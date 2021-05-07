@@ -1480,6 +1480,7 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
         self.opt['Logger'] = self.log
         self.edge_exp_dic = dict()
         self.edge_pred_dic = dict()
+        self.records = dict()
 
     def process(self, record, port):
         try:
@@ -1508,6 +1509,7 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
                 raise ValueError("The DDG_rec record is missing the Binding Free Energy")
 
             self.edge_pred_dic[edge_name] = [DDG_A_to_B_pred, ddG_A_to_B_pred]
+            self.records[edge_name] = record
 
             # self.success.emit(record)
 
@@ -1525,23 +1527,59 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
 
             affinity_dic = utils.predictDGsfromDDGs(self.edge_pred_dic)
 
-            if affinity_dic:
-                meta_unit = OEFieldMeta().set_option(Meta.Units.Energy.kJ_per_mol)
-                binding_fe_pred_field = OEField(Fields.FEC.binding_fe.get_name(),
+            meta_unit = OEFieldMeta().set_option(Meta.Units.Energy.kJ_per_mol)
+            binding_fe_pred_field = OEField(Fields.FEC.binding_fe.get_name(),
+                                            Fields.FEC.binding_fe_err.get_type(), meta=meta_unit)
+            binding_fe_pred_err_field = OEField(Fields.FEC.binding_fe_err.get_name(),
                                                 Fields.FEC.binding_fe_err.get_type(), meta=meta_unit)
-                binding_fe_pred_err_field = OEField(Fields.FEC.binding_fe_err.get_name(),
-                                                    Fields.FEC.binding_fe_err.get_type(), meta=meta_unit)
-                lig_name_field = Fields.ligand_name
 
-                for name, aff_list in affinity_dic.items():
-                    rec = OERecord()
-                    rec.set_value(lig_name_field, name)
-                    rec.set_value(binding_fe_pred_field, aff_list[0])
-                    rec.set_value(binding_fe_pred_err_field, aff_list[1])
-                    self.success.emit(rec)
-            else:
-                self.opt['Logger'].warn("It was not possible to generate the output affinity records "
-                                        "because the edge mapping graph is not enough connected")
+            for edge_name, record in self.records.items():
+
+                self.opt['Logger'].info("DGG to DG record: {}".format(edge_name))
+
+                ligA_name = edge_name.split()[0]
+                ligB_name = edge_name.split()[2]
+
+                if ligA_name in affinity_dic and ligB_name in affinity_dic:
+                    aff_A = affinity_dic[ligA_name][0]
+                    aff_A_err = affinity_dic[ligA_name][1]
+
+                    aff_B = affinity_dic[ligB_name][0]
+                    aff_B_err = affinity_dic[ligB_name][1]
+
+                    aff_A_rec = OERecord()
+                    aff_A_rec.set_value(binding_fe_pred_field, aff_A)
+                    aff_A_rec.set_value(binding_fe_pred_err_field, aff_A_err)
+
+                    aff_B_rec = OERecord()
+                    aff_B_rec.set_value(binding_fe_pred_field, aff_B)
+                    aff_B_rec.set_value(binding_fe_pred_err_field, aff_B_err)
+
+                    record.set_value(Fields.FEC.RBFEC.NESC.state_A, aff_A_rec)
+                    record.set_value(Fields.FEC.RBFEC.NESC.state_B, aff_B_rec)
+                else:
+                    self.opt['Logger'].warn("It was not possible to generate the absolute "
+                                            "affinity values for the ligands in the edge: {}".format(edge_name))
+
+                self.emit(record)
+
+            # if affinity_dic:
+            #     meta_unit = OEFieldMeta().set_option(Meta.Units.Energy.kJ_per_mol)
+            #     binding_fe_pred_field = OEField(Fields.FEC.binding_fe.get_name(),
+            #                                     Fields.FEC.binding_fe_err.get_type(), meta=meta_unit)
+            #     binding_fe_pred_err_field = OEField(Fields.FEC.binding_fe_err.get_name(),
+            #                                         Fields.FEC.binding_fe_err.get_type(), meta=meta_unit)
+            #     lig_name_field = Fields.ligand_name
+            #
+            #     for name, aff_list in affinity_dic.items():
+            #         rec = OERecord()
+            #         rec.set_value(lig_name_field, name)
+            #         rec.set_value(binding_fe_pred_field, aff_list[0])
+            #         rec.set_value(binding_fe_pred_err_field, aff_list[1])
+            #         self.success.emit(rec)
+            # else:
+            #     self.opt['Logger'].warn("It was not possible to generate the output affinity records "
+            #                             "because the edge mapping graph is not enough connected")
 
         except Exception as e:
             self.opt['Logger'].warn("It was not possible to generate the floe report: {}".format(str(e)))
