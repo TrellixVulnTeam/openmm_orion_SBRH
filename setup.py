@@ -24,6 +24,7 @@ from setuptools import setup, find_packages
 
 from pip._internal.req import parse_requirements
 
+
 def get_reqs(reqs):
     return [str(ir.requirement) for ir in reqs]
 

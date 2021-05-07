@@ -57,6 +57,7 @@ import math
 
 from parmed.gromacs.gromacstop import _Defaults
 
+
 class GromacsSimulations(MDSimulations):
 
     def __init__(self, mdstate, parmed_structure, opt):
