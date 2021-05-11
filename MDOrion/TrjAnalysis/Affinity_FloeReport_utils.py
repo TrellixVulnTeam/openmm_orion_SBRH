@@ -389,8 +389,13 @@ def FindAxisRangeForSquarePlot(x, xerr, y, yerr):
     return [min_range_axes, max_range_axes]
 
 
-def CombinePredExptDDGs(lig_expt,edge_pred):
-    lig_names = set(lig_expt.keys())
+def CombinePredExptDDGs(lig_expt, edge_pred):
+
+    if lig_expt is not None:
+        lig_names = set(lig_expt.keys())
+    else:
+        lig_names = list()
+
     combined = dict()
     for edge_name in edge_pred.keys():
         lig_name_state_A = edge_name.split()[0]
@@ -404,43 +409,6 @@ def CombinePredExptDDGs(lig_expt,edge_pred):
             combined[edge_name] = combined[edge_name] + [DDG_A_to_B_exp, ddG_A_to_B_exp]
         else:
             combined[edge_name] = combined[edge_name] + [None, None]
-    #
-    return combined
-
-
-def CombineAndOffsetPredExptDGs(lig_expt,affinity_pred):
-    lig_names = set(lig_expt.keys())
-    combined = dict()
-    for lig_name in affinity_pred.keys():
-        combined[lig_name] = affinity_pred[lig_name]
-        if lig_name in lig_names:
-            # Append experimental binding affinity & error
-            DG_A_to_B_exp = lig_expt[lig_name][0]
-            # Experimental binding affinity error
-            dG_A_to_B_exp = lig_expt[lig_name][1]
-            combined[lig_name] = combined[lig_name] + [lig_expt[lig_name][0], lig_expt[lig_name][1]]
-        else:
-            combined[lig_name] = combined[lig_name] + [None, None]
-    #
-    # select data with both predicted and experimental data to figure out DG offset
-    exp_DG = []
-    pred_DG_with_expt = []
-    for lig_name in combined.keys():
-        lig = combined[lig_name]
-        if lig[2] is not None:
-            pred_DG_with_expt.append(lig[0])
-            exp_DG.append(lig[2])
-    #print(exp_DG)
-    #print(pred_DG_with_expt)
-    #
-    # Offset Predicted DGs to have the same mean as that of the experimental DGs
-    exp_DG_mean = sum(exp_DG)/len(exp_DG)
-    pred_DG_arr = np.array(pred_DG_with_expt)
-    offset = exp_DG_mean - pred_DG_arr.mean()
-    #print(exp_DG_mean, offset)
-    #
-    for lig_name in combined.keys():
-        combined[lig_name][0] += offset
     #
     return combined
 

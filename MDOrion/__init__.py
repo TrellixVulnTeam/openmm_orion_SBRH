@@ -62,4 +62,4 @@ from .FEC.RFEC.cubes import (BoundUnboundSwitchCube,
                              NESGMX,
                              ParallelNESGMX,
                              NESAnalysis,
-                             PlotRBFEResults)
+                             PlotNESResults)
