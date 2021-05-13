@@ -17,16 +17,14 @@
 # liable for any damages or liability in connection with the Sample Code
 # or its use.
 
-from os import path
+from floe.api import ParallelCubeGroup
 
-from floe.api import (WorkFloe,
-                      ParallelCubeGroup)
+from orionplatform.cubes import DatasetReaderCube
 
-from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
+from MDOrion.System.cubes import BypassCube
 
 from MDOrion.System.cubes import (IDSettingCube,
-                                  CollectionSetting,
-                                  ParallelRecordSizeCheck)
+                                  CollectionSetting)
 
 from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
                                      ParallelMDNvtCube,
@@ -46,7 +44,9 @@ from MDOrion.FEC.RFEC.cubes import (BoundUnboundSwitchCube,
                                     RBFECEdgeGathering,
                                     ParallelNESGMXChimera,
                                     ParallelNESGMX,
-                                    NESAnalysis)
+                                    NESAnalysis,
+                                    PredictDGFromDDG,
+                                    PlotNESResults)
 
 from MDOrion.TrjAnalysis.cubes_trajProcessing import (ParallelTrajToOEMolCube,
                                                       ParallelTrajInteractionEnergyCube,
@@ -65,105 +65,100 @@ from MDOrion.TrjAnalysis.cubes_clusterAnalysis import (ParallelClusterOETrajCube
 from MDOrion.TrjAnalysis.cubes_hintAnalysis import (ParallelBintScoreInitialPoseAndTrajectory)
 
 
-def setup_NonEquilSwch_GMX(input_floe, input_bound, input_unbound, check_rec, options):
-    # check_rec is the exterior cube for all the fail port connections as well as success
-    #
-    # This cube is necessary for the correct work of collection and shard
-    coll_open_write = CollectionSetting("OpenNESCollection", title="OpenNESCollection")
-    coll_open_write.set_parameters(open=True)
-    coll_open_write.set_parameters(write_new_collection='NES_OPLMD')
+def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
+
+    input_bound_port = input_port_dic['input_bound_port']
+    input_open_collection_port = input_port_dic['input_open_collection_port']
+
+    output_nes_port = output_port_dic['output_nes_port']
+    output_abfe_port = output_port_dic['output_abfe_port']
+    output_fail_port = output_port_dic['output_fail_port']
 
     # Switching Bound and Unbound runs
-    switch = BoundUnboundSwitchCube("Bound/Unbound Switch", title='Bound/Unbound Switch')
+    switch_sub = BoundUnboundSwitchCube("Bound/Unbound Switch", title='Bound/Unbound Switch')
 
-    gathering = RBFECEdgeGathering("Gathering", title="Gathering Equilibrium Runs")
-    gathering.promote_parameter('map_file', promoted_name=options['edge_map_file'], order=2)
+    gathering_sub = RBFECEdgeGathering("Gathering", title="Gathering Equilibrium Runs")
+    gathering_sub.promote_parameter('map_file', promoted_name=options['edge_map_file'], order=2)
 
-    chimera = ParallelNESGMXChimera("GMXChimera", title="GMX Chimera")
-    chimera.promote_parameter("trajectory_frames", promoted_name="trajectory_frames",
-                              default=options['n_traj_frames'],
-                              description="The total number of trajectory frames to be used along the NE switching", order=2)
+    chimera_sub = ParallelNESGMXChimera("GMXChimera", title="GMX Chimera")
+    chimera_sub.promote_parameter("trajectory_frames", promoted_name="trajectory_frames",
+                                  default=options['n_traj_frames'],
+                                  description="The total number of trajectory frames to be used along the NE switching", order=2)
 
-    unbound_nes = ParallelNESGMX("GMXUnboundNES", title="GMX Unbound NES")
-    unbound_nes.promote_parameter("time", promoted_name="nes_time",
-                                  default=options['nes_switch_time_in_ns'], order=3)
+    unbound_nes_sub = ParallelNESGMX("GMXUnboundNES", title="GMX Unbound NES")
+    unbound_nes_sub.promote_parameter("time", promoted_name="nes_time",
+                                      default=options['nes_switch_time_in_ns'], order=3)
 
-    unbound_nes.modify_parameter(unbound_nes.instance_type, promoted=False, default='c5')
-    unbound_nes.modify_parameter(unbound_nes.cpu_count, promoted=False, default=2)
-    unbound_nes.modify_parameter(unbound_nes.gpu_count, promoted=False, default=0)
-    unbound_nes.modify_parameter(unbound_nes.memory_mb, promoted=False, default=3*1024)
-    unbound_nes.modify_parameter(unbound_nes.gmx_mpi_threads, promoted=False, default=1)
-    unbound_nes.modify_parameter(unbound_nes.gmx_openmp_threads, promoted=False, default=2)
-    unbound_nes.modify_parameter(unbound_nes.max_parallel, promoted=False, default=10000)
+    unbound_nes_sub.modify_parameter(unbound_nes_sub.instance_type, promoted=False, default='c5')
+    unbound_nes_sub.modify_parameter(unbound_nes_sub.cpu_count, promoted=False, default=2)
+    unbound_nes_sub.modify_parameter(unbound_nes_sub.gpu_count, promoted=False, default=0)
+    unbound_nes_sub.modify_parameter(unbound_nes_sub.memory_mb, promoted=False, default=3*1024)
+    unbound_nes_sub.modify_parameter(unbound_nes_sub.gmx_mpi_threads, promoted=False, default=1)
+    unbound_nes_sub.modify_parameter(unbound_nes_sub.gmx_openmp_threads, promoted=False, default=2)
+    unbound_nes_sub.modify_parameter(unbound_nes_sub.max_parallel, promoted=False, default=10000)
 
-    bound_nes = ParallelNESGMX("GMXBoundNES", title="GMX Bound NES")
-    bound_nes.promote_parameter("time", promoted_name="nes_time", order=3)
+    bound_nes_sub = ParallelNESGMX("GMXBoundNES", title="GMX Bound NES")
+    bound_nes_sub.promote_parameter("time", promoted_name="nes_time", order=3)
     # bound_nes.modify_parameter(bound_nes.instance_type, promoted=False, default='g3')
-    bound_nes.modify_parameter(bound_nes.cpu_count, promoted=False, default=16)
-    bound_nes.modify_parameter(bound_nes.gpu_count, promoted=False, default=1)
-    bound_nes.modify_parameter(bound_nes.gmx_mpi_threads, promoted=False, default=1)
-    bound_nes.modify_parameter(bound_nes.gmx_openmp_threads, promoted=False, default=16)
-    bound_nes.modify_parameter(bound_nes.max_parallel, promoted=False, default=10000)
+    bound_nes_sub.modify_parameter(bound_nes_sub.cpu_count, promoted=False, default=16)
+    bound_nes_sub.modify_parameter(bound_nes_sub.gpu_count, promoted=False, default=1)
+    bound_nes_sub.modify_parameter(bound_nes_sub.gmx_mpi_threads, promoted=False, default=1)
+    bound_nes_sub.modify_parameter(bound_nes_sub.gmx_openmp_threads, promoted=False, default=16)
+    bound_nes_sub.modify_parameter(bound_nes_sub.max_parallel, promoted=False, default=10000)
 
-    nes_analysis = NESAnalysis("NES_Analysis")
+    nes_analysis_sub = NESAnalysis("NES_Analysis")
 
-    # This cube is necessary for the correct working of collections and shards
-    coll_close = CollectionSetting("CloseCollection", title="Close Collection")
-    coll_close.set_parameters(open=False)
+    ddg_to_dg_sub = PredictDGFromDDG("RBFE to ABFE", title="RBFE to ABFE")
+    ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp')
 
-    report = MDFloeReportCube("report", title="Floe Report")
-    report.set_parameters(floe_report_title="NES Report")
+    plot_aff_sub = PlotNESResults("Plot Affinities", title="Plot Affinities")
 
-    ofs = DatasetWriterCube('ofs', title='NES Out')
-    ofs.promote_parameter("data_out", promoted_name="out",
-                          title="NES Dataset Out",
-                          description="NES Dataset Out", order=4)
+    report_sub = MDFloeReportCube("report", title="Floe Report")
+    report_sub.set_parameters(floe_report_title="NES Report")
 
-    fail = DatasetWriterCube('fail', title='NES Failures')
-    fail.promote_parameter("data_out", promoted_name="fail", title="NES Failures",
-                           description="NES Dataset Failures out", order=5)
+    floe_job.add_cubes(switch_sub, gathering_sub,
+                       chimera_sub, bound_nes_sub, unbound_nes_sub,
+                       nes_analysis_sub, ddg_to_dg_sub,
+                       plot_aff_sub, report_sub)
 
-    input_floe.add_cubes(coll_open_write, switch, gathering,
-                        chimera, bound_nes, unbound_nes,
-                        nes_analysis, coll_close, report,
-                        ofs, fail)
+    input_open_collection_port.connect(switch_sub.intake)
 
-    # Input bound and unbound cubes into Collection Setting
-    input_bound.success.connect(coll_open_write.intake)
-    if input_bound != input_unbound:
-        input_unbound.success.connect(coll_open_write.intake)
-    coll_open_write.success.connect(switch.intake)
-
-    switch.success.connect(gathering.intake)
-    switch.bound_port.connect(gathering.bound_port)
+    switch_sub.success.connect(gathering_sub.intake)
+    switch_sub.bound_port.connect(gathering_sub.bound_port)
 
     # Chimera NES Setting
-    gathering.success.connect(chimera.intake)
+    gathering_sub.success.connect(chimera_sub.intake)
 
-    chimera.bound_port.connect(bound_nes.intake)
-    bound_nes.success.connect(nes_analysis.intake)
+    chimera_sub.bound_port.connect(bound_nes_sub.intake)
+    bound_nes_sub.success.connect(nes_analysis_sub.intake)
 
-    chimera.success.connect(unbound_nes.intake)
-    unbound_nes.success.connect(nes_analysis.intake)
+    chimera_sub.success.connect(unbound_nes_sub.intake)
+    unbound_nes_sub.success.connect(nes_analysis_sub.intake)
 
-    nes_analysis.success.connect(report.intake)
-    report.success.connect(coll_close.intake)
-    coll_close.success.connect(check_rec.intake)
-    check_rec.success.connect(ofs.intake)
+    nes_analysis_sub.success.connect(report_sub.intake)
+    nes_analysis_sub.success.connect(ddg_to_dg_sub.intake)
+    ddg_to_dg_sub.success.connect(output_abfe_port)
+    ddg_to_dg_sub.graph_port.connect(plot_aff_sub.intake)
+    input_bound_port.connect(ddg_to_dg_sub.bound_port)
+
+    report_sub.success.connect(output_nes_port)
+
+    bypass_fail_sub = BypassCube("Fail Bypass", title="Fail Bypass")
 
     # Fail port connections
-    coll_open_write.failure.connect(check_rec.fail_in)
-    switch.failure.connect(check_rec.fail_in)
+    switch_sub.failure.connect(bypass_fail_sub.intake)
 
-    gathering.failure.connect(check_rec.fail_in)
-    chimera.failure.connect(check_rec.fail_in)
-    unbound_nes.failure.connect(check_rec.fail_in)
-    bound_nes.failure.connect(check_rec.fail_in)
+    gathering_sub.failure.connect(bypass_fail_sub.intake)
+    chimera_sub.failure.connect(bypass_fail_sub.intake)
+    unbound_nes_sub.failure.connect(bypass_fail_sub.intake)
+    bound_nes_sub.failure.connect(bypass_fail_sub.intake)
 
-    coll_close.failure.connect(check_rec.fail_in)
-    nes_analysis.failure.connect(check_rec.fail_in)
-    report.failure.connect(check_rec.fail_in)
-    check_rec.failure.connect(fail.intake)
+    nes_analysis_sub.failure.connect(bypass_fail_sub.intake)
+    ddg_to_dg_sub.failure.connect(bypass_fail_sub.intake)
+    plot_aff_sub.failure.connect(bypass_fail_sub.intake)
+
+    report_sub.failure.connect(bypass_fail_sub.intake)
+    bypass_fail_sub.success.connect(output_fail_port)
 
     return True
 
