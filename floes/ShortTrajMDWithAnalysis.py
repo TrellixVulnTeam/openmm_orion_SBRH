@@ -30,8 +30,8 @@ from MDOrion.SubFloes.SubfloeFunctions import (setup_MD_startup,
                                                setup_PLComplex_for_MD,
                                                setup_traj_analysis)
 
-from MDOrion.System.cubes import (CollectionSetting,
-                                  ParallelRecordSizeCheck)
+from MDOrion.Flask.cubes import (CollectionSetting,
+                                 ParallelRecordSizeCheck)
 
 
 job = WorkFloe('Short Trajectory MD with Analysis',
@@ -64,7 +64,7 @@ fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
                        description="MD Dataset Failures out", order=3)
 
-job.add_cubes(coll_open, coll_close, check_rec, ofs, fail)
+job.add_cubes(coll_open, coll_close, check_rec, exceptions, ofs, fail)
 
 # Call subfloe function to set up the solvated protein-ligand complex
 PLComplex_for_MD_options = {}

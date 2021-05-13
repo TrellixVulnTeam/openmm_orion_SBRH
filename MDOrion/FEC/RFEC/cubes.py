@@ -508,11 +508,11 @@ class GMXChimera(RecordPortsMixin, ComputeCube):
             lig_A = md_record_state_A_Unbound.get_md_components.get_ligand
             lig_B = md_record_state_B_Unbound.get_md_components.get_ligand
 
-            pmd_flask_state_A_Unbound = md_record_state_A_Unbound.get_parmed(sync_stage_name="System Parametrization")
-            pmd_flask_state_B_Unbound = md_record_state_B_Unbound.get_parmed(sync_stage_name="System Parametrization")
+            pmd_flask_state_A_Unbound = md_record_state_A_Unbound.get_parmed(sync_stage_name="Flask Parametrization")
+            pmd_flask_state_B_Unbound = md_record_state_B_Unbound.get_parmed(sync_stage_name="Flask Parametrization")
 
-            pmd_flask_state_A_Bound = md_record_state_A_Bound.get_parmed(sync_stage_name="System Parametrization")
-            pmd_flask_state_B_Bound = md_record_state_B_Bound.get_parmed(sync_stage_name="System Parametrization")
+            pmd_flask_state_A_Bound = md_record_state_A_Bound.get_parmed(sync_stage_name="Flask Parametrization")
+            pmd_flask_state_B_Bound = md_record_state_B_Bound.get_parmed(sync_stage_name="Flask Parametrization")
 
             pmd_lig_A, idxA = parmed_find_ligand(pmd_flask_state_A_Unbound)
             pmd_lig_B, idxB = parmed_find_ligand(pmd_flask_state_B_Unbound)

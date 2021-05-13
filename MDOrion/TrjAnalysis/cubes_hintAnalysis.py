@@ -119,12 +119,19 @@ class BintScoreInitialPoseAndTrajectory(RecordPortsMixin, ComputeCube):
 
             # Calc list of per-frame BintScores for a trajectory
             trajBintScoreList = hint.TrajBintScoreListFromRefHints(ligTraj,protTraj,good_hints_init_pose)
-            opt['Logger'].info('{} Traj has {} BintScores'.format(system_title,len(trajBintScoreList)))
+            opt['Logger'].info('{} Traj has {} BintScores in the ensemble'.format(system_title,
+                                                                                  len(trajBintScoreList)))
 
             # Calc Trajectory BintScore: Initial BintScore weighted by fractional occupancy of each interaction
             trajBintScore, trajBintStderr, CI05, CI95 = utl.MeanAndBootstrapStdErrCI(trajBintScoreList)
             opt['Logger'].info('{} Trajectory of ligand {:s} has BintScore {:.2f} +/- {:.2f}'.format(
                 system_title, ligTraj.GetTitle(), trajBintScore, trajBintStderr))
+
+            # Calc Pose Stability: Trajectory BintScore / Initial BintScore
+            poseStability = trajBintScore/initBintScore
+            poseStabilityStderr = trajBintStderr/initBintScore
+            opt['Logger'].info('{} ligand {:s} has Pose Stability {:.4f} +/- {:.2f}'.format(
+                system_title, ligTraj.GetTitle(), poseStability, poseStabilityStderr))
 
             # Create new record with Bint-related results
             bintRecord = OERecord()
@@ -134,6 +141,8 @@ class BintScoreInitialPoseAndTrajectory(RecordPortsMixin, ComputeCube):
             bintRecord.set_value(Fields.Bint.trajBintScoreList, trajBintScoreList)
             bintRecord.set_value(Fields.Bint.trajBintScore, trajBintScore)
             bintRecord.set_value(Fields.Bint.trajBintStderr, trajBintStderr)
+            bintRecord.set_value(Fields.Bint.poseStability, poseStability)
+            bintRecord.set_value(Fields.Bint.poseStabilityStderr, poseStabilityStderr)
 
             # The Bint record goes on the top-level record
             record.set_value(Fields.Bint.oebint_rec, bintRecord)

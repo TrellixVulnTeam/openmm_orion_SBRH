@@ -22,20 +22,20 @@ from floe.api import (WorkFloe,
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
-from MDOrion.System.cubes import MDComponentCube
+from MDOrion.Flask.cubes import MDComponentCube
 
 from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 
-from MDOrion.System.cubes import ParallelSolvationCube
+from MDOrion.Flask.cubes import ParallelSolvationCube
 
 from MDOrion.ForceField.cubes import ParallelForceFieldCube
 
 from MDOrion.LigPrep.cubes import (ParallelLigandChargeCube,
                                    LigandSetting)
 
-from MDOrion.System.cubes import (IDSettingCube,
-                                  CollectionSetting,
-                                  ParallelRecordSizeCheck)
+from MDOrion.Flask.cubes import (IDSettingCube,
+                                 CollectionSetting,
+                                 ParallelRecordSizeCheck)
 
 job = WorkFloe('Complex prep for Short Trajectory MD',
                title='Complex prep for Short Trajectory MD')

@@ -37,7 +37,7 @@ from orionplatform.mixins import RecordPortsMixin
 class LigandChargeCube(RecordPortsMixin, ComputeCube):
     title = "Ligand Charge"
     # version = "0.1.4"
-    classification = [["System Preparation"]]
+    classification = [["Flask Preparation"]]
     tags = ["Ligand"]
     description = """
     This Cube charges small organic molecules by using the ELF10 charge method 
@@ -110,7 +110,7 @@ class LigandChargeCube(RecordPortsMixin, ComputeCube):
 class LigandSetting(RecordPortsMixin, ComputeCube):
     title = "Ligand Setting"
     # version = "0.1.4"
-    classification = [["System Preparation"]]
+    classification = [["Flask Preparation"]]
     tags = ['Ligand']
     description = """
     This Cube is used to set the ligand residue name as the cube parameter

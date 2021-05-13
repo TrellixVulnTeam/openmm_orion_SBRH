@@ -220,7 +220,7 @@ class MDMinimizeCube(RecordPortsMixin, ComputeCube):
             opt['out_directory'] = mdrecord.cwd
             opt['molecule'] = flask
             opt['str_logger'] = str_logger
-            opt['Logger'].info('[{}] MINIMIZING System: {}'.format(opt['CubeTitle'], system_title))
+            opt['Logger'].info('[{}] MINIMIZING Flask: {}'.format(opt['CubeTitle'], system_title))
 
             # Extract the Parmed structure and synchronize it with the last MD stage state
             parmed_structure = mdrecord.get_parmed(sync_stage_name='last')

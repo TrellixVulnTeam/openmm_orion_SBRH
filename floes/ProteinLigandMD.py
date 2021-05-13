@@ -26,8 +26,8 @@ from MDOrion.SubFloes.SubfloeFunctions import (setup_MD_startup,
 
 from orionplatform.cubes import DatasetWriterCube
 
-from MDOrion.System.cubes import (CollectionSetting,
-                                  ParallelRecordSizeCheck)
+from MDOrion.Flask.cubes import (CollectionSetting,
+                                 ParallelRecordSizeCheck)
 
 from snowball import (ExceptHandlerCube,
                       SuccessCounterCube)

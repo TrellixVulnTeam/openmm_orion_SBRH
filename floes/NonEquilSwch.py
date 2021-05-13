@@ -15,7 +15,7 @@ from floe.api import WorkFloe
 
 from orionplatform.cubes import DatasetReaderCube
 
-from MDOrion.System.cubes import ParallelRecordSizeCheck
+from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
 from MDOrion.SubFloes.SubfloeFunctions import setup_NonEquilSwch_GMX
 

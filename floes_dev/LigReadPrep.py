@@ -24,14 +24,14 @@ from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
 from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 
-from MDOrion.System.cubes import MDComponentCube
+from MDOrion.Flask.cubes import MDComponentCube
 
 from MDOrion.LigPrep.cubes import (ParallelLigandChargeCube,
                                    LigandSetting)
 
-from MDOrion.System.cubes import (IDSettingCube,
-                                  CollectionSetting,
-                                  ParallelRecordSizeCheck)
+from MDOrion.Flask.cubes import (IDSettingCube,
+                                 CollectionSetting,
+                                 ParallelRecordSizeCheck)
 
 job = WorkFloe('PL Complex formation for Short Trajectory MD',
                title='PL Complex formation for Short Trajectory MD')

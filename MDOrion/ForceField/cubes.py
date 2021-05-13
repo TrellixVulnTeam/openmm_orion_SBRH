@@ -175,7 +175,7 @@ class ForceFieldCube(RecordPortsMixin, ComputeCube):
             # Update the components after setting the charges
             record.set_value(Fields.md_components, md_components)
 
-            # Check if it is possible to create the OpenMM System
+            # Check if it is possible to create the OpenMM Flask
             if is_periodic:
                 omm_flask = flask_pmd_structure.createSystem(nonbondedMethod=app.CutoffPeriodic,
                                                              nonbondedCutoff=10.0 * unit.angstroms,

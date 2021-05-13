@@ -38,7 +38,7 @@ from MDOrion.ComplexPrep.utils import clash_detection
 class ComplexPrepCube(RecordPortsMixin, ComputeCube):
     title = "Complex Preparation"
     # version = "0.1.4"
-    classification = [["System Preparation"]]
+    classification = [["Flask Preparation"]]
     tags = ['Complex', 'Ligand', 'Protein']
     description = """
     This Cube assembles the complex made of a protein and its docked ligands. 
@@ -111,7 +111,7 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                 if not oeommutils.check_shell(ligand, protein, 3):
                     raise ValueError("The Ligand is probably outside the Protein binding site")
 
-                # Remove Steric Clashes between the ligand and the other System components
+                # Remove Steric Clashes between the ligand and the other Flask components
                 for comp_name, comp in self.md_components.get_components.items():
 
                     # Skip clashes between the ligand itself

@@ -28,9 +28,9 @@ from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 from snowball import (ExceptHandlerCube,
                       SuccessCounterCube)
 
-from MDOrion.System.cubes import ParallelRecordSizeCheck
+from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
-from MDOrion.System.cubes import CollectionSetting
+from MDOrion.Flask.cubes import CollectionSetting
 
 job = WorkFloe('Analyze Protein-Ligand MD',
                title='Analyze Protein-Ligand MD')

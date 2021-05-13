@@ -26,10 +26,10 @@ out (.oedb file): file of the Analysis results for all ligands.
 job.uuid = "43f33e3f-0240-4e34-9b8b-da4d5796052a"
 
 ifs = DatasetReaderCube("ifs")
-ifs.promote_parameter("data_in", promoted_name="in", title="System Input OERecord", description="OERecord file name")
+ifs.promote_parameter("data_in", promoted_name="in", title="Flask Input OERecord", description="OERecord file name")
 
 ofs = DatasetWriterCube('ofs', title='OFS-Success')
-ofs.promote_parameter("data_out", promoted_name="out", title="System Output OERecord", description="OERecord file name")
+ofs.promote_parameter("data_out", promoted_name="out", title="Flask Output OERecord", description="OERecord file name")
 
 clusCube = ParallelClusterOETrajCube("ClusterOETrajCube")
 molHtml = ParallelMDTrajAnalysisClusterReport("MolHtmlCube")

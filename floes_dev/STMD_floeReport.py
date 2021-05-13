@@ -26,10 +26,10 @@ out (.oedb file): file of the Analysis results for all ligands.
 job.uuid = "a21708dd-085b-4494-84db-a45d12c4dded"
 
 ifs = DatasetReaderCube("ifs")
-ifs.promote_parameter("data_in", promoted_name="in", title="System Input OERecord", description="OERecord file name")
+ifs.promote_parameter("data_in", promoted_name="in", title="Flask Input OERecord", description="OERecord file name")
 
 ofs = DatasetWriterCube('ofs', title='OFS-Success')
-ofs.promote_parameter("data_out", promoted_name="out", title="System Output OERecord", description="OERecord file name")
+ofs.promote_parameter("data_out", promoted_name="out", title="Flask Output OERecord", description="OERecord file name")
 
 prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Analysis Report")
 report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Relevant Output Extraction")

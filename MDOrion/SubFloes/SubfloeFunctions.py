@@ -24,9 +24,9 @@ from floe.api import (WorkFloe,
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
-from MDOrion.System.cubes import (IDSettingCube,
-                                  CollectionSetting,
-                                  ParallelRecordSizeCheck)
+from MDOrion.Flask.cubes import (IDSettingCube,
+                                 CollectionSetting,
+                                 ParallelRecordSizeCheck)
 
 from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
                                      ParallelMDNvtCube,
@@ -34,8 +34,8 @@ from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
 
 from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 
-from MDOrion.System.cubes import (ParallelSolvationCube,
-                                  MDComponentCube)
+from MDOrion.Flask.cubes import (ParallelSolvationCube,
+                                 MDComponentCube)
 
 from MDOrion.ForceField.cubes import ParallelForceFieldCube
 

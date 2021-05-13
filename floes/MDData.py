@@ -35,7 +35,7 @@ job.classification = [['MD Data']]
 job.uuid = "6665ca20-6014-4f3b-8d02-4b5d15b75ee3"
 job.tags = [tag for lists in job.classification for tag in lists]
 
-ifs = DatasetReaderCube("SystemReader", title="System Reader")
+ifs = DatasetReaderCube("SystemReader", title="Flask Reader")
 ifs.promote_parameter("data_in", promoted_name="system",
                       title='STMDA Input File',
                       description="The Dataset produced by the Short Trajectory MD with Analysis floe", order=0)

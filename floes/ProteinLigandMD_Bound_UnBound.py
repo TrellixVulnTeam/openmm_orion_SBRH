@@ -6,9 +6,9 @@ from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 from MDOrion.LigPrep.cubes import (ParallelLigandChargeCube,
                                    LigandSetting)
 
-from MDOrion.System.cubes import (IDSettingCube,
-                                  CollectionSetting,
-                                  ParallelSolvationCube)
+from MDOrion.Flask.cubes import (IDSettingCube,
+                                 CollectionSetting,
+                                 ParallelSolvationCube)
 
 from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
                                      ParallelMDNvtCube,
@@ -16,7 +16,7 @@ from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
 
 from MDOrion.ForceField.cubes import ParallelForceFieldCube
 
-from MDOrion.System.cubes import MDComponentCube
+from MDOrion.Flask.cubes import MDComponentCube
 
 from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 
