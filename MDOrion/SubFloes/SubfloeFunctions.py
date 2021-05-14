@@ -75,7 +75,7 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     output_fail_port = output_port_dic['output_fail_port']
 
     # Switching Bound and Unbound runs
-    switch_sub = BoundUnboundSwitchCube("Bound/Unbound Switch", title='Bound/Unbound Switch')
+    switch_sub = BoundUnboundSwitchCube("Bound/Unbound Switch NES", title='Bound/Unbound Switch NES')
 
     gathering_sub = RBFECEdgeGathering("Gathering", title="Gathering Equilibrium Runs")
     gathering_sub.promote_parameter('map_file', promoted_name=options['edge_map_file'], order=2)
@@ -111,9 +111,9 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     ddg_to_dg_sub = PredictDGFromDDG("RBFE to ABFE", title="RBFE to ABFE")
     ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp')
 
-    plot_aff_sub = PlotNESResults("Plot Affinities", title="Plot Affinities")
+    plot_aff_sub = PlotNESResults("Plot Affinities Report", title="Plot Affinities Report")
 
-    report_sub = MDFloeReportCube("report", title="Floe Report")
+    report_sub = MDFloeReportCube("NES Report", title="NES Floe Report")
     report_sub.set_parameters(floe_report_title="NES Report")
 
     floe_job.add_cubes(switch_sub, gathering_sub,
@@ -143,22 +143,19 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
 
     report_sub.success.connect(output_nes_port)
 
-    bypass_fail_sub = BypassCube("Fail Bypass", title="Fail Bypass")
-
     # Fail port connections
-    switch_sub.failure.connect(bypass_fail_sub.intake)
+    switch_sub.failure.connect(output_fail_port)
 
-    gathering_sub.failure.connect(bypass_fail_sub.intake)
-    chimera_sub.failure.connect(bypass_fail_sub.intake)
-    unbound_nes_sub.failure.connect(bypass_fail_sub.intake)
-    bound_nes_sub.failure.connect(bypass_fail_sub.intake)
+    gathering_sub.failure.connect(output_fail_port)
+    chimera_sub.failure.connect(output_fail_port)
+    unbound_nes_sub.failure.connect(output_fail_port)
+    bound_nes_sub.failure.connect(output_fail_port)
 
-    nes_analysis_sub.failure.connect(bypass_fail_sub.intake)
-    ddg_to_dg_sub.failure.connect(bypass_fail_sub.intake)
-    plot_aff_sub.failure.connect(bypass_fail_sub.intake)
+    nes_analysis_sub.failure.connect(output_fail_port)
+    ddg_to_dg_sub.failure.connect(output_fail_port)
+    plot_aff_sub.failure.connect(output_fail_port)
 
-    report_sub.failure.connect(bypass_fail_sub.intake)
-    bypass_fail_sub.success.connect(output_fail_port)
+    report_sub.failure.connect(output_fail_port)
 
     return True
 

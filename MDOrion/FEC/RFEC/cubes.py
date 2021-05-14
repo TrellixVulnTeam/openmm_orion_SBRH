@@ -1185,9 +1185,9 @@ class PlotNESResults(RecordPortsMixin, ComputeCube):
 
         if in_orion():
             job_id = environ.get('ORION_JOB_ID')
-            self.floe_report = FloeReport.start_report("floe_report", job_id=job_id)
+            self.floe_report = FloeReport.start_report("Affinity Report", job_id=job_id)
         else:
-            self.floe_report = LocalFloeReport.start_report("floe_report")
+            self.floe_report = LocalFloeReport.start_report("Affinity Report")
 
     def process(self, record, port):
         try:
@@ -1220,11 +1220,17 @@ class PlotNESResults(RecordPortsMixin, ComputeCube):
             self.edge_pred_dic[edge_name] = [DDG_A_to_B_pred, ddG_A_to_B_pred]
 
             if record.has_field(OEField("OPLMD_StateA_ABFE", Types.Record)):
+
+                aff_recA = record.get_value(OEField("OPLMD_StateA_ABFE", Types.Record))
+
                 if ligA_name not in self.pred_affinity_dic:
-                    aff_recA = record.get_value(OEField("OPLMD_StateA_ABFE", Types.Record))
-                    DG = aff_recA.get_value(Fields.FEC.binding_fe)
-                    dG = aff_recA.get_value(Fields.FEC.binding_fe_err)
-                    self.pred_affinity_dic[ligA_name] = [DG, dG]
+
+                    if aff_recA.has_field(Fields.FEC.binding_fe) and aff_recA.has_field(Fields.FEC.binding_fe_err):
+                        DG = aff_recA.get_value(Fields.FEC.binding_fe)
+                        dG = aff_recA.get_value(Fields.FEC.binding_fe_err)
+                        self.pred_affinity_dic[ligA_name] = [DG, dG]
+
+                if ligA_name not in self.exp_affinity_dic:
 
                     if aff_recA.has_field(Fields.FEC.binding_exptl_fe) and aff_recA.has_field(Fields.FEC.binding_exptl_fe_err):
                         DG_exp = aff_recA.get_value(Fields.FEC.binding_exptl_fe)
@@ -1233,14 +1239,22 @@ class PlotNESResults(RecordPortsMixin, ComputeCube):
                         self.exp_affinity_dic[ligA_name] = [DG_exp, dG_exp]
 
             if record.has_field(OEField("OPLMD_StateB_ABFE", Types.Record)):
+
+                aff_recB = record.get_value(OEField("OPLMD_StateB_ABFE", Types.Record))
+
                 if ligB_name not in self.pred_affinity_dic:
-                    aff_recB = record.get_value(OEField("OPLMD_StateB_ABFE", Types.Record))
-                    DG = aff_recB.get_value(Fields.FEC.binding_fe)
-                    dG = aff_recB.get_value(Fields.FEC.binding_fe_err)
-                    self.pred_affinity_dic[ligB_name] = [DG, dG]
+
+                    if aff_recB.has_field(Fields.FEC.binding_fe) and aff_recB.has_field(Fields.FEC.binding_fe_err):
+
+                        DG = aff_recB.get_value(Fields.FEC.binding_fe)
+                        dG = aff_recB.get_value(Fields.FEC.binding_fe_err)
+                        self.pred_affinity_dic[ligB_name] = [DG, dG]
+
+                if ligB_name not in self.exp_affinity_dic:
 
                     if aff_recB.has_field(Fields.FEC.binding_exptl_fe) and aff_recB.has_field(
                             Fields.FEC.binding_exptl_fe_err):
+
                         DG_exp = aff_recB.get_value(Fields.FEC.binding_exptl_fe)
                         dG_exp = aff_recB.get_value(Fields.FEC.binding_exptl_fe_err)
 
@@ -1441,100 +1455,112 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
 
     def end(self):
 
-        try:
-            self.opt['Logger'].info("....Predicting ABFEs from RBFEs")
+        # try:
+        self.opt['Logger'].info("....Predicting ABFEs from RBFEs")
 
-            # Internally all the RBFE/ABFE results are in kJ/mol
-            affinity_dic = utils.predictDGsfromDDGs(self.edge_pred_dic)
+        # Internally all the RBFE/ABFE results are in kJ/mol
+        affinity_dic = utils.predictDGsfromDDGs(self.edge_pred_dic)
 
-            # example lig_pred_expt_affinity_dic[lig_name] = [DExp, dExp, DPred, dPred]
-            lig_pred_expt_affinity_dic = CombineAndOffsetPredExptDGs(self.exp_dic, affinity_dic)
+        if affinity_dic is None and self.exp_dic is None:
+            lig_pred_expt_affinity_dic = {name: [None, None, None, None] for name in self.bound_records}
+        else:
+            # example lig_pred_expt_affinity_dic[lig_name] = [DPred, dPred, DExp, dExp]
+            lig_pred_expt_affinity_dic = CombineAndOffsetPredExptDGs(affinity_dic, self.exp_dic)
 
-            stateA_abfe_field = OEField("OPLMD_StateA_ABFE", Types.Record)
-            stateB_abfe_field = OEField("OPLMD_StateB_ABFE", Types.Record)
+        stateA_abfe_field = OEField("OPLMD_StateA_ABFE", Types.Record)
+        stateB_abfe_field = OEField("OPLMD_StateB_ABFE", Types.Record)
 
-            meta_unit = OEFieldMeta().set_option(Meta.Units.Energy.kJ_per_mol)
+        meta_unit = OEFieldMeta().set_option(Meta.Units.Energy.kJ_per_mol)
 
-            binding_fe_pred_field = OEField(Fields.FEC.binding_fe.get_name(),
-                                            Fields.FEC.binding_fe.get_type(), meta=meta_unit)
-            binding_fe_pred_err_field = OEField(Fields.FEC.binding_fe_err.get_name(),
-                                                Fields.FEC.binding_fe_err.get_type(), meta=meta_unit)
+        binding_fe_pred_field = OEField(Fields.FEC.binding_fe.get_name(),
+                                        Fields.FEC.binding_fe.get_type(), meta=meta_unit)
+        binding_fe_pred_err_field = OEField(Fields.FEC.binding_fe_err.get_name(),
+                                            Fields.FEC.binding_fe_err.get_type(), meta=meta_unit)
 
-            binding_fe_exp_field = OEField(Fields.FEC.binding_exptl_fe.get_name(),
-                                           Fields.FEC.binding_exptl_fe.get_type(), meta=meta_unit)
-            binding_fe_exp_err_field = OEField(Fields.FEC.binding_exptl_fe_err.get_name(),
-                                               Fields.FEC.binding_exptl_fe_err.get_type(), meta=meta_unit)
+        binding_fe_exp_field = OEField(Fields.FEC.binding_exptl_fe.get_name(),
+                                       Fields.FEC.binding_exptl_fe.get_type(), meta=meta_unit)
+        binding_fe_exp_err_field = OEField(Fields.FEC.binding_exptl_fe_err.get_name(),
+                                           Fields.FEC.binding_exptl_fe_err.get_type(), meta=meta_unit)
 
-            for lig_name in self.bound_records:
+        for lig_name in self.bound_records:
 
-                if lig_name in lig_pred_expt_affinity_dic:
+            if lig_name in lig_pred_expt_affinity_dic:
 
-                    if self.args.units == 'kcal/mol':
-                        meta_unit = OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol)
-                        binding_fe_pred_field.set_meta(meta_unit)
-                        binding_fe_pred_err_field.set_meta(meta_unit)
-                        conv_factor = 4.184
-                    else:
-                        conv_factor = 1.0
+                if self.args.units == 'kcal/mol':
+                    meta_unit = OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol)
+                    binding_fe_pred_field.set_meta(meta_unit)
+                    binding_fe_pred_err_field.set_meta(meta_unit)
+                    conv_factor = 4.184
+                else:
+                    conv_factor = 1.0
 
+                lig_Aff = lig_pred_expt_affinity_dic[lig_name][0]
+                lig_Aff_err = lig_pred_expt_affinity_dic[lig_name][1]
+
+                if lig_Aff is not None and lig_Aff_err is not None:
                     bound_rec = self.bound_records[lig_name]
                     bound_rec.set_value(binding_fe_pred_field, lig_pred_expt_affinity_dic[lig_name][0]/conv_factor)
                     bound_rec.set_value(binding_fe_pred_err_field, lig_pred_expt_affinity_dic[lig_name][1]/conv_factor)
                     self.success.emit(bound_rec)
 
-            for edge_name, record in self.records.items():
+        for edge_name, record in self.records.items():
 
-                # self.opt['Logger'].info("DGG to DG record: {}".format(edge_name))
+            # self.opt['Logger'].info("DGG to DG record: {}".format(edge_name))
 
-                ligA_name = edge_name.split()[0]
-                ligB_name = edge_name.split()[2]
+            ligA_name = edge_name.split()[0]
+            ligB_name = edge_name.split()[2]
 
-                if ligA_name in lig_pred_expt_affinity_dic:
+            if ligA_name in lig_pred_expt_affinity_dic:
 
-                    pred_aff_A = lig_pred_expt_affinity_dic[ligA_name][0]
-                    pred_aff_A_err = lig_pred_expt_affinity_dic[ligA_name][1]
+                aff_A_rec = OERecord()
 
-                    aff_A_rec = OERecord()
+                pred_aff_A = lig_pred_expt_affinity_dic[ligA_name][0]
+                pred_aff_A_err = lig_pred_expt_affinity_dic[ligA_name][1]
+
+                if pred_aff_A is not None and pred_aff_A_err is not None:
 
                     aff_A_rec.set_value(binding_fe_pred_field, pred_aff_A)
                     aff_A_rec.set_value(binding_fe_pred_err_field, pred_aff_A_err)
 
-                    exp_aff_A = lig_pred_expt_affinity_dic[ligA_name][2]
-                    exp_aff_A_err = lig_pred_expt_affinity_dic[ligA_name][3]
+                exp_aff_A = lig_pred_expt_affinity_dic[ligA_name][2]
+                exp_aff_A_err = lig_pred_expt_affinity_dic[ligA_name][3]
 
-                    if exp_aff_A is not None and exp_aff_A_err is not None:
-                        aff_A_rec.set_value(binding_fe_exp_field, exp_aff_A)
-                        aff_A_rec.set_value(binding_fe_exp_err_field, exp_aff_A_err)
+                if exp_aff_A is not None and exp_aff_A_err is not None:
+                    aff_A_rec.set_value(binding_fe_exp_field, exp_aff_A)
+                    aff_A_rec.set_value(binding_fe_exp_err_field, exp_aff_A_err)
 
+                if pred_aff_A is not None or exp_aff_A is not None:
                     record.set_value(stateA_abfe_field, aff_A_rec)
 
-                if ligB_name in lig_pred_expt_affinity_dic:
+            if ligB_name in lig_pred_expt_affinity_dic:
 
-                    pred_aff_B = lig_pred_expt_affinity_dic[ligB_name][0]
-                    pred_aff_B_err = lig_pred_expt_affinity_dic[ligB_name][1]
+                aff_B_rec = OERecord()
 
-                    aff_B_rec = OERecord()
+                pred_aff_B = lig_pred_expt_affinity_dic[ligB_name][0]
+                pred_aff_B_err = lig_pred_expt_affinity_dic[ligB_name][1]
 
+                if pred_aff_B is not None and pred_aff_B_err is not None:
                     aff_B_rec.set_value(binding_fe_pred_field, pred_aff_B)
                     aff_B_rec.set_value(binding_fe_pred_err_field, pred_aff_B_err)
 
-                    exp_aff_B = lig_pred_expt_affinity_dic[ligB_name][2]
-                    exp_aff_B_err = lig_pred_expt_affinity_dic[ligB_name][3]
+                exp_aff_B = lig_pred_expt_affinity_dic[ligB_name][2]
+                exp_aff_B_err = lig_pred_expt_affinity_dic[ligB_name][3]
 
-                    if exp_aff_B is not None and exp_aff_B_err is not None:
-                        aff_B_rec.set_value(binding_fe_exp_field, exp_aff_B)
-                        aff_B_rec.set_value(binding_fe_exp_err_field, exp_aff_B_err)
+                if exp_aff_B is not None and exp_aff_B_err is not None:
+                    aff_B_rec.set_value(binding_fe_exp_field, exp_aff_B)
+                    aff_B_rec.set_value(binding_fe_exp_err_field, exp_aff_B_err)
 
+                if pred_aff_B is not None or exp_aff_B is not None:
                     record.set_value(stateB_abfe_field, aff_B_rec)
 
-                # else:
-                #     self.opt['Logger'].warn("It was not possible to generate the absolute "
-                #                             "affinity values for the ligands in the edge: {}".format(edge_name))
+            # else:
+            #     self.opt['Logger'].warn("It was not possible to generate the absolute "
+            #                             "affinity values for the ligands in the edge: {}".format(edge_name))
 
-                self.graph_port.emit(record)
+            self.graph_port.emit(record)
 
-        except Exception as e:
-            self.opt['Logger'].warn("It was not possible to generate the floe report: {}".format(str(e)))
+        # except Exception as e:
+        #     self.opt['Logger'].warn("It was not possible to generate the floe report: {}".format(str(e)))
 
         return
 

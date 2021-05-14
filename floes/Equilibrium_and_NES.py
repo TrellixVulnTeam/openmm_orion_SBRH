@@ -1,3 +1,4 @@
+
 from floe.api import (WorkFloe,
                       ParallelCubeGroup)
 
@@ -9,8 +10,7 @@ from MDOrion.LigPrep.cubes import (ParallelLigandChargeCube,
 from MDOrion.System.cubes import (IDSettingCube,
                                   CollectionSetting,
                                   ParallelSolvationCube,
-                                  ParallelRecordSizeCheck,
-                                  RecordSizeCheck)
+                                  ParallelRecordSizeCheck)
 
 from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
                                      ParallelMDNvtCube,
@@ -245,7 +245,7 @@ coll_write.set_parameters(write_new_collection='NES_OPLMD')
 coll_close = CollectionSetting("CloseCollection", title="Close Collection")
 coll_close.set_parameters(open=False)
 
-check_rec = RecordSizeCheck("Record Check Success")
+check_rec = ParallelRecordSizeCheck("Record Check Success")
 
 ofs = DatasetWriterCube('ofs', title='NES Out')
 ofs.promote_parameter("data_out", promoted_name="out",
@@ -278,7 +278,7 @@ job.add_cubes(iligs, ligset, chargelig, ligid, md_lig_components, coll_open,
               minimize_bns, warmup_bns, equil1_bns,
               equil2_bns, equil3_bns, equil4_bns, prod_bns,
               coll_write,   coll_close,
-              check_rec, ofs, fail, ofs_lig, ofs_prot)
+              check_rec, ofs_abfe, ofs, fail, ofs_lig, ofs_prot)
 
 
 # Call subfloe function to start up the MD, equilibrate, and do the production run
@@ -287,8 +287,11 @@ nes_subfloe_options['edge_map_file'] = 'map'
 nes_subfloe_options['n_traj_frames'] = 80
 nes_subfloe_options['nes_switch_time_in_ns'] = 0.05
 
-input_port_dic = {'input_open_collection_port': coll_write.success, 'input_bound_port': prod_bns.success}
-output_port_dic = {'output_nes_port': coll_close.intake, 'output_abfe_port': ofs_abfe.intake, 'output_fail_port': fail.intake}
+input_port_dic = {'input_open_collection_port': coll_write.success,
+                  'input_bound_port': prod_bns.success}
+output_port_dic = {'output_nes_port': coll_close.intake,
+                   'output_abfe_port': ofs_abfe.intake,
+                   'output_fail_port': check_rec.intake}
 
 nes_gmx_subfloe(job, input_port_dic, output_port_dic, nes_subfloe_options)
 
