@@ -880,7 +880,7 @@ class NESAnalysis(RecordPortsMixin, ComputeCube):
     binding affinity calculations. The binding affinities are estimated by using 
     the Bennet Acceptance Ratio method.
     
-     Input:
+    Input:
     -------
     Data Record Stream - Streamed-in of records containing work data produced by NES runs
      
@@ -1150,7 +1150,18 @@ class PlotNESResults(RecordPortsMixin, ComputeCube):
     classification = [["RBFE Analysis"]]
     tags = ['Complex', 'Protein', 'Ligand']
     description = """
-    TO BE DECIDED
+    This cube generates plots for the Relative binding affinities and the 
+    estimated Absolute Binding Affinities versus the provided experimental data. 
+    Relevant statistics are calculated and tabled.
+    
+    Input:
+    -------
+    Data Record Stream - Streamed-in of records containing predicted relative 
+    and absolute binding affinities. 
+     
+    Output:
+    -------
+    Floe Report
     """
 
     uuid = "a62fd733-132b-4619-bb8b-68f373020a79"
@@ -1313,7 +1324,27 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
     classification = [["FEC Analysis"]]
     tags = ['Protein', 'Ligand', 'FEC', 'RBFE', 'NES']
     description = """
-    TO BE DECIDED
+    This cube applies the Maximum likelihood Estimator method to predict the absolute
+    binding affinities starting from the relative binding affinities (rbfe). If rbfe
+    edges are not well graph connected the estimate will not be provided.  
+    
+    Inputs:
+    -------
+    Data Record Stream - Streamed-in of records containing predicted relative binding affinities 
+    
+    Data Record Stream - Streamed-in of records containing ligand information usually provided 
+    running the Short Trajectory MD floe
+     
+    Output:
+    -------
+    Floe Report
+    
+    Data record Stream - Streamed-out of records containing per ligand predicted absolute binding 
+    affinities. 
+    
+    Data Record Stream - Streamed-out of records containing  predicted relative 
+    and absolute binding affinities used to feed the plot affinity cube
+
     """
 
     uuid = "9d8e9390-eb0d-4b97-afec-b0f6482f2843"

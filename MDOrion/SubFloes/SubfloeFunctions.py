@@ -108,10 +108,10 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
 
     nes_analysis_sub = NESAnalysis("NES_Analysis")
 
-    ddg_to_dg_sub = PredictDGFromDDG("RBFE to ABFE", title="RBFE to ABFE")
+    ddg_to_dg_sub = PredictDGFromDDG("RBFE to ABFE", title="RBFE to Affinity Estimate")
     ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp')
 
-    plot_aff_sub = PlotNESResults("Plot Affinities Report", title="Plot Affinities Report")
+    plot_aff_sub = PlotNESResults("Plot Affinity Report", title="Plot Affinity Report")
 
     report_sub = MDFloeReportCube("NES Report", title="NES Floe Report")
     report_sub.set_parameters(floe_report_title="NES Report")
@@ -478,7 +478,3 @@ def setup_bint(input_floe, input_cube, fail_cube):
     input_cube.success.connect(trajBints.intake)
 
     return trajBints
-
-
-#if __name__ == "__main__":
-#    job.run()

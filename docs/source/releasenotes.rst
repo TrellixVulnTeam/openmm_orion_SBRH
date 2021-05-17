@@ -2,6 +2,55 @@
 Release Notes
 #############
 
+v 4.0.0 June 2021
+======================
+
+General Notice
+---------------------------------------------------------------------------------
+* Non-Equilibrium Switching floe for Relative Binding affinity calculations
+* New Bint score for pose stability
+* OpenFF 1.3.1a1 support
+* Bug Fixing
+
+New Floes
+--------------------------------------------------------------------------------
+* Non-Equilibrium Switching. Relative Binding Free energy calculations and estimate of Binding Affinity
+* MD of Ligand Bound and Unbound to Protein. Performs equilibrium calculations for Non-Equilibrium Switching
+* Equilibrium and Non-Equilibrium Switching. Equilibrium MD runs followed by Non-Equilibrium Switching
+
+Floe Updates
+--------------------------------------------------------------------------------
+* Short Trajectory MD with Analysis. The Bint score analysis has been added
+* Analyze Protein-Ligand MD. The Bint score analysis has been added
+
+New Cubes
+--------------------------------------------------------------------------------
+* BoundUnboundSwitching cube. This cube accept a flask and emit on the bound port the flask
+  containing the a complex while the unbound flask is emitted on the standard output port
+* RBFECEdgeGathering cube. This cube gathers the MD equilibrium simulation data related to
+  the Bound and Unbound simulations and creates edges used to perform relative binding affinity
+  calculations
+* NESGMXChimera cube. This cube generates a chimera molecule and injecting it on select frames
+  from the Bound and Unbound simulations for the Gromacs forward and reverse Non-Equilibrium simulations
+* NESGMX cube.This cubes runs the forward and reverse Bound and Unbound starting equilibrium
+  frames by using Gromacs
+* NESAnalysis cube. This cube collects the data generated from the Non-Equilibrium runs and calculates
+  the relative binding affinities
+* PlotNESResults cube. This cube generates plots for the Relative binding affinities and the
+  estimated Absolute Affinities versus the provided experimental data. Relevant statistics are calculated
+  and tabled
+* PredictDGFromDDG cube. This cube applies the Maximum likelihood Estimator method to
+  predict the absolute binding affinities starting from the relative binding affinities
+
+Cube Updates
+--------------------------------------------------------------------------------
+* Complex Preparation Cube. This cube has been updated to give better support for clashes
+  detected between the ligands and the other flask components.
+
+* TODO @Christopher ADD BINT SCORE CUBE UPDATES HERE
+
+======================
+
 v3.0.1 November 2020
 ======================
 
