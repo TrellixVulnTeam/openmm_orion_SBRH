@@ -179,6 +179,9 @@ def setup_PLComplex_for_MD(input_floe, fail_cube, options):
     ligset.promote_parameter('max_md_runs', promoted_name='max_md_runs',
                              default=500,
                              description='The maximum allowed number of md runs')
+    ligset.promote_parameter('n_md_starts', promoted_name='n_md_starts',
+                             default=options['n_md_starts'],
+                             description='The number of md starts for each ligand/conformer')
     ligset.set_parameters(lig_res_name='LIG')
 
     chargelig = ParallelLigandChargeCube("LigCharge", title="Ligand Charge")

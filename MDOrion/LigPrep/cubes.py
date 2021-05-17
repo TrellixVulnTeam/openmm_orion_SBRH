@@ -137,6 +137,10 @@ class LigandSetting(RecordPortsMixin, ComputeCube):
                                               default=500,
                                               help_text='The maximum allowed number of md runs')
 
+    n_md_starts = parameters.IntegerParameter('n_md_starts',
+                                              default=1,
+                                              help_text='The number of md starts for each ligand/conformer')
+
     def begin(self):
         self.opt = vars(self.args)
         self.opt['Logger'] = self.log
@@ -186,6 +190,19 @@ class LigandSetting(RecordPortsMixin, ComputeCube):
                 residue = oechem.OEAtomGetResidue(at)
                 residue.SetName(self.args.lig_res_name)
                 oechem.OEAtomSetResidue(at, residue)
+
+            n_md_starts = self.args.n_md_starts
+            opt['Logger'].info('{} running {} independent MD starts for each ligand/conformer'.format(
+                system_title,n_md_starts))
+            if n_md_starts>1:
+                newlig = oechem.OEMol(ligand)
+                newlig.DeleteConfs()
+                for baseconf in ligand.GetConfs():
+                    newlig.NewConf(baseconf)
+                    for start in range(1,self.args.n_md_starts):
+                        newlig.NewConf(baseconf)
+                record.set_value(Fields.primary_molecule, newlig)
+                ligand = newlig
 
             record.set_value(Fields.primary_molecule, ligand)
             record.set_value(Fields.ligid, self.ligand_count)

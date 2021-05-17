@@ -68,9 +68,16 @@ job.tags = [tag for lists in job.classification for tag in lists]
 
 # Ligand setting
 iligs = DatasetReaderCube("LigandReader", title="Ligand Reader")
-iligs.promote_parameter("data_in", promoted_name="ligands", title="Ligand Input Dataset", description="Ligand Dataset")
+iligs.promote_parameter("data_in", promoted_name="ligands", title="Ligand Input Dataset",
+                        description="Ligand Dataset", order=1)
 
 ligset = LigandSetting("LigandSetting", title="Ligand Setting")
+ligset.promote_parameter('max_md_runs', promoted_name='max_md_runs',
+                         default=500,
+                         description='The maximum allowed number of md runs')
+ligset.promote_parameter('n_md_starts', promoted_name='n_md_starts',
+                         default=1,
+                         description='The number of md starts for each ligand/conformer')
 ligset.set_parameters(lig_res_name='LIG')
 
 chargelig = ParallelLigandChargeCube("LigCharge", title="Ligand Charge")
@@ -83,14 +90,15 @@ ligid = IDSettingCube("Ligand Ids")
 # output system files
 iprot = DatasetReaderCube("ProteinReader", title="Protein Reader")
 iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input Dataset',
-                        description="Protein Dataset")
+                        description="Protein Dataset", order=0)
+
+# Protein Setting
+mdcomp = MDComponentCube("MD Components", title="MD Components")
+mdcomp.promote_parameter("flask_title", promoted_name="flask_title", default="")
 
 # Complex cube used to assemble the ligands and the solvated protein
 complx = ComplexPrepCube("Complex", title="Complex Preparation")
-complx.set_parameters(lig_res_name='LIG')
-
-# Protein Setting
-protset = MDComponentCube("ProteinSetting", title="Protein Setting")
+#complx.set_parameters(lig_res_name='LIG')
 
 ofs = DatasetWriterCube('ofs', title='MD Out')
 ofs.promote_parameter("data_out", promoted_name="out",
@@ -100,15 +108,15 @@ fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
                        description="MD Dataset Failures out")
 
-job.add_cubes(iligs, ligset, ligid, iprot, protset, chargelig, complx,
+job.add_cubes(iligs, ligset, ligid, iprot, mdcomp, chargelig, complx,
               ofs, fail)
 
 iligs.success.connect(ligset.intake)
 ligset.success.connect(chargelig.intake)
 chargelig.success.connect(ligid.intake)
 ligid.success.connect(complx.intake)
-iprot.success.connect(protset.intake)
-protset.success.connect(complx.protein_port)
+iprot.success.connect(mdcomp.intake)
+mdcomp.success.connect(complx.protein_port)
 complx.success.connect(ofs.intake)
 complx.failure.connect(fail.intake)
 
