@@ -1344,7 +1344,6 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
     
     Data Record Stream - Streamed-out of records containing  predicted relative 
     and absolute binding affinities used to feed the plot affinity cube
-
     """
 
     uuid = "9d8e9390-eb0d-4b97-afec-b0f6482f2843"
