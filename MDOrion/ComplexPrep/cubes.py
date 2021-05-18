@@ -82,9 +82,11 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
         return
 
     def process(self, record, port):
+
+        # Initialize ligand_title for exception handling
+        ligand_title = ''
+
         try:
-            # Initialize ligand_title for exception handling
-            ligand_title = ''
 
             if port == 'intake':
 

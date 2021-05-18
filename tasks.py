@@ -191,6 +191,9 @@ def clean_pycache(ctx):
 @task
 def clean_docs(ctx):
 
+    if os.path.isdir("docs/docs"):
+        shutil.rmtree("docs/docs")
+
     if os.path.isdir("docs/build"):
         shutil.rmtree("docs/build")
 

@@ -81,7 +81,7 @@ coll_open.failure.connect(check_rec.fail_in)
 MD_startup_options = {}
 MD_startup_options['Prod_Default_Time_ns'] = 2.0
 MD_startup_options['Prod_Default_Traj_Intvl_ns'] = 0.004
-MD_outcube = setup_MD_startup(job, coll_open, check_rec, MD_startup_options)
+MD_outcube = setup_MD_startup(job, coll_open, check_rec,  MD_startup_options)
 
 # Call subfloe function to do the full trajectory analysis directly from the MD production run
 traj_anlys_outcube = setup_traj_analysis(job, MD_outcube, check_rec)

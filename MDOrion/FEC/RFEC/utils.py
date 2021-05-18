@@ -99,31 +99,37 @@ import subprocess
 
 def edge_map_grammar(word):
 
-    map_string = Word(printables) + ">>" + Word(printables)
+    try:
+        map_string = Word(printables) + ">>" + Word(printables)
 
-    expr = map_string.parseString(word)
-
-    # expr = word.rstrip().split()
-    # print(expr)
-
-    return expr
-
-
-def rbfe_file_grammar(word):
-
-    units = Combine(Literal("kcal/mol") | Literal("kJ/mol"))
-
-    lig_name = Word(printables)
-
-    DG = pyparsing_common.number
-
-    dg_err = Optional(pyparsing_common.number)
-
-    map_string = lig_name + DG + dg_err + units
-
-    expr = map_string.parseString(word)
+        expr = map_string.parseString(word)
+    except Exception as e:
+        raise ValueError("The syntax of the following line in the experimental file is not supported: {}\n"
+                         "The supported syntax is: <LigA_name> >> <LigB_name>".format(word))
 
     return expr
+
+
+def exp_file_grammar(word):
+
+    try:
+        units = Combine(Literal("kcal/mol") | Literal("kJ/mol"))
+
+        lig_name = Word(printables)
+
+        DG = pyparsing_common.number
+
+        dg_err = Optional(pyparsing_common.number)
+
+        map_string = lig_name + DG + dg_err + units
+
+        expr = map_string.parseString(word)
+
+        return expr
+    except Exception as e:
+        raise ValueError("The syntax of the following line in the experimental file is not supported: {}\n"
+                         "The supported syntax is: <Lig_name> <ExpAff> <ExpAffError> "
+                         "<Units in the form kcal/mol or kJ/mol>".format(word))
 
 
 def parmed_find_ligand(pmd, lig_res_name="LIG"):
@@ -1139,6 +1145,53 @@ def generate_plots_and_stats(lig_pred_expt_dic, edge_pred_expt_dic,
     htmlString += flrpt._html_trailer
 
     return htmlString
+
+
+def CombineAndOffsetPredExptDGs(affinity_pred, lig_expt):
+
+    if lig_expt is not None:
+        lig_names = set(lig_expt.keys())
+    else:
+        lig_names = list()
+
+    combined = dict()
+
+    if affinity_pred is not None:
+        for lig_name in affinity_pred.keys():
+            combined[lig_name] = affinity_pred[lig_name]
+            if lig_name in lig_names:
+                # Append experimental binding affinity & error
+
+                # Experimental binding affinity error
+                combined[lig_name] = combined[lig_name] + [lig_expt[lig_name][0], lig_expt[lig_name][1]]
+            else:
+                combined[lig_name] = combined[lig_name] + [None, None]
+
+        # Select data with both predicted and experimental data to figure out DG offset
+        exp_DG = []
+
+        pred_DG_with_expt = []
+
+        for lig_name in combined.keys():
+            lig = combined[lig_name]
+            if lig[2] is not None:
+                pred_DG_with_expt.append(lig[0])
+                exp_DG.append(lig[2])
+
+        # Offset Predicted DGs to have the same mean as that of the experimental DGs
+        if len(exp_DG) > 0:
+            exp_DG_mean = sum(exp_DG)/len(exp_DG)
+            pred_DG_arr = np.array(pred_DG_with_expt)
+            offset = exp_DG_mean - pred_DG_arr.mean()
+        else:
+            offset = 0
+
+        for lig_name in combined.keys():
+            combined[lig_name][0] += offset
+    else:
+        combined = {name: [None, None] + lig_expt[name] for name in lig_expt}
+
+    return combined
 
 
 def predictDGsfromDDGs(predicted_data_dic):

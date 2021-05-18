@@ -15,7 +15,7 @@
 # liable for any damages or liability in connection with the Sample Code
 # or its use.
 
-__version__ = '4.0.0b17'
+__version__ = '4.0.0b21'
 
 from .ComplexPrep.cubes import ComplexPrepCube
 
@@ -41,26 +41,26 @@ from .Flask.cubes import SolvationCube
 from .Flask.cubes import ParallelSolvationCube
 from .Flask.cubes import CollectionSetting
 from .Flask.cubes import MDComponentCube
+from .Flask.cubes import BypassCube
 
-from .TrjAnalysis.cubes_trajProcessing import (ConformerGatheringData,
-                                               ParallelTrajToOEMolCube,
-                                               ParallelTrajPBSACube,
-                                               ParallelTrajInteractionEnergyCube)
+from .TrjAnalysis.cubes_trajProcessing import ConformerGatheringData
+from .TrjAnalysis.cubes_trajProcessing import ParallelTrajToOEMolCube
+from .TrjAnalysis.cubes_trajProcessing import ParallelTrajPBSACube
+from .TrjAnalysis.cubes_trajProcessing import ParallelTrajInteractionEnergyCube
 
-from .TrjAnalysis.cubes_clusterAnalysis import (ParallelMDTrajAnalysisClusterReport,
-                                                ParallelClusterOETrajCube,
-                                                ParallelClusterPopAnalysis,
-                                                MDFloeReportCube,
-                                                ExtractMDDataCube)
+from .TrjAnalysis.cubes_clusterAnalysis import ParallelMDTrajAnalysisClusterReport
+from .TrjAnalysis.cubes_clusterAnalysis import ParallelClusterOETrajCube
+from .TrjAnalysis.cubes_clusterAnalysis import ParallelClusterPopAnalysis
+from .TrjAnalysis.cubes_clusterAnalysis import MDFloeReportCube
+from .TrjAnalysis.cubes_clusterAnalysis import ExtractMDDataCube
 
-from .TrjAnalysis.cubes_hintAnalysis import (ParallelBintScoreInitialPoseAndTrajectory)
+from .TrjAnalysis.cubes_hintAnalysis import ParallelBintScoreInitialPoseAndTrajectory
 
-from .FEC.RFEC.cubes import (BoundUnboundSwitchCube,
-                             RBFECMapping,
-                             RBFECEdgeGathering,
-                             GMXChimera,
-                             ParallelGMXChimera,
-                             NESGMX,
-                             ParallelNESGMX,
-                             NESAnalysis,
-                             PlotRBFEResults)
+from .FEC.RFEC.cubes import BoundUnboundSwitchCube
+from .FEC.RFEC.cubes import RBFECEdgeGathering
+from .FEC.RFEC.cubes import NESGMXChimera
+from .FEC.RFEC.cubes import ParallelNESGMXChimera
+from .FEC.RFEC.cubes import NESGMX
+from .FEC.RFEC.cubes import ParallelNESGMX
+from .FEC.RFEC.cubes import NESAnalysis
+from .FEC.RFEC.cubes import PlotNESResults
