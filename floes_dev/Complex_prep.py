@@ -37,6 +37,8 @@ from MDOrion.System.cubes import (IDSettingCube,
                                   CollectionSetting,
                                   ParallelRecordSizeCheck)
 
+from snowball.utils.dataset_reader_opt import DatasetReaderOptCube
+
 job = WorkFloe('Complex prep for Short Trajectory MD',
                title='Complex prep for Short Trajectory MD')
 
@@ -89,7 +91,7 @@ ligid = IDSettingCube("Ligand Ids")
 
 # Protein Reading cube. The protein prefix parameter is used to select a name for the
 # output system files
-iprot = DatasetReaderCube("ProteinReader", title="Protein Reader")
+iprot = DatasetReaderOptCube("ProteinReader", title="Protein Reader")
 iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input Dataset',
                         description="Protein Dataset")
 

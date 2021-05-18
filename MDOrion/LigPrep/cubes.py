@@ -36,7 +36,7 @@ from orionplatform.mixins import RecordPortsMixin
 
 class LigandChargeCube(RecordPortsMixin, ComputeCube):
     title = "Ligand Charge"
-    # version = "0.1.4"
+    
     classification = [["System Preparation"]]
     tags = ["Ligand"]
     description = """
@@ -109,7 +109,7 @@ class LigandChargeCube(RecordPortsMixin, ComputeCube):
 
 class LigandSetting(RecordPortsMixin, ComputeCube):
     title = "Ligand Setting"
-    # version = "0.1.4"
+    
     classification = [["System Preparation"]]
     tags = ['Ligand']
     description = """
@@ -153,6 +153,9 @@ class LigandSetting(RecordPortsMixin, ComputeCube):
             # place the entire initial record as a sub-record, to be restored when conformer runs are gathered
             record = OERecord()
             record.set_value(Fields.ligInit_rec, initialRecord)
+
+            if initialRecord.has_field(Fields.design_unit_from_spruce):
+                record.set_value(Fields.design_unit_from_spruce, initialRecord.get_value(Fields.design_unit_from_spruce))
 
             if oechem.OECalculateMolecularWeight(ligand) > 1500.0:  # Units are in Dalton
                 raise ValueError("[{}] The molecule {} seems to have a large molecular weight for a "

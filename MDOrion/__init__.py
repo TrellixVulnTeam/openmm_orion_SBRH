@@ -41,7 +41,6 @@ from .System.cubes import SolvationCube
 from .System.cubes import ParallelSolvationCube
 from .System.cubes import CollectionSetting
 from .System.cubes import MDComponentCube
-from .System.cubes import BypassCube
 
 from .TrjAnalysis.cubes_trajProcessing import ConformerGatheringData
 from .TrjAnalysis.cubes_trajProcessing import ParallelTrajToOEMolCube

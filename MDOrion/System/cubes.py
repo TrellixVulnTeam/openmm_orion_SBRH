@@ -139,7 +139,7 @@ class IDSettingCube(RecordPortsMixin, ComputeCube):
 
 class CollectionSetting(RecordPortsMixin, ComputeCube):
     title = "Collection Setting"
-    # version = "0.1.4"
+
     classification = [["System Preparation"]]
     tags = ['System', 'Complex', 'Protein', 'Ligand']
     description = """
@@ -275,7 +275,6 @@ class CollectionSetting(RecordPortsMixin, ComputeCube):
 
 class SolvationCube(RecordPortsMixin, ComputeCube):
     title = "Solvation Packmol"
-    # version = "0.1.4"
     classification = [["System Preparation"]]
     tags = ['Complex', 'Protein', 'Ligand', 'Solvation']
     description = """
@@ -490,7 +489,6 @@ class SolvationCube(RecordPortsMixin, ComputeCube):
 
 class RecordSizeCheck(RecordPortsMixin, ComputeCube):
     title = "Record Size Checking"
-    # version = "0.1.4"
     classification = [["System Preparation"]]
     tags = ['System', 'Complex', 'Protein', 'Ligand']
     description = """
@@ -544,7 +542,6 @@ class RecordSizeCheck(RecordPortsMixin, ComputeCube):
 
 class MDComponentCube(RecordPortsMixin, ComputeCube):
     title = "Receptor Components"
-    # version = "0.1.4"
     classification = [["Flask Preparation"]]
     tags = ['Receptor']
     description = """
@@ -646,36 +643,6 @@ class MDComponentCube(RecordPortsMixin, ComputeCube):
             self.log.error(traceback.format_exc())
             # Return failed mol
             self.failure.emit(record)
-
-        return
-
-
-class BypassCube(RecordPortsMixin, ComputeCube):
-    title = "Bypass Cube"
-    # version = "0.1.4"
-    classification = [["Preparation"]]
-    tags = ["Ligand", "Protein", "Free Energy", "Non Equilibrium"]
-    description = """
-    TO BE DECIDED
-    """
-
-    uuid = "bb704866-c280-4e0e-bc0f-fef18a01b841"
-
-    # Override defaults for some parameters
-    parameter_overrides = {
-        "memory_mb": {"default": 6000},
-        "spot_policy": {"default": "Prohibited"},
-        "prefetch_count": {"default": 1},  # 1 molecule at a time
-        "item_count": {"default": 1}  # 1 molecule at a time
-    }
-
-    bytes_in_port = RecordBytesInputPort("bytes_in_port")
-    bytes_out_port = RecordBytesOutputPort("bytes_out_port")
-
-    def process(self, record, port):
-
-        if port == "bytes_in_port":
-            self.bytes_out_port.emit(record)
 
         return
 

@@ -56,7 +56,7 @@ magic_big_float_to_replace_NaN = 4.0e+256
 
 class TrajToOEMolCube(RecordPortsMixin, ComputeCube):
     title = 'Traj to OEMol Cube'
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Trajectory', 'Ligand', 'Protein']
 
@@ -214,7 +214,7 @@ class TrajToOEMolCube(RecordPortsMixin, ComputeCube):
 
 class ConcatenateTrajMMPBSACube(RecordPortsMixin, ComputeCube):
     title = "Concatenate Trajectory MMPBSA Energy Components"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['OEChem', 'TrajAnalysis', 'MMPBSA']
     description = """
@@ -296,7 +296,7 @@ class ConcatenateTrajMMPBSACube(RecordPortsMixin, ComputeCube):
 
 class TrajPBSACube(RecordPortsMixin, ComputeCube):
     title = "Trajectory Poisson-Boltzmann and Surface Area Energies"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['OEChem', 'Zap', 'TrajAnalysis', 'MMPBSA']
     description = """
@@ -444,7 +444,7 @@ class TrajPBSACube(RecordPortsMixin, ComputeCube):
 
 class TrajInteractionEnergyCube(RecordPortsMixin, ComputeCube):
     title = "Trajectory Interaction Energies"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['OEChem', 'OpenMM', 'TrajAnalysis', 'MMPBSA']
     description = """
@@ -557,7 +557,7 @@ class TrajInteractionEnergyCube(RecordPortsMixin, ComputeCube):
 
 class ConfTrajsToLigTraj(RecordPortsMixin, ComputeCube):
     title = 'Conf Trajs To Ligand Traj'
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Clustering', 'Ligand', 'Protein']
 
@@ -697,7 +697,7 @@ class ConfTrajsToLigTraj(RecordPortsMixin, ComputeCube):
 
 class ConformerGatheringData(RecordPortsMixin, ComputeCube):
     title = "MD Conformer Gathering Data"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Ligand', 'Protein']
 
@@ -816,7 +816,7 @@ class ConformerGatheringData(RecordPortsMixin, ComputeCube):
 
 class NMaxWatersLigProt(RecordPortsMixin, ComputeCube):
     title = "NMax Waters"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Ligand', 'Protein', 'Waters']
 

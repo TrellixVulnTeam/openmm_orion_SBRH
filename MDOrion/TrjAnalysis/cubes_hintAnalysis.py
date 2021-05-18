@@ -44,7 +44,7 @@ from MDOrion.Standards.mdrecord import MDDataRecord
 
 class BintScoreInitialPoseAndTrajectory(RecordPortsMixin, ComputeCube):
     title = 'Compute BintScore for Initial Pose and Trajectory'
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Binding Interactions', 'Ligand', 'Protein']
 

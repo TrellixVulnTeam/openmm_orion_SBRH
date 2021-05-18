@@ -65,7 +65,7 @@ import traceback
 #
 # class SSTMapHsa(ParallelMixin, OERecordComputeCube):
 #
-#     # version = "0.1.4"
+#     
 #
 #     title = "SSTMAP HSA Analysis"
 #
@@ -352,7 +352,7 @@ import traceback
 #     # Cube documentation.  This documentation for This Cube, and all other cubes in this repository, can be converted
 #     # to html by calling 'invoke docs' from the root directory of this repository.  This documentation will also
 #     # appear in the Orion Floe editor.
-#     # version = "0.1.4"
+#     
 #
 #     title = "SSTMAP GIST Analysis"
 #
