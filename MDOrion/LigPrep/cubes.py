@@ -192,8 +192,8 @@ class LigandSetting(RecordPortsMixin, ComputeCube):
                 oechem.OEAtomSetResidue(at, residue)
 
             n_md_starts = self.args.n_md_starts
-            opt['Logger'].info('{} running {} independent MD starts for each ligand/conformer'.format(
-                system_title,n_md_starts))
+            self.opt['Logger'].info('ligand {}: running {} independent MD starts for each ligand/conformer'.
+                format(lig_title,n_md_starts))
             if n_md_starts>1:
                 newlig = oechem.OEMol(ligand)
                 newlig.DeleteConfs()
