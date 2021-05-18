@@ -105,7 +105,7 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                         # print(md_components)
 
                         if md_components.has_protein:
-                            self.log.info("...Protein found")
+                            self.log.info("...Protein found: {}".format(md_components.get_protein.GetTitle()))
                         else:
                             raise ValueError("It was not possible to detect the Protein Component "
                                              "from the protein nor from the ligand ports")
