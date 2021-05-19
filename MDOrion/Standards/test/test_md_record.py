@@ -159,12 +159,12 @@ class MDRecordTests(unittest.TestCase):
         self.assertEqual(last_stage.get_value(Fields.stage_name), 'Production')
         self.assertEqual(last_stage.get_value(Fields.stage_type), 'NPT')
 
-        param_stage = self.mdrecord.get_stage_by_name(stg_name='System Parametrization')
-        self.assertEqual(param_stage.get_value(Fields.stage_name), 'System Parametrization')
+        param_stage = self.mdrecord.get_stage_by_name(stg_name='Flask Parametrization')
+        self.assertEqual(param_stage.get_value(Fields.stage_name), 'Flask Parametrization')
         self.assertEqual(param_stage.get_value(Fields.stage_type), 'SETUP')
 
-        param_stage = self.mdrecord.get_stage_by_name(stg_name='System Minimization')
-        self.assertEqual(param_stage.get_value(Fields.stage_name), 'System Minimization')
+        param_stage = self.mdrecord.get_stage_by_name(stg_name='Flask Minimization')
+        self.assertEqual(param_stage.get_value(Fields.stage_name), 'Flask Minimization')
         self.assertEqual(param_stage.get_value(Fields.stage_type), 'MINIMIZATION')
 
         with self.assertRaises(ValueError):
@@ -175,8 +175,8 @@ class MDRecordTests(unittest.TestCase):
     #     new_record = OERecord(self.record)
     #     new_mdrecord = MDDataRecord(new_record)
     #
-    #     new_mdrecord.delete_stage_by_name(stg_name='System Minimization')
-    #     self.assertFalse(new_mdrecord.has_stage_name('System Minimization'))
+    #     new_mdrecord.delete_stage_by_name(stg_name='Flask Minimization')
+    #     self.assertFalse(new_mdrecord.has_stage_name('Flask Minimization'))
     #     self.assertEqual(len(new_mdrecord.get_stages), 2)
 
     # TODO THIS IS GOING TO DELETE FILES LOCALLY KEEP DISABLED
@@ -191,7 +191,7 @@ class MDRecordTests(unittest.TestCase):
     def test_get_stage_by_idx(self):
         with self.assertRaises(ValueError):
             self.mdrecord.get_stage_by_idx(5)
-        self.assertEqual(self.mdrecord.get_stage_by_idx(0).get_value(Fields.stage_name), 'System Parametrization')
+        self.assertEqual(self.mdrecord.get_stage_by_idx(0).get_value(Fields.stage_name), 'Flask Parametrization')
 
     @pytest.mark.travis
     @pytest.mark.local
@@ -235,7 +235,7 @@ class MDRecordTests(unittest.TestCase):
             with oechem.oemolistream(topology_fn) as ifs:
                 oechem.OEReadMolecule(ifs, topology_mol)
 
-        topology = self.mdrecord.get_stage_topology(stg_name='System Parametrization')
+        topology = self.mdrecord.get_stage_topology(stg_name='Flask Parametrization')
 
         for mol_at, top_at in zip(topology_mol.GetAtoms(), topology.GetAtoms()):
             self.assertEqual(mol_at.GetAtomicNum(), top_at.GetAtomicNum())
@@ -248,10 +248,10 @@ class MDRecordTests(unittest.TestCase):
 
         self.assertEqual(info, self.mdrecord.get_stage_info())
 
-        min_stage = self.mdrecord.get_stage_by_name(stg_name='System Minimization')
+        min_stage = self.mdrecord.get_stage_by_name(stg_name='Flask Minimization')
         info = min_stage.get_value(Fields.log_data)
 
-        self.assertEqual(info, self.mdrecord.get_stage_info(stg_name='System Minimization'))
+        self.assertEqual(info, self.mdrecord.get_stage_info(stg_name='Flask Minimization'))
 
     @pytest.mark.travis
     @pytest.mark.local
@@ -289,7 +289,7 @@ class MDRecordTests(unittest.TestCase):
     @pytest.mark.travis
     @pytest.mark.local
     def test_get_stages_names(self):
-        ls_names = ['System Parametrization', 'System Minimization', 'Production']
+        ls_names = ['Flask Parametrization', 'Flask Minimization', 'Production']
         stg_names = self.mdrecord.get_stages_names
         self.assertEqual(stg_names, ls_names)
 

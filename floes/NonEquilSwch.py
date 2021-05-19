@@ -17,10 +17,9 @@ from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
 from MDOrion.SubFloes.SubfloeFunctions import nes_gmx_subfloe
 
+from MDOrion.Flask.cubes import CollectionSetting
 
-from MDOrion.System.cubes import CollectionSetting
-
-from MDOrion.System.cubes import ParallelRecordSizeCheck
+from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
 job = WorkFloe("Non-Equilibrium Switching", title="Non-Equilibrium Switching")
 

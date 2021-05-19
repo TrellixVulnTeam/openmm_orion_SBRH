@@ -27,7 +27,7 @@ job = WorkFloe("NPT Simulation",
                title="NPT Simulation")
 
 job.description = """
-NPT simulation of an OpenMM-ready System
+NPT simulation of an OpenMM-ready Flask
 
 Ex: python floes/openmm_MDnpt.py --system complex.oeb --nanoseconds 0.01
 
@@ -50,9 +50,9 @@ job.classification = [['NPT']]
 job.uuid = "4ea1a8ab-5e8b-41c9-9317-3e36b72491fe"
 job.tags = [tag for lists in job.classification for tag in lists]
 
-ifs = DatasetReaderCube("SystemReader", title="System Reader")
-ifs.promote_parameter("data_in", promoted_name="system", title='System Input File',
-                      description="System input file")
+ifs = DatasetReaderCube("SystemReader", title="Flask Reader")
+ifs.promote_parameter("data_in", promoted_name="system", title='Flask Input File',
+                      description="Flask input file")
 
 npt = ParallelMDNptCube('npt', title='NPT Simulation')
 npt.promote_parameter('time', promoted_name='nanoseconds', default=0.01,

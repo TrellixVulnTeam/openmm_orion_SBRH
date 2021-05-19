@@ -18,25 +18,17 @@
 from orionplatform.mixins import RecordPortsMixin
 
 from floe.api import (ParallelMixin,
-                      parameters,
                       ComputeCube)
 
 from MDOrion.Standards import Fields
 
-import numpy as np
-import json
-
 import MDOrion.TrjAnalysis.utils as utl
 import oetrajanalysis.trajOEHint_utils as hint
 
-from openeye import oechem
 
 import traceback
 
 from datarecord import (Types,
-                        Meta,
-                        OEFieldMeta,
-                        OEField,
                         OERecord)
 
 from MDOrion.Standards.mdrecord import MDDataRecord
@@ -44,7 +36,7 @@ from MDOrion.Standards.mdrecord import MDDataRecord
 
 class BintScoreInitialPoseAndTrajectory(RecordPortsMixin, ComputeCube):
     title = 'Compute BintScore for Initial Pose and Trajectory'
-    
+
     classification = [["Analysis"]]
     tags = ['Binding Interactions', 'Ligand', 'Protein']
 
@@ -57,7 +49,7 @@ class BintScoreInitialPoseAndTrajectory(RecordPortsMixin, ComputeCube):
     ligand trajectory.
     """
 
-    #uuid = "b503c2f4-12e6-49c7-beb6-ee17da177ec2"
+    uuid = "aafb9f0e-3d5f-4978-962c-86aa4e707302"
 
     # Override defaults for some parameters
     parameter_overrides = {
@@ -119,12 +111,19 @@ class BintScoreInitialPoseAndTrajectory(RecordPortsMixin, ComputeCube):
 
             # Calc list of per-frame BintScores for a trajectory
             trajBintScoreList = hint.TrajBintScoreListFromRefHints(ligTraj,protTraj,good_hints_init_pose)
-            opt['Logger'].info('{} Traj has {} BintScores'.format(system_title,len(trajBintScoreList)))
+            opt['Logger'].info('{} Traj has {} BintScores in the ensemble'.format(system_title,
+                                                                                  len(trajBintScoreList)))
 
             # Calc Trajectory BintScore: Initial BintScore weighted by fractional occupancy of each interaction
             trajBintScore, trajBintStderr, CI05, CI95 = utl.MeanAndBootstrapStdErrCI(trajBintScoreList)
             opt['Logger'].info('{} Trajectory of ligand {:s} has BintScore {:.2f} +/- {:.2f}'.format(
                 system_title, ligTraj.GetTitle(), trajBintScore, trajBintStderr))
+
+            # Calc Pose Stability: Trajectory BintScore / Initial BintScore
+            poseStability = trajBintScore/initBintScore
+            poseStabilityStderr = trajBintStderr/initBintScore
+            opt['Logger'].info('{} ligand {:s} has Pose Stability {:.4f} +/- {:.2f}'.format(
+                system_title, ligTraj.GetTitle(), poseStability, poseStabilityStderr))
 
             # Create new record with Bint-related results
             bintRecord = OERecord()
@@ -134,6 +133,8 @@ class BintScoreInitialPoseAndTrajectory(RecordPortsMixin, ComputeCube):
             bintRecord.set_value(Fields.Bint.trajBintScoreList, trajBintScoreList)
             bintRecord.set_value(Fields.Bint.trajBintScore, trajBintScore)
             bintRecord.set_value(Fields.Bint.trajBintStderr, trajBintStderr)
+            bintRecord.set_value(Fields.Bint.poseStability, poseStability)
+            bintRecord.set_value(Fields.Bint.poseStabilityStderr, poseStabilityStderr)
 
             # The Bint record goes on the top-level record
             record.set_value(Fields.Bint.oebint_rec, bintRecord)
@@ -154,5 +155,5 @@ class BintScoreInitialPoseAndTrajectory(RecordPortsMixin, ComputeCube):
 class ParallelBintScoreInitialPoseAndTrajectory(ParallelMixin,  BintScoreInitialPoseAndTrajectory):
     title = "Parallel " + BintScoreInitialPoseAndTrajectory.title
     description = "(Parallel) " + BintScoreInitialPoseAndTrajectory.description
-    #uuid = "10f572c8-a874-47de-8f48-19ac76f72bdd"
+    uuid = "2a67d161-1c51-41d4-b0f0-9f0256b88107"
 

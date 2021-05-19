@@ -230,7 +230,7 @@ import traceback
 #                     # Extract the ligand from the final frame
 #                     prot, lig, wat, excp = split(prod_coord_eomol)
 #
-#                     self.log.info("System name: {}\nProtein atom numbers = {}\nLigand atom numbers = {}\n"
+#                     self.log.info("Flask name: {}\nProtein atom numbers = {}\nLigand atom numbers = {}\n"
 #                                   "Water atom numbers = {}\nExcipients atom numbers = {}".format(sys_info,
 #                                                                                                  prot.NumAtoms(),
 #                                                                                                  lig.NumAtoms(),
@@ -296,7 +296,7 @@ import traceback
 #                     # Initialize hydration sites
 #                     hsa.initialize_hydration_sites()
 #
-#                     # Print System summary
+#                     # Print Flask summary
 #                     hsa.print_system_summary()
 #
 #                     # Get frame information
@@ -514,7 +514,7 @@ import traceback
 #                     # Extract the ligand from the final frame
 #                     prot, lig, wat, excp = split(prod_coord_eomol)
 #
-#                     self.log.info("System name: {}\nProtein atom numbers = {}\nLigand atom numbers = {}\n"
+#                     self.log.info("Flask name: {}\nProtein atom numbers = {}\nLigand atom numbers = {}\n"
 #                                   "Water atom numbers = {}\nExcipients atom numbers = {}".format(sys_info,
 #                                                                                                  prot.NumAtoms(),
 #                                                                                                  lig.NumAtoms(),
@@ -593,7 +593,7 @@ import traceback
 #                     new_record.set_value(Fields.title, system_title),
 #                     new_record.set_value(Fields.id, sys_id)
 #
-#                     # Print System summary from GISt
+#                     # Print Flask summary from GISt
 #                     gist.print_system_summary()
 #
 #                     # Make GIST calculations

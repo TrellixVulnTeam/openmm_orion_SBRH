@@ -181,9 +181,9 @@ class GromacsSimulations(MDSimulations):
             opt['Logger'].info("[{}] Centering is On".format(opt['CubeTitle']))
             # Numpy array in A
             coords = new_system_structure.coordinates
-            # System Center of Geometry
+            # Flask Center of Geometry
             cog = np.mean(coords, axis=0)
-            # System box vectors
+            # Flask box vectors
             box_v = new_system_structure.box_vectors.in_units_of(unit.angstrom) / unit.angstrom
             box_v = np.array([box_v[0][0], box_v[1][1], box_v[2][2]])
             # Translation vector
@@ -349,10 +349,10 @@ class GromacsSimulations(MDSimulations):
                 opt['Logger'].info("[{}] Restraint to the Reference State Enabled".format(opt['CubeTitle']))
                 reference_positions = opt['reference_state'].get_positions()
                 coords = np.array(reference_positions.value_in_unit(unit.angstrom))
-                # System Center of Geometry
+                # Flask Center of Geometry
                 cog = np.mean(coords, axis=0)
 
-                # System box vectors
+                # Flask box vectors
                 box_v = opt['reference_state'].get_box_vectors().value_in_unit(unit.angstrom)
                 box_v = np.array([box_v[0][0], box_v[1][1], box_v[2][2]])
 
@@ -619,7 +619,7 @@ class GromacsSimulations(MDSimulations):
             f = open(opt['grm_ndx_fn'], "a+")
 
             atom_idx = range(1, len(new_system_structure.atoms) + 1)
-            f.write("[ System ]\n")
+            f.write("[ Flask ]\n")
 
             for idx in atom_idx:
                 f.write("{:>{digits}}".format(idx, digits=MAX_DIGITS))
@@ -760,7 +760,7 @@ class GromacsSimulations(MDSimulations):
                 #                       '-pbc', b'whole'],
                 #                      stdin=subprocess.PIPE)
                 #
-                # # Select the entire System
+                # # Select the entire Flask
                 # p.communicate(b'0')
 
                 # Tar the files dir with its content:

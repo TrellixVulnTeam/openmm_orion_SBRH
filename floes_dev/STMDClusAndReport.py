@@ -48,7 +48,7 @@ job.uuid = "4de8826b-8902-4037-9f8e-5c1a7d8a793c"
 job.tags = [tag for lists in job.classification for tag in lists]
 
 ifs = DatasetReaderCube("ifs")
-ifs.promote_parameter("data_in", promoted_name="in", title="System Input OERecord", description="OERecord file name")
+ifs.promote_parameter("data_in", promoted_name="in", title="Flask Input OERecord", description="OERecord file name")
 
 ofs = DatasetWriterCube('ofs', title='MD Out')
 ofs.promote_parameter("data_out", promoted_name="out")

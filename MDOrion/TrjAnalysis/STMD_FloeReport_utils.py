@@ -249,24 +249,11 @@ def MakeClusterInfoText(dataDict, popResults, rgbVec):
     nMajorThresh = dataDict['MajorClusThreshold']
     rowColors = clusutl.ColorblindHexMarkerColors(nMajor) + ['#4c4c4c']
     #
-    text.append("""
-      <br/>
-      <div class="cb-floe-report-element--analysis">""")
-    text.append('Clustering by ligand RMSD after alignment by active site C_alphas:\n' )
-    text.append('        <br>- Cluster method {}\n'.format( dataDict['ClusterMethod']) )
-    #text.append('        <br>- Using alpha={:.2f}\n'.format( dataDict['HDBSCAN_alpha']))
-    text.append('        <br>- Clustered {} frames\n'.format(nFrames) )
+    #text.append("""
+    #  <div class="cb-floe-report-element--analysis">""")
     #
-    if dataDict['nClusters']<2:
-        text.append('        <br>- Produced {} cluster'.format( dataDict['nClusters']))
-    else:
-        text.append('        <br>- Produced {} clusters'.format( dataDict['nClusters']))
-    nOutliers = dataDict['ClusterVec'].count(-1)
-    text.append(' and {:4d} Outliers,'.format( nOutliers))
-    text.append(' with {} Major clusters (>{:.0%} of trajectory)\n'.
-                format( nMajor,nMajorThresh) )
-
-    text.append('<br><br>Major Clusters (> {:.0%} of trajectory):<br>'.format( nMajorThresh) )
+    text.append('<hr><center> <b>Major Clusters (> {:.0%} of trajectory)</b> </center>'.
+                format( nMajorThresh) )
     #
     text.append("""
         <div class="cb-floe-report__analysis-table">
@@ -276,8 +263,6 @@ def MakeClusterInfoText(dataDict, popResults, rgbVec):
             <span>&lt;MMPBSA&gt;<sup>a,b</sup> </span>
             <span>&lt;BintScore&gt;<sup>a</sup> </span>
           </div>\n""")
-           #<span><span>&lt;MMPBSA&gt;<sup>a</sup> </span>
-           #<span>&lt;MMPBSA&gt;* &plusmn; StdErr</span>
 
     clusSize = popResults['ClusTot']
     MMPBSAByClusMean = popResults['OEZap_MMPBSA6_ByClusMean']
@@ -297,7 +282,7 @@ def MakeClusterInfoText(dataDict, popResults, rgbVec):
                 background-color: {hexColor};
                 color: white;">
             <span>{clusID}</span>
-            <span>{percent:.1%}</span>
+            <span>{percent:.0%}</span>
             <span>{mmpbsadata}</span>
             <span>{bintscoredata}</span>
           </div>\n""".format(clusID=clusName, percent=percent, mmpbsadata=mmpbsa,
@@ -305,7 +290,24 @@ def MakeClusterInfoText(dataDict, popResults, rgbVec):
     # Footnotes to Table.
     text.append('<sup>a</sup>Ensemble average &plusmn; 2*StdErr.\n')
     text.append('<sup>b</sup>kcal/mol.\n')
-    text.append('<sup>c</sup>Other includes Minor clusters as well as Outliers from the clustering.\n')
+    text.append('<sup>c</sup>"Other" includes Minor clusters as well as Outliers from the clustering.\n')
+
+    #
+    text.append('<br><br><b>Clustering Details:</b>\n' )
+    text.append('        <br>- {} frames aligned by active site C&alpha;s'.format(nFrames) )
+    text.append('        <br>- Ligand RMSD clustering with {}\n'.format( dataDict['ClusterMethod']) )
+    #
+    if dataDict['nClusters']<2:
+        text.append('        <br>- Produced {} cluster'.format( dataDict['nClusters']))
+    else:
+        text.append('        <br>- Produced {} clusters'.format( dataDict['nClusters']))
+    nOutliers = dataDict['ClusterVec'].count(-1)
+    text.append(' with {:4d} Outliers\n'.format( nOutliers))
+    if nMajor < 2:
+        text.append('        <br>-  {} Major cluster (>{:.0%} of trajectory)\n'.format( nMajor,nMajorThresh) )
+    else:
+        text.append('        <br>-  {} Major clusters (>{:.0%} of trajectory)\n'.format( nMajor,nMajorThresh) )
+
 
     text.append("""
         </div>
@@ -532,7 +534,7 @@ def HtmlMakeClusterPopTables(popResults):
     htmlBody = ''
     # Omitting the html_ClusInfo Table because the data is already given elsewhere
     #for html_dict in [html_ClusInfo, html_ClusFracByConf, html_ConfRMSDsByClus]:
-    for html_dict in [html_ClusFracByConf, html_ConfRMSDsByClus]:
+    for html_dict in [html_ConfRMSDsByClus, html_ClusFracByConf]:
         htmlBody += HtmlWriteTableBody(html_dict, headermodsName)
     #print(htmlStyle)
     #print(htmlBody)

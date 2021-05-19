@@ -21,17 +21,16 @@ from floe.api import ParallelCubeGroup
 
 from orionplatform.cubes import DatasetReaderCube
 
-from MDOrion.System.cubes import (IDSettingCube,
-                                  CollectionSetting)
+
+from MDOrion.Flask.cubes import (IDSettingCube,
+                                 ParallelSolvationCube,
+                                 MDComponentCube)
 
 from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
                                      ParallelMDNvtCube,
                                      ParallelMDNptCube)
 
 from MDOrion.ComplexPrep.cubes import ComplexPrepCube
-
-from MDOrion.System.cubes import (ParallelSolvationCube,
-                                  MDComponentCube)
 
 from MDOrion.ForceField.cubes import ParallelForceFieldCube
 
@@ -171,6 +170,9 @@ def setup_PLComplex_for_MD(input_floe, fail_cube, options):
     ligset.promote_parameter('max_md_runs', promoted_name='max_md_runs',
                              default=500,
                              description='The maximum allowed number of md runs')
+    ligset.promote_parameter('n_md_starts', promoted_name='n_md_starts',
+                             default=options['n_md_starts'],
+                             description='The number of md starts for each ligand/conformer')
     ligset.set_parameters(lig_res_name='LIG')
 
     chargelig = ParallelLigandChargeCube("LigCharge", title="Ligand Charge")

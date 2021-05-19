@@ -23,8 +23,8 @@ from MDOrion.TrjAnalysis.cubes_hintAnalysis import (ParallelBintScoreInitialPose
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
-from MDOrion.System.cubes import (ParallelRecordSizeCheck,
-                                  CollectionSetting)
+from MDOrion.Flask.cubes import (ParallelRecordSizeCheck,
+                                 CollectionSetting)
 
 
 job = WorkFloe("Assess Pose Stability from Binding Interactions")

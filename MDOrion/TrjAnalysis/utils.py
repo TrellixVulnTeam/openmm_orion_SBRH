@@ -96,7 +96,7 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
     else:
         raise ValueError("Trajectory file format {} not recognized in the trajectory {}".format(traj_ext, trj_fn))
 
-    # System topology
+    # Flask topology
     top_trj = trj.topology
 
     # Ligand indexes

@@ -39,8 +39,9 @@ from oemdtoolbox.ForceField.md_components import MDComponents
 
 class ComplexPrepCube(RecordPortsMixin, ComputeCube):
     title = "Complex Preparation"
-    
-    classification = [["System Preparation"]]
+
+    classification = [["Flask Preparation"]]
+
     tags = ['Complex', 'Ligand', 'Protein']
     description = """
     This Cube assembles the complex made of a protein and its docked ligands. 

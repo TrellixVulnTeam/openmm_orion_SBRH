@@ -26,8 +26,8 @@ from MDOrion.SubFloes.SubfloeFunctions import (setup_MD_startup,
 
 from orionplatform.cubes import DatasetWriterCube
 
-from MDOrion.System.cubes import (CollectionSetting,
-                                  ParallelRecordSizeCheck)
+from MDOrion.Flask.cubes import (CollectionSetting,
+                                 ParallelRecordSizeCheck)
 
 from snowball import (ExceptHandlerCube,
                       SuccessCounterCube)
@@ -66,6 +66,7 @@ job.add_cubes(coll_open, coll_close, check_rec, exceptions, ofs, fail)
 # Call subfloe function to set up the solvated protein-ligand complex
 PLComplex_for_MD_options = {}
 PLComplex_for_MD_options['charge_ligands'] = True
+PLComplex_for_MD_options['n_md_starts'] = 1
 PLComplex_outcube = setup_PLComplex_for_MD(job, check_rec, PLComplex_for_MD_options)
 
 # Connections

@@ -39,8 +39,8 @@ class MDStageTypes:
 
 
 class MDStageNames:
-    ForceField = "System Parametrization"
-    Minimization = "System Minimization"
+    ForceField = "Flask Parametrization"
+    Minimization = "Flask Minimization"
     WarmUp = "WarmUp"
     EquilibrationI = "EquilibrationI"
     EquilibrationII = "EquilibrationII"
@@ -168,7 +168,9 @@ class Fields:
     floe_report_svg_lig_depiction = OEField("Floe_report_lig_svg_OPLMD", Types.String,
                                             meta=OEFieldMeta().set_option(Meta.Hints.Image_SVG))
 
-    floe_report_sort_string = OEField('Floe_report_sort_OPLMD', Types.String, meta=_metaHidden)
+    floe_report_sort_string = OEField('Floe_report_sort_str_OPLMD', Types.String, meta=_metaHidden)
+
+    floe_report_sort_float = OEField('Floe_report_sort_float_OPLMD', Types.Float, meta=_metaHidden)
 
     floe_report_label = OEField('Floe_report_label_OPLMD', Types.String, meta=_metaHidden)
 
@@ -258,6 +260,9 @@ class Fields:
         trajBintScore = OEField('TrajBintScore', Types.Float)
         metaTrajBintStderr = OEFieldMeta().add_relation(Meta.Relations.ErrorsFor, trajBintScore)
         trajBintStderr = OEField('TrajBintStderr', Types.Float, meta=metaTrajBintStderr)
+        poseStability = OEField('PoseStability', Types.Float)
+        metaPoseStabilityStderr = OEFieldMeta().add_relation(Meta.Relations.ErrorsFor, poseStability)
+        poseStabilityStderr = OEField('PoseStabilityStderr', Types.Float, meta=metaPoseStabilityStderr)
 
     class FEC:
         # Free Energy

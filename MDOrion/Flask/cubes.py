@@ -16,7 +16,7 @@
 # or its use.
 
 
-from MDOrion.System.utils import get_human_readable
+from MDOrion.Flask.utils import get_human_readable
 
 from orionplatform.mixins import RecordPortsMixin
 
@@ -140,8 +140,9 @@ class IDSettingCube(RecordPortsMixin, ComputeCube):
 class CollectionSetting(RecordPortsMixin, ComputeCube):
     title = "Collection Setting"
 
-    classification = [["System Preparation"]]
-    tags = ['System', 'Complex', 'Protein', 'Ligand']
+    classification = [["Flask Preparation"]]
+    tags = ['Flask', 'Complex', 'Protein', 'Ligand']
+
     description = """
     This Cube sets a record collection state in open or closed for safety by
     using the cube bool parameter open. A True value will open the record
@@ -275,7 +276,9 @@ class CollectionSetting(RecordPortsMixin, ComputeCube):
 
 class SolvationCube(RecordPortsMixin, ComputeCube):
     title = "Solvation Packmol"
-    classification = [["System Preparation"]]
+
+    classification = [["Flask Preparation"]]
+
     tags = ['Complex', 'Protein', 'Ligand', 'Solvation']
     description = """
     The solvation cube solvates a given solute input system by a
@@ -489,8 +492,10 @@ class SolvationCube(RecordPortsMixin, ComputeCube):
 
 class RecordSizeCheck(RecordPortsMixin, ComputeCube):
     title = "Record Size Checking"
-    classification = [["System Preparation"]]
-    tags = ['System', 'Complex', 'Protein', 'Ligand']
+
+    classification = [["Flask Preparation"]]
+    tags = ['Flask', 'Complex', 'Protein', 'Ligand']
+
     description = """
     This Cube checks if the size of the incoming record is less than 100MB
     to avoid Orion database size issues. Locally does not have any effect.

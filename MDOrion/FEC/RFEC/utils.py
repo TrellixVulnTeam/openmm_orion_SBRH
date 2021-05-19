@@ -393,7 +393,7 @@ def gmx_chimera_coordinate_injection(pmd_chimera, mdrecord, tot_frames, query_mo
                               '-o', trj_whole_fn,
                               '-pbc', b'whole'],
                              stdin=subprocess.PIPE)
-        # Select the entire System
+        # Select the entire Flask
         p.communicate(b'0')
 
         trj = md.load_trr(trj_whole_fn, top=pdb_fn)
