@@ -34,14 +34,17 @@ from MDOrion.Flask.cubes import (CollectionSetting,
                                  ParallelRecordSizeCheck)
 
 
-job = WorkFloe('Short Trajectory MD with Analysis',
-               title='Short Trajectory MD with Analysis')
+floe_title = 'Short Trajectory MD with Analysis'
+tags_for_floe = ['MDPrep', 'MD', 'MDAnlys']
+#
+job = WorkFloe(floe_title.join(' [{}]'.format(tag) for tag in tags_for_floe),
+               title=floe_title)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = open(path.join(path.dirname(__file__), 'ShortTrajMDWithAnalysis_desc.rst'), 'r').read()
 
-job.classification = [['Specialized MD']]
 job.uuid = "c831d03e-c0cb-48b0-aa02-f848da8fd1a6"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 # This Cube is necessary for the correct work of collection and shard
 coll_open = CollectionSetting("OpenCollection", title="Open Collection")

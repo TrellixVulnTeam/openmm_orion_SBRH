@@ -33,11 +33,17 @@ from snowball import (ExceptHandlerCube,
                       SuccessCounterCube)
 
 
-job = WorkFloe('Solvate and Run Protein-Ligand MD', title='Solvate and Run Protein-Ligand MD')
+floe_title = 'Solvate and Run Protein-Ligand MD'
+tags_for_floe = ['MDPrep', 'MD']
+#
+job = WorkFloe(floe_title.join(' [{}]'.format(tag) for tag in tags_for_floe),
+               title=floe_title)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
+
 job.description = open(path.join(path.dirname(__file__), 'ProteinLigandMD_desc.rst'), 'r').read()
-job.classification = [['Specialized MD']]
+
 job.uuid = "ae561d76-a2b6-4d89-b621-b979f1930b40"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 
 # This Cube is necessary for the correct work of collection and shard

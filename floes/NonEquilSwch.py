@@ -21,13 +21,18 @@ from MDOrion.Flask.cubes import CollectionSetting
 
 from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
-job = WorkFloe("Non-Equilibrium Switching", title="Non-Equilibrium Switching")
+
+floe_title = 'Non-Equilibrium Switching'
+tags_for_floe = ['MD', 'FEC']
+#
+job = WorkFloe(floe_title.join(' [{}]'.format(tag) for tag in tags_for_floe),
+               title=floe_title)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = open(path.join(path.dirname(__file__), 'NonEquilSwch.rst'), 'r').read()
 
-job.classification = [['FEC']]
 job.uuid = "74cd690f-f98a-47e0-bfa4-1858e4080dc3"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 
 # Unbound Reader

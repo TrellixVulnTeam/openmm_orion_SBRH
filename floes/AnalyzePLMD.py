@@ -32,14 +32,17 @@ from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
 from MDOrion.Flask.cubes import CollectionSetting
 
-job = WorkFloe('Analyze Protein-Ligand MD',
-               title='Analyze Protein-Ligand MD')
+
+floe_title = 'Analyze Protein-Ligand MD'
+tags_for_floe = ['MDAnlys']
+#
+job = WorkFloe(floe_title.join(' [{}]'.format(tag) for tag in tags_for_floe),
+               title=floe_title)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = open(path.join(path.dirname(__file__), 'AnalyzePLMD_desc.rst'), 'r').read()
-
-job.classification = [['Specialized MD']]
 job.uuid = "7438db4d-30b1-478c-afc0-e921f0336c78"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 # Ligand setting
 iMDInput = DatasetReaderCube("MDInputReader", title="MD Input Reader")

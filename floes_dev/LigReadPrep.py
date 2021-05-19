@@ -56,9 +56,24 @@ out (.oedb file): file of the protein-ligand complexes with parameters.
 # Locally the floe can be invoked by running the terminal command:
 # python floes/LigReadPrep.py --ligands ligands.oeb --protein protein.oeb --out prod.oeb
 
-job.classification = [['Molecular Dynamics']]
+floe_title = 'Protein-Ligand Flask Prep'
+tags_for_floe = ['MDPrep']
+#
+job = WorkFloe(floe_title.join(' [{}]'.format(tag) for tag in tags_for_floe),
+               title=floe_title)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
+
+job.description = """
+Starting with separate inputs for one MD-ready protein and multiple posed ligands,
+this floe assembles a simulation-ready flask for each ligand, consisting of
+the protein-ligand complex in a periodic box of explicit water with counterions.
+If the protein input is not used, the floe will expect an MD-ready protein on the
+same input record with each posed ligand, which it will use to form the complex with
+that ligand.
+"""
+
 uuid = "cce33937-1eda-446a-864e-3627b58d09b4"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 check_rec = ParallelRecordSizeCheck("Record Check Success")
 
