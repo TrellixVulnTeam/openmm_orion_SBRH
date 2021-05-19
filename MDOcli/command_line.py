@@ -401,7 +401,7 @@ def analysis(ctx, filename, id):
 
 def check_sys_id(record):
     if not record.has_value(Fields.title):
-        raise ValueError("System title field is not present on the record")
+        raise ValueError("Flask title field is not present on the record")
 
     title = record.get_value(Fields.title)
 

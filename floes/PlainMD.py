@@ -23,15 +23,15 @@ from floe.api import (WorkFloe)
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
-from floes.SubfloeFunctions import setup_MD_startup
+from MDOrion.SubFloes.SubfloeFunctions import setup_MD_startup
 
-from MDOrion.System.cubes import MDComponentCube
+from MDOrion.Flask.cubes import MDComponentCube
 
-from MDOrion.System.cubes import ParallelSolvationCube
+from MDOrion.Flask.cubes import ParallelSolvationCube
 
-from MDOrion.System.cubes import (IDSettingCube,
-                                  CollectionSetting,
-                                  ParallelRecordSizeCheck)
+from MDOrion.Flask.cubes import (IDSettingCube,
+                                 CollectionSetting,
+                                 ParallelRecordSizeCheck)
 
 job = WorkFloe('Solvate and Run MD',
                title='Solvate and Run MD')
@@ -44,11 +44,11 @@ job.classification = [['General MD']]
 job.uuid = "266481fc-b257-41e9-b2f9-a92bf028b701"
 job.tags = [tag for lists in job.classification for tag in lists]
 
-ifs = DatasetReaderCube("SystemReader", title="System Reader")
+ifs = DatasetReaderCube("SystemReader", title="Flask Reader")
 ifs.promote_parameter("data_in", promoted_name="solute", title='Solute Input File',
-                      description="Solute input file")
+                      description="Solute input file", order=0)
 
-sysid = IDSettingCube("System Ids")
+sysid = IDSettingCube("Flask Ids")
 
 md_comp = MDComponentCube("MD Components")
 md_comp.set_parameters(multiple_flasks=True)
@@ -74,11 +74,11 @@ check_rec = ParallelRecordSizeCheck("Record Check Success")
 
 ofs = DatasetWriterCube('ofs', title='MD Out')
 ofs.promote_parameter("data_out", promoted_name="out",
-                      title="MD Out", description="MD Dataset out")
+                      title="MD Out", description="MD Dataset out", order=1)
 
 fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
-                       description="MD Dataset Failures out")
+                       description="MD Dataset Failures out", order=2)
 
 job.add_cubes(ifs, sysid, md_comp, solvate, coll_open,
               coll_close, check_rec, ofs, fail)

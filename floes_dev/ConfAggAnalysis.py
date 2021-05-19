@@ -25,7 +25,7 @@ The input dataset is an .oedb file of the unaggregated confs MD results with Tra
 # job.uuid = "7cacc2af-cae7-4dc7-8956-fcf539861e3d"
 
 ifs = DatasetReaderCube("ifs")
-ifs.promote_parameter("data_in", promoted_name="in", title="System Input OERecord", description="OERecord file name")
+ifs.promote_parameter("data_in", promoted_name="in", title="Flask Input OERecord", description="OERecord file name")
 
 confGather = ConformerGatheringData("Gathering Conformer Records")
 catLigTraj = ParallelConfTrajsToLigTraj("ConfTrajsToLigTraj")
@@ -38,7 +38,7 @@ report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport")
 report = MDFloeReportCube("report", title="Floe Report")
 
 ofs = DatasetWriterCube('ofs', title='OFS-Success')
-ofs.promote_parameter("data_out", promoted_name="out", title="System Output OERecord", description="OERecord file name")
+ofs.promote_parameter("data_out", promoted_name="out", title="Flask Output OERecord", description="OERecord file name")
 
 fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",

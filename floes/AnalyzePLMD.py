@@ -21,13 +21,16 @@ from os import path
 
 from floe.api import (WorkFloe)
 
-from floes.SubfloeFunctions import setup_traj_analysis
+from MDOrion.SubFloes.SubfloeFunctions import setup_traj_analysis
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
-from MDOrion.System.cubes import (ParallelRecordSizeCheck)
+from snowball import (ExceptHandlerCube,
+                      SuccessCounterCube)
 
-from MDOrion.System.cubes import CollectionSetting
+from MDOrion.Flask.cubes import ParallelRecordSizeCheck
+
+from MDOrion.Flask.cubes import CollectionSetting
 
 job = WorkFloe('Analyze Protein-Ligand MD',
                title='Analyze Protein-Ligand MD')
@@ -41,7 +44,7 @@ job.tags = [tag for lists in job.classification for tag in lists]
 # Ligand setting
 iMDInput = DatasetReaderCube("MDInputReader", title="MD Input Reader")
 iMDInput.promote_parameter("data_in", promoted_name="in",
-                           title="MD Input Dataset", description="MD Input Dataset")
+                           title="MD Input Dataset", description="MD Input Dataset", order=0)
 
 # This Cube is necessary for the correct work of collection and shard
 coll_open = CollectionSetting("OpenCollection", title="Open Collection")
@@ -60,13 +63,13 @@ ofs.promote_parameter("data_out", promoted_name="out",
 ofs_du = DatasetWriterCube('ofs_du', title='MD Out Cluster Centric Output')
 ofs_du.promote_parameter("data_out", promoted_name="du",
                          title="MD Out Cluster Centric Output", description="MD Out Cluster Centric Output")
+exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
 
 fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
-                       description="MD Dataset Failures out")
+                       description="MD Dataset Failures out", order=2)
 
-job.add_cubes(iMDInput, coll_open,
-              coll_close, check_rec,  ofs, fail, ofs_du)
+job.add_cubes(iMDInput, coll_open, coll_close, check_rec,  ofs, exceptions, fail, ofs_du)
 
 traj_anlys_outcube = setup_traj_analysis(job, coll_open, check_rec, ofs_du)
 
@@ -80,7 +83,8 @@ check_rec.success.connect(ofs.intake)
 traj_anlys_outcube.failure.connect(check_rec.fail_in)
 coll_open.failure.connect(check_rec.fail_in)
 coll_close.failure.connect(check_rec.fail_in)
-check_rec.failure.connect(fail.intake)
+check_rec.failure.connect(exceptions.intake)
+exceptions.failure.connect(fail.intake)
 
 
 if __name__ == "__main__":

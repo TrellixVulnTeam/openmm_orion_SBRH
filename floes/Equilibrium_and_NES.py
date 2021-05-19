@@ -1,3 +1,4 @@
+
 from floe.api import (WorkFloe,
                       ParallelCubeGroup)
 
@@ -6,10 +7,10 @@ from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 from MDOrion.LigPrep.cubes import (ParallelLigandChargeCube,
                                    LigandSetting)
 
-from MDOrion.System.cubes import (IDSettingCube,
-                                  CollectionSetting,
-                                  ParallelSolvationCube,
-                                  ParallelRecordSizeCheck)
+from MDOrion.Flask.cubes import (IDSettingCube,
+                                 CollectionSetting,
+                                 ParallelSolvationCube,
+                                 ParallelRecordSizeCheck)
 
 from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
                                      ParallelMDNvtCube,
@@ -17,18 +18,13 @@ from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
 
 from MDOrion.ForceField.cubes import ParallelForceFieldCube
 
-from MDOrion.System.cubes import MDComponentCube
+from MDOrion.Flask.cubes import MDComponentCube
 
 from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 
-from MDOrion.FEC.RFEC.cubes import (BoundUnboundSwitchCube,
-                                    RBFECMapping,
-                                    RBFECEdgeGathering,
-                                    ParallelGMXChimera,
-                                    ParallelNESGMX,
-                                    NESAnalysis)
+from MDOrion.FEC.RFEC.cubes import BoundUnboundSwitchCube
 
-from MDOrion.TrjAnalysis.cubes_clusterAnalysis import MDFloeReportCube
+from MDOrion.SubFloes.SubfloeFunctions import nes_gmx_subfloe
 
 job = WorkFloe("Equilibrium and Non Equilibrium Switching", title="Equilibrium and Non Equilibrium Switching")
 
@@ -55,7 +51,8 @@ job.tags = [tag for lists in job.classification for tag in lists]
 
 # Ligand setting
 iligs = DatasetReaderCube("LigandReader", title="Ligand Reader")
-iligs.promote_parameter("data_in", promoted_name="ligands", title="Ligand Input Dataset", description="Ligand Dataset")
+iligs.promote_parameter("data_in", promoted_name="ligands", title="Ligand Input Dataset",
+                        description="Ligand Dataset", order=1)
 
 ligset = LigandSetting("Ligand Setting", title="Ligand Setting")
 ligset.set_parameters(lig_res_name='LIG')
@@ -74,7 +71,7 @@ md_lig_components.set_parameters(multiple_flasks=True)
 # output system files
 iprot = DatasetReaderCube("ProteinReader", title="Protein Reader")
 iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input Dataset',
-                        description="Protein Dataset")
+                        description="Protein Dataset", order=0)
 
 md_prot_components = MDComponentCube("MD Protein Components", title="MD Protein Components")
 md_prot_components.promote_parameter("flask_title", promoted_name="flask_title",
@@ -97,7 +94,7 @@ solvate.modify_parameter(solvate.close_solvent, promoted=False, default=False)
 # Force Field Application
 ff = ParallelForceFieldCube("ForceField", title="Apply Force Field")
 ff.promote_parameter('protein_forcefield', promoted_name='protein_ff', default='Amber14SB')
-ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.0')
+ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.1a1')
 
 # Switching Bound and Unbound runs
 switch = BoundUnboundSwitchCube("Bound/Unbound Switch", title='Bound/Unbound Switch')
@@ -238,69 +235,65 @@ equil4_bns.set_parameters(suffix='equil4_bn')
 md_group_bs = ParallelCubeGroup(cubes=[minimize_bns, warmup_bns, equil1_bns, equil2_bns, equil3_bns, equil4_bns, prod_bns])
 job.add_group(md_group_bs)
 
-switch_out = BoundUnboundSwitchCube("Bound/Unbound Switch Out", title="Bound/Unbound Switch Out")
-
 # This cube is necessary for the correct work of collection and shard
 coll_write = CollectionSetting("WriteNESCollection", title="WriteNESCollection")
 coll_write.set_parameters(open=True)
 coll_write.set_parameters(write_new_collection='NES_OPLMD')
 
 
-gathering = RBFECEdgeGathering("Gathering", title="Gathering Equilibrium Runs")
-gathering.promote_parameter('map_file', promoted_name='map',
-                            description='The edge mapping file used to run the RBFE calculations')
-
-chimera = ParallelGMXChimera("GMXChimera", title="GMX Chimera")
-chimera.promote_parameter("trajectory_frames", promoted_name="trajectory_frames", default=80,
-                          description="The total number of trajectory frames to be used along the NE switching")
-unbound_nes = ParallelNESGMX("GMXUnboundNES", title="GMX Unbound NES")
-unbound_nes.promote_parameter("time", promoted_name="nes_time", default=0.05)
-
-bound_nes = ParallelNESGMX("GMXBoundNES", title="GMX Bound NES")
-bound_nes.promote_parameter("time", promoted_name="nes_time")
-
-nes_analysis = NESAnalysis("NES_Analysis")
-
 # This cube is necessary for the correct working of collections and shards
 coll_close = CollectionSetting("CloseCollection", title="Close Collection")
 coll_close.set_parameters(open=False)
-
-
-report = MDFloeReportCube("report", title="Floe Report")
-report.set_parameters(floe_report_title="NES Report")
 
 check_rec = ParallelRecordSizeCheck("Record Check Success")
 
 ofs = DatasetWriterCube('ofs', title='NES Out')
 ofs.promote_parameter("data_out", promoted_name="out",
                       title="NES Dataset Out",
-                      description="NES Dataset Out")
+                      description="NES Dataset Out", order=5)
 
 fail = DatasetWriterCube('fail', title='NES Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="NES Failures",
-                       description="NES Dataset Failures out")
-
+                       description="NES Dataset Failures out", order=6)
 
 # TODO DEBUG ONLY TO BE REMOVED
 ofs_lig = DatasetWriterCube('ofs_unbound', title='Equilibrium Unbound Out')
 ofs_lig.promote_parameter("data_out", promoted_name="out_unbound",
                           title="Equilibrium Unbound Out",
-                          description="Equilibrium Unbound Out")
+                          description="Equilibrium Unbound Out", order=4)
 
 ofs_prot = DatasetWriterCube('ofs_bound', title='Equilibrium Bound Out')
 ofs_prot.promote_parameter("data_out", promoted_name="out_bound",
                            title="Equilibrium Bound Out",
-                           description="Equilibrium Bound Out")
+                           description="Equilibrium Bound Out", order=3)
+
+ofs_abfe = DatasetWriterCube('ofs_abfe', title='ABFE Out')
+ofs_abfe.promote_parameter("data_out", promoted_name="abfe",
+                           title="ABFE Out",
+                           description="Absolute Binding Affinity Out", order=5)
 
 job.add_cubes(iligs, ligset, chargelig, ligid, md_lig_components, coll_open,
               iprot, md_prot_components, complx, solvate, ff, switch,
               minimize_uns, warmup_uns, equil_uns, prod_uns,
               minimize_bns, warmup_bns, equil1_bns,
               equil2_bns, equil3_bns, equil4_bns, prod_bns,
-              switch_out, coll_write, gathering,
-              chimera, bound_nes, unbound_nes,
-              nes_analysis,  coll_close, report,
-              check_rec, ofs, fail, ofs_lig, ofs_prot)
+              coll_write,   coll_close,
+              check_rec, ofs_abfe, ofs, fail, ofs_lig, ofs_prot)
+
+
+# Call subfloe function to start up the MD, equilibrate, and do the production run
+nes_subfloe_options = dict()
+nes_subfloe_options['edge_map_file'] = 'map'
+nes_subfloe_options['n_traj_frames'] = 80
+nes_subfloe_options['nes_switch_time_in_ns'] = 0.05
+
+input_port_dic = {'input_open_collection_port': coll_write.success,
+                  'input_bound_port': prod_bns.success}
+output_port_dic = {'output_nes_port': coll_close.intake,
+                   'output_abfe_port': ofs_abfe.intake,
+                   'output_fail_port': check_rec.intake}
+
+nes_gmx_subfloe(job, input_port_dic, output_port_dic, nes_subfloe_options)
 
 # Ligand Setting
 iligs.success.connect(ligset.intake)
@@ -341,21 +334,6 @@ prod_bns.success.connect(coll_write.intake)
 
 prod_bns.success.connect(ofs_prot.intake)
 
-coll_write.success.connect(switch_out.intake)
-
-switch_out.success.connect(gathering.intake)
-switch_out.bound_port.connect(gathering.bound_port)
-gathering.success.connect(chimera.intake)
-
-# Chimera NES Setting
-chimera.success.connect(unbound_nes.intake)
-unbound_nes.success.connect(nes_analysis.intake)
-
-chimera.bound_port.connect(bound_nes.intake)
-bound_nes.success.connect(nes_analysis.intake)
-
-nes_analysis.success.connect(report.intake)
-report.success.connect(coll_close.intake)
 coll_close.success.connect(check_rec.intake)
 check_rec.success.connect(ofs.intake)
 
@@ -385,19 +363,10 @@ equil4_bns.failure.connect(check_rec.fail_in)
 prod_bns.failure.connect(check_rec.fail_in)
 
 coll_write.failure.connect(check_rec.fail_in)
-switch_out.failure.connect(check_rec.fail_in)
-gathering.failure.connect(check_rec.fail_in)
-chimera.failure.connect(check_rec.fail_in)
-unbound_nes.failure.connect(check_rec.fail_in)
-bound_nes.failure.connect(check_rec.fail_in)
 
 coll_close.failure.connect(check_rec.fail_in)
-nes_analysis.failure.connect(check_rec.fail_in)
-report.failure.connect(check_rec.fail_in)
 check_rec.failure.connect(fail.intake)
 
 
 if __name__ == "__main__":
     job.run()
-
-

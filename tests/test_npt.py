@@ -139,7 +139,7 @@ class TestMDOrionFloes(FloeTestCase):
                 "cube": {
                     "npt": {
                         "save_md_stage": True,
-                        "constraints": "H-Bonds",
+                        "constraints": "Bonds2H",
                         "restraints": "",
                         "nonbondedCutoff": 10.0
                     }
@@ -148,17 +148,6 @@ class TestMDOrionFloes(FloeTestCase):
         )
 
         self.assertWorkFloeComplete(workfloe)
-
-        fail_ifs = oechem.oeifstream()
-        records_fail = []
-
-        for rec_fail in read_records(fail_ifs):
-            records_fail.append(rec_fail)
-        fail_ifs.close()
-
-        count = len(records_fail)
-        # The fail record must be empty
-        self.assertEqual(count, 0)
 
         ifs = oeifstream(output_file.path)
         records = []
@@ -238,7 +227,7 @@ class TestMDOrionFloes(FloeTestCase):
                 "cube": {
                     "npt": {
                         "save_md_stage": True,
-                        "constraints": "H-Bonds",
+                        "constraints": "Bonds2H",
                         "restraints": "",
                         "nonbondedCutoff": 10.0
                     }
@@ -247,17 +236,6 @@ class TestMDOrionFloes(FloeTestCase):
         )
 
         self.assertWorkFloeComplete(workfloe)
-
-        fail_ifs = oechem.oeifstream()
-        records_fail = []
-
-        for rec_fail in read_records(fail_ifs):
-            records_fail.append(rec_fail)
-        fail_ifs.close()
-
-        count = len(records_fail)
-        # The fail record must be empty
-        self.assertEqual(count, 0)
 
         ifs = oeifstream(output_file.path)
         records = []

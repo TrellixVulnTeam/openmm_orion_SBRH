@@ -15,11 +15,11 @@ from floe.api import WorkFloe
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
+from MDOrion.SubFloes.SubfloeFunctions import nes_gmx_subfloe
 
-from MDOrion.System.cubes import (ParallelRecordSizeCheck)
+from MDOrion.Flask.cubes import CollectionSetting
 
-from floes.SubfloeFunctions import (setup_NonEquilSwch_GMX)
-
+from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
 job = WorkFloe("Non-Equilibrium Switching", title="Non-Equilibrium Switching")
 
@@ -31,25 +31,63 @@ job.tags = [tag for lists in job.classification for tag in lists]
 
 
 # Unbound Reader
-iun = DatasetReaderCube("UnboundReader", title="Unbound Reader")
-iun.promote_parameter("data_in", promoted_name="unbound", title="Unbound Input Dataset", description="Unbound Input Dataset")
-
 ibn = DatasetReaderCube("BoundReader", title="Bound Reader")
-ibn.promote_parameter("data_in", promoted_name="bound", title="Bound Input Dataset", description="Bound Input Dataset")
+ibn.promote_parameter("data_in", promoted_name="bound", title="Bound Input Dataset", description="Bound Input Dataset", order=0)
 
-check_rec = ParallelRecordSizeCheck("Record Check Success")
+iun = DatasetReaderCube("UnboundReader", title="Unbound Reader")
+iun.promote_parameter("data_in", promoted_name="unbound", title="Unbound Input Dataset", description="Unbound Input Dataset", order=1)
 
-job.add_cubes(iun, ibn, check_rec)
+# This cube is necessary for the correct work of collection and shard
+coll_open = CollectionSetting("OpenNESCollection", title="OpenNESCollection")
+coll_open.set_parameters(open=True)
+coll_open.set_parameters(write_new_collection='NES_OPLMD')
 
-# Call subfloe function to start up the MD, equilibrate, and do the production run
-NonEquilSwch_startup_options = {}
-NonEquilSwch_startup_options['edge_map_file'] = 'map'
-NonEquilSwch_startup_options['n_traj_frames'] = 80
-NonEquilSwch_startup_options['nes_switch_time_in_ns'] = 0.05
-setup_NonEquilSwch_GMX(job, ibn, iun, check_rec, NonEquilSwch_startup_options)
+# This cube is necessary for the correct working of collections and shards
+coll_close = CollectionSetting("CloseCollection", title="Close Collection")
+coll_close.set_parameters(open=False)
 
+rec_check = ParallelRecordSizeCheck("Record Check Success", title="Record Size Checking")
+rec_check_abfe = ParallelRecordSizeCheck("Record Check Success ABFE", title="Affinity Record Size Checking")
+
+ofs_nes = DatasetWriterCube('ofs', title='NES Out')
+ofs_nes.promote_parameter("data_out", promoted_name="out",
+                          title="NES Dataset Out",
+                          description="NES Dataset Out", order=4)
+
+ofs_abfe = DatasetWriterCube('ofs_abfe', title='Affinity Out')
+ofs_abfe.promote_parameter("data_out", promoted_name="abfe",
+                           title="Affinity Out",
+                           description="Affinity Out", order=5)
+
+fail = DatasetWriterCube('fail', title='NES Failures')
+fail.promote_parameter("data_out", promoted_name="fail", title="NES Failures",
+                       description="NES Dataset Failures out", order=6)
+
+job.add_cubes(iun, ibn, coll_open, coll_close, rec_check, rec_check_abfe, ofs_nes, ofs_abfe, fail)
+
+nes_subfloe_options = dict()
+nes_subfloe_options['edge_map_file'] = 'map'
+nes_subfloe_options['n_traj_frames'] = 80
+nes_subfloe_options['nes_switch_time_in_ns'] = 0.05
+
+input_port_dic = {'input_open_collection_port': coll_open.success,
+                  'input_bound_port': ibn.success}
+output_port_dic = {'output_nes_port': coll_close.intake,
+                   'output_abfe_port': rec_check_abfe.intake,
+                   'output_fail_port': rec_check.fail_in}
+
+nes_gmx_subfloe(job, input_port_dic, output_port_dic, nes_subfloe_options)
+
+iun.success.connect(coll_open.intake)
+ibn.success.connect(coll_open.intake)
+coll_close.success.connect(rec_check.intake)
+rec_check.success.connect(ofs_nes.intake)
+rec_check_abfe.success.connect(ofs_abfe.intake)
+
+coll_open.failure.connect(rec_check.fail_in)
+coll_close.failure.connect(rec_check.fail_in)
+rec_check.failure.connect(fail.intake)
+rec_check_abfe.failure.connect(fail.intake)
 
 if __name__ == "__main__":
     job.run()
-
-

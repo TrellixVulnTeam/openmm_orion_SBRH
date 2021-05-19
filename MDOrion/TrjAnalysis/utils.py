@@ -99,7 +99,7 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
     else:
         raise ValueError("Trajectory file format {} not recognized in the trajectory {}".format(traj_ext, trj_fn))
 
-    # System topology
+    # Flask topology
     top_trj = trj.topology
 
     # Ligand indexes
@@ -147,7 +147,7 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
     # trjImaged = trjImaged[:10]
 
     for frame in trjImaged:
-        # print(count, flush=True)
+        # print("{}/{}".format(count, len(trjImaged)-1, flush=True))
 
         # Water oxygen binding site indexes
         water_O_bs_idx = md.compute_neighbors(frame,
@@ -601,3 +601,27 @@ class DUClusterStyler:
                 self.acolorer.AddColor(atom.GetAtomicNum(), color)
                 self.ligand_style.SetAtomColorer(self.acolorer)
                 oechem.OESetStyle(atom, self.ligand_style)
+
+def MeanAndBootstrapStdErrCI(vec, nreps=2000, nsample=None):
+    '''Calculate stats of the mean for the input vector of values:
+    The mean, and from bootstrapping estimate Standard Error and the Confidence Interval 5%-95%.
+    Defaults: nreps=2000 (number of bootstrapped samples used for Std Error estimate)
+            nsampl=None (size of resampled vector; if None use the same size as inital vector'''
+    if len(vec)<2:
+        return None
+    if nsample is None:
+        nsample=len(vec)
+
+    vecMeans = []
+    for rep in range(nreps):
+        # bootstrap from vec
+        boot = np.random.choice(vec,size=nsample)
+        vecMeans.append( boot.mean())
+
+    mean = np.mean(vec)
+    arrMeans = np.array(vecMeans)
+    arrMeans.sort()
+    CI_05 = arrMeans[int(.05*len(arrMeans))]
+    CI_95 = arrMeans[int(.95*len(arrMeans))]
+    #print('BootstrapStdErrOfMean len vecMeans: ', len(arrMeans), arrMeans.std())
+    return mean, arrMeans.std(), CI_05, CI_95

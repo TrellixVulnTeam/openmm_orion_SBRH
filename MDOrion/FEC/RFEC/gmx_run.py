@@ -18,7 +18,7 @@
 
 import subprocess
 
-from subprocess import STDOUT, PIPE, Popen, DEVNULL
+from subprocess import STDOUT, PIPE, DEVNULL
 
 from simtk import unit
 
@@ -26,6 +26,9 @@ import os
 
 from tempfile import TemporaryDirectory
 
+from MDOrion.MDEngines.utils import md_keys_converter
+
+from MDOrion.Standards.standards import MDEngines
 
 gromacs_min_nes_nvt_npt = """
 ; RUN CONTROL PARAMETERS
@@ -33,7 +36,7 @@ gromacs_min_nes_nvt_npt = """
 define		= {restraints}	; position restrain
 
 integrator               = {integrator}
-dt                       = 0.002		; md timestep
+dt                       = {timestep:f}		; md timestep
 nsteps                   = {nsteps:d}		; number of md steps
 comm-mode                = Linear
 ; number of steps for center of mass motion removal
@@ -94,7 +97,7 @@ epsilon_surface          = 0
 ; Temperature coupling  
 tcoupl                   = v-rescale
 ; Groups to couple separately
-tc-grps                  = System
+tc-grps                  = Flask
 ; Time constant (ps) and reference temperature (K)
 tau-t                    = 2.0
 ref-t                    = {temperature:f} ; reference temperature in K
@@ -130,7 +133,7 @@ sc-coul = yes
 nstdhdl                  = {nstdhdl:d}
 nstcalcenergy            = 1
 
-domain-decomposition     = no
+;domain-decomposition     = no
 
 ; Non-equilibrium MD stuff
 acc-grps                 = 
@@ -160,13 +163,14 @@ def check_gmx_grompp(gro, top, sim_type=None, verbose=False):
 
             gmx_fe_template = gromacs_min_nes_nvt_npt.format(restraints='',
                                                              integrator='steep',
+                                                             timestep=0.001,
                                                              nsteps=300,
                                                              temperature=300,
                                                              barostat='Parrinello-Rahman',
                                                              pressure=1.1,
                                                              gen_vel='no',
                                                              continue_sim='no',
-                                                             lincs_type='all-bonds',
+                                                             lincs_type='none',
                                                              cutoff=1.0,
                                                              rvdwswitch=0.9,
                                                              dlambda=0,
@@ -183,13 +187,12 @@ def check_gmx_grompp(gro, top, sim_type=None, verbose=False):
                                        '-c', gmx_gro_fn,
                                        '-p', gmx_top_fn,
                                        '-o', gmx_tpr_fn,
-                                       '-maxwarn', '4'
-                                       ])
+                                       '-maxwarn', '4'], timeout=100)
 
                 subprocess.check_call(['gmx',
                                        'mdrun',
                                        '-v',
-                                       '-s', gmx_tpr_fn])
+                                       '-s', gmx_tpr_fn], timeout=500)
 
             else:
 
@@ -200,128 +203,152 @@ def check_gmx_grompp(gro, top, sim_type=None, verbose=False):
                                        '-p', gmx_top_fn,
                                        '-o', gmx_tpr_fn,
                                        '-maxwarn', '4'
-                                       ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT)
+                                       ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT, timeout=100)
 
                 subprocess.check_call(['gmx',
                                        'mdrun',
                                        '-v',
                                        '-s', gmx_tpr_fn,
-                                       ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT, timeout=300)
+                                       ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT, timeout=500)
 
-    except:
-        raise ValueError("Cannot Assemble the Gromacs .tpr file for the sim type: {}".format(sim_type))
+    except subprocess.CalledProcessError:
+        raise ValueError("Subprocess CalledProcess Error. Cannot assemble the Gromacs .tpr file for the sim type: {}".format(sim_type))
+    except subprocess.TimeoutExpired:
+        raise ValueError("Subprocess Timeout Error")
+    except OSError:
+        raise ValueError("OS Error. Cannot assemble the Gromacs .tpr file for the sim type: {}".format(sim_type))
 
 
 def _run_gmx(mdp_fn, gro_fn, top_fn, tpr_fn, deffnm_fn, opt, cpti_fn=None, cpto_fn=None):
 
-    if opt['verbose']:
+    try:
 
-        # Assemble the Gromacs system to run
-        if not opt['restraints']:
-            subprocess.check_call(['gmx',
-                                   'grompp',
-                                   '-f', mdp_fn,
-                                   '-c', gro_fn,
-                                   '-p', top_fn,
-                                   '-o', tpr_fn,
-                                   '-maxwarn', '4'
-                                   ])
-        else:
-            subprocess.check_call(['gmx',
-                                   'grompp',
-                                   '-f', mdp_fn,
-                                   '-c', gro_fn,
-                                   '-r', gro_fn,
-                                   '-p', top_fn,
-                                   '-o', tpr_fn,
-                                   '-maxwarn', '4'
-                                   ])
+        if opt['verbose']:
 
-        # Run Gromacs
-        if cpti_fn is None and cpto_fn is None:
-            subprocess.check_call(['gmx',
-                                   'mdrun',
-                                   '-v',
-                                   '-s', tpr_fn,
-                                   '-deffnm', deffnm_fn
-                                   ])
-        else:
-
-            if cpti_fn is None and cpto_fn is not None:
-
+            # Assemble the Gromacs system to run
+            if not opt['restraints']:
                 subprocess.check_call(['gmx',
-                                       'mdrun',
-                                       '-v',
-                                       '-s', tpr_fn,
-                                       '-cpo', cpto_fn,
-                                       '-deffnm', deffnm_fn
-                                       ])
+                                       'grompp',
+                                       '-f', mdp_fn,
+                                       '-c', gro_fn,
+                                       '-p', top_fn,
+                                       '-o', tpr_fn,
+                                       '-maxwarn', '4'
+                                       ], timeout=100)
             else:
                 subprocess.check_call(['gmx',
-                                       'mdrun',
-                                       '-v',
-                                       '-s', tpr_fn,
-                                       '-noappend',
-                                       '-cpi', cpti_fn,
-                                       '-cpo', cpto_fn,
-                                       '-deffnm', deffnm_fn
-                                       ])
+                                       'grompp',
+                                       '-f', mdp_fn,
+                                       '-c', gro_fn,
+                                       '-r', gro_fn,
+                                       '-p', top_fn,
+                                       '-o', tpr_fn,
+                                       '-maxwarn', '4'
+                                       ], timeout=100)
 
-    else:
-        # Assemble the Gromacs system to run
-        if not opt['restraints']:
-            subprocess.check_call(['gmx',
-                                   'grompp',
-                                   '-f', mdp_fn,
-                                   '-c', gro_fn,
-                                   '-p', top_fn,
-                                   '-o', tpr_fn,
-                                   '-maxwarn', '4'
-                                   ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT,
-                                  timeout=opt['gmx_process_timeout'])
-        else:
-            subprocess.check_call(['gmx',
-                                   'grompp',
-                                   '-f', mdp_fn,
-                                   '-c', gro_fn,
-                                   '-r', gro_fn,
-                                   '-p', top_fn,
-                                   '-o', tpr_fn,
-                                   '-maxwarn', '4'
-                                   ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT,
-                                  timeout=opt['gmx_process_timeout'])
-
-        # Run Gromacs
-        if cpti_fn is None and cpto_fn is None:
-            subprocess.check_call(['gmx',
-                                   'mdrun',
-                                   '-v',
-                                   '-s', tpr_fn,
-                                   '-deffnm', deffnm_fn
-                                   ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT,
-                                  timeout=opt['gmx_process_timeout'])
-        else:
-
-            if cpti_fn is None and cpto_fn is not None:
+            # Run Gromacs
+            if cpti_fn is None and cpto_fn is None:
                 subprocess.check_call(['gmx',
                                        'mdrun',
+                                       '-ntomp', str(opt['gmx_openmp_threads']),
+                                       '-ntmpi', str(opt['gmx_mpi_threads']),
                                        '-v',
                                        '-s', tpr_fn,
-                                       '-cpo', cpto_fn,
+                                       '-deffnm', deffnm_fn
+                                       ], timeout=opt['gmx_process_timeout'])
+            else:
+
+                if cpti_fn is None and cpto_fn is not None:
+
+                    subprocess.check_call(['gmx',
+                                           'mdrun',
+                                           '-ntomp', str(opt['gmx_openmp_threads']),
+                                           '-ntmpi', str(opt['gmx_mpi_threads']),
+                                           '-v',
+                                           '-s', tpr_fn,
+                                           '-cpo', cpto_fn,
+                                           '-deffnm', deffnm_fn
+                                           ], timeout=opt['gmx_process_timeout'])
+                else:
+                    subprocess.check_call(['gmx',
+                                           'mdrun',
+                                           '-ntomp', str(opt['gmx_openmp_threads']),
+                                           '-ntmpi', str(opt['gmx_mpi_threads']),
+                                           '-v',
+                                           '-s', tpr_fn,
+                                           '-noappend',
+                                           '-cpi', cpti_fn,
+                                           '-cpo', cpto_fn,
+                                           '-deffnm', deffnm_fn
+                                           ], timeout=opt['gmx_process_timeout'])
+
+        else:
+            # Assemble the Gromacs system to run
+            if not opt['restraints']:
+                subprocess.check_call(['gmx',
+                                       'grompp',
+                                       '-f', mdp_fn,
+                                       '-c', gro_fn,
+                                       '-p', top_fn,
+                                       '-o', tpr_fn,
+                                       '-maxwarn', '4'
+                                       ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT,
+                                      timeout=100)
+            else:
+                subprocess.check_call(['gmx',
+                                       'grompp',
+                                       '-f', mdp_fn,
+                                       '-c', gro_fn,
+                                       '-r', gro_fn,
+                                       '-p', top_fn,
+                                       '-o', tpr_fn,
+                                       '-maxwarn', '4'
+                                       ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT,
+                                      timeout=100)
+
+            # Run Gromacs
+            if cpti_fn is None and cpto_fn is None:
+                subprocess.check_call(['gmx',
+                                       'mdrun',
+                                       '-ntomp', str(opt['gmx_openmp_threads']),
+                                       '-ntmpi', str(opt['gmx_mpi_threads']),
+                                       '-v',
+                                       '-s', tpr_fn,
                                        '-deffnm', deffnm_fn
                                        ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT,
                                       timeout=opt['gmx_process_timeout'])
             else:
-                subprocess.check_call(['gmx',
-                                       'mdrun',
-                                       '-v',
-                                       '-s', tpr_fn,
-                                       '-noappend',
-                                       '-cpi', cpti_fn,
-                                       '-cpo', cpto_fn,
-                                       '-deffnm', deffnm_fn
-                                       ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT,
-                                      timeout=opt['gmx_process_timeout'])
+
+                if cpti_fn is None and cpto_fn is not None:
+                    subprocess.check_call(['gmx',
+                                           'mdrun',
+                                           '-ntomp', str(opt['gmx_openmp_threads']),
+                                           '-ntmpi', str(opt['gmx_mpi_threads']),
+                                           '-v',
+                                           '-s', tpr_fn,
+                                           '-cpo', cpto_fn,
+                                           '-deffnm', deffnm_fn
+                                           ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT,
+                                          timeout=opt['gmx_process_timeout'])
+                else:
+                    subprocess.check_call(['gmx',
+                                           'mdrun',
+                                           '-ntomp', str(opt['gmx_openmp_threads']),
+                                           '-ntmpi', str(opt['gmx_mpi_threads']),
+                                           '-v',
+                                           '-s', tpr_fn,
+                                           '-noappend',
+                                           '-cpi', cpti_fn,
+                                           '-cpo', cpto_fn,
+                                           '-deffnm', deffnm_fn
+                                           ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT,
+                                          timeout=opt['gmx_process_timeout'])
+    except subprocess.CalledProcessError as e:
+        raise ValueError("Subprocess Called Process Error: {}".format(e))
+    except subprocess.TimeoutExpired as e:
+        raise ValueError("Subprocess Timeout Error: {}".format(e))
+    except OSError:
+        raise ValueError("Subprocess call OS Error")
 
 
 def gmx_run(gmx_gro, gmx_top, opt):
@@ -329,7 +356,7 @@ def gmx_run(gmx_gro, gmx_top, opt):
     min_box = opt['min_box']
 
     # Cutoff in A
-    cutoff = 10
+    cutoff = 11
 
     # in A
     theshold = (min_box / 2.0) * 0.85
@@ -351,16 +378,15 @@ def gmx_run(gmx_gro, gmx_top, opt):
     # TODO DEBUGGING
     # out_dir = "./"
 
-    # FAST MINIMIZATION
-    nsteps = 2000
-    opt['restraints'] = True
+    constraints = md_keys_converter[MDEngines.Gromacs]['constraints'][opt['constraints']]
+
+    # Timestep
+    timestep = 1.0 * unit.femtoseconds
+
+    opt['Logger'].info("Time step set to: {} fs".format(timestep.value_in_unit(unit.femtoseconds)))
 
     gmx_gro_fn = os.path.join(out_dir, "gmx_gro.gro")
     gmx_top_fn = os.path.join(out_dir, "gmx_top.top")
-    gmx_min_mdp_fn = os.path.join(out_dir, "gmx_min.mdp")
-    gmx_min_tpr_fn = os.path.join(out_dir, "gmx_min.tpr")
-    gmx_min_deffnm_fn = os.path.join(out_dir, "gmx_run_min_" + str(opt['frame_count']))
-    gmx_min_confout_gro = gmx_min_deffnm_fn + '.gro'
 
     with open(gmx_gro_fn, 'w') as f:
         f.write(gmx_gro)
@@ -368,107 +394,25 @@ def gmx_run(gmx_gro, gmx_top, opt):
     with open(gmx_top_fn, 'w') as f:
         f.write(gmx_top)
 
-    gmx_fe_template = gromacs_min_nes_nvt_npt.format(restraints='-DRESTRAINTS',
-                                                     integrator='steep',
-                                                     nsteps=nsteps,
-                                                     temperature=opt['temperature'],
-                                                     barostat='no',
-                                                     pressure=pressure.value_in_unit(unit.bar),
-                                                     gen_vel='no',
-                                                     continue_sim='no',
-                                                     lincs_type=opt['lincs_type'],
-                                                     cutoff=cutoff_distance.value_in_unit(unit.nanometer),
-                                                     rvdwswitch=rvdw_switch.value_in_unit(unit.nanometer),
-                                                     dlambda=0,
-                                                     nstdhdl=0)
-    with open(gmx_min_mdp_fn, 'w') as f:
-        f.write(gmx_fe_template)
-
-    _run_gmx(gmx_min_mdp_fn, gmx_gro_fn, gmx_top_fn, gmx_min_tpr_fn, gmx_min_deffnm_fn, opt,
-             cpti_fn=None, cpto_fn=None)
-
-    # Restrained NVT
-    nsteps = 5000
-    opt['restraints'] = True
-
-    gmx_eq_nvt_mdp_fn = os.path.join(out_dir, "gmx_eq_nvt.mdp")
-    gmx_eq_nvt_tpr_fn = os.path.join(out_dir, "gmx_eq_nvt.tpr")
-    gmx_nvt_deffnm_fn = os.path.join(out_dir, "gmx_run_nvt_" + str(opt['frame_count']))
-    gmx_nvt_cpto_fn = gmx_nvt_deffnm_fn + '.cpt'
-    gmx_nvt_confout_gro = gmx_nvt_deffnm_fn + '.gro'
-
-    # gmx_trj_fn = gmx_nvt_deffnm_fn + '.trr'
-
-    gmx_fe_template = gromacs_min_nes_nvt_npt.format(restraints='-DRESTRAINTS',
-                                                     integrator='md',
-                                                     nsteps=nsteps,
-                                                     temperature=opt['temperature'],
-                                                     barostat='no',
-                                                     pressure=pressure.value_in_unit(unit.bar),
-                                                     gen_vel='no',
-                                                     continue_sim='yes',
-                                                     lincs_type=opt['lincs_type'],
-                                                     cutoff=cutoff_distance.value_in_unit(unit.nanometer),
-                                                     rvdwswitch=rvdw_switch.value_in_unit(unit.nanometer),
-                                                     dlambda=0,
-                                                     nstdhdl=0)
-
-    with open(gmx_eq_nvt_mdp_fn, 'w') as f:
-        f.write(gmx_fe_template)
-
-    _run_gmx(gmx_eq_nvt_mdp_fn, gmx_min_confout_gro, gmx_top_fn, gmx_eq_nvt_tpr_fn, gmx_nvt_deffnm_fn, opt,
-             cpti_fn=None, cpto_fn=None)
-
-    # Restrained NPT
-    nsteps = 5000
-    opt['restraints'] = True
-
-    gmx_eq_npt0_mdp_fn = os.path.join(out_dir, "gmx_eq_npt0.mdp")
-    gmx_eq_npt0_tpr_fn = os.path.join(out_dir, "gmx_eq_npt0.tpr")
-    gmx_npt0_deffnm_fn = os.path.join(out_dir, "gmx_run_npt0" + '_' + str(opt['frame_count']))
-    gmx_npt0_cpto_fn = gmx_npt0_deffnm_fn + '.cpt'
-    gmx_npt0_confout_gro = gmx_npt0_deffnm_fn + '.gro'
-
-    gmx_fe_template = gromacs_min_nes_nvt_npt.format(restraints='-DRESTRAINTS',
-                                                     integrator='md',
-                                                     nsteps=nsteps,
-                                                     temperature=opt['temperature'],
-                                                     barostat='Parrinello-Rahman',
-                                                     pressure=pressure.value_in_unit(unit.bar),
-                                                     gen_vel='no',
-                                                     continue_sim='yes',
-                                                     lincs_type=opt['lincs_type'],
-                                                     cutoff=cutoff_distance.value_in_unit(unit.nanometer),
-                                                     rvdwswitch=rvdw_switch.value_in_unit(unit.nanometer),
-                                                     dlambda=0,
-                                                     nstdhdl=0)
-
-    with open(gmx_eq_npt0_mdp_fn, 'w') as f:
-        f.write(gmx_fe_template)
-
-    _run_gmx(gmx_eq_npt0_mdp_fn, gmx_nvt_confout_gro, gmx_top_fn, gmx_eq_npt0_tpr_fn, gmx_npt0_deffnm_fn, opt,
-             cpti_fn=None, cpto_fn=gmx_npt0_cpto_fn)
-
     # NPT
-    opt['restraints'] = False
     nsteps = 5000
 
     gmx_eq_npt1_mdp_fn = os.path.join(out_dir, "gmx_eq_npt1.mdp")
     gmx_eq_npt1_tpr_fn = os.path.join(out_dir, "gmx_eq_npt1.tpr")
     gmx_npt1_deffnm_fn = os.path.join(out_dir, "gmx_run_npt1" + '_' + str(opt['frame_count']))
-    gmx_npt1_cpti_fn = gmx_npt0_cpto_fn
     gmx_npt1_cpto_fn = gmx_npt1_deffnm_fn + '.cpt'
     gmx_npt1_confout_gro = gmx_npt1_deffnm_fn + '.gro'
 
     gmx_fe_template = gromacs_min_nes_nvt_npt.format(restraints='',
                                                      integrator='md',
+                                                     timestep=timestep.value_in_unit(unit.picoseconds),
                                                      nsteps=nsteps,
                                                      temperature=opt['temperature'],
                                                      barostat='Parrinello-Rahman',
                                                      pressure=pressure.value_in_unit(unit.bar),
                                                      gen_vel='no',
-                                                     continue_sim='yes',
-                                                     lincs_type=opt['lincs_type'],
+                                                     continue_sim='no',
+                                                     lincs_type=constraints,
                                                      cutoff=cutoff_distance.value_in_unit(unit.nanometer),
                                                      rvdwswitch=rvdw_switch.value_in_unit(unit.nanometer),
                                                      dlambda=0,
@@ -477,14 +421,12 @@ def gmx_run(gmx_gro, gmx_top, opt):
     with open(gmx_eq_npt1_mdp_fn, 'w') as f:
         f.write(gmx_fe_template)
 
-    _run_gmx(gmx_eq_npt1_mdp_fn, gmx_npt0_confout_gro, gmx_top_fn, gmx_eq_npt1_tpr_fn, gmx_npt1_deffnm_fn, opt,
+    _run_gmx(gmx_eq_npt1_mdp_fn, gmx_gro_fn, gmx_top_fn, gmx_eq_npt1_tpr_fn, gmx_npt1_deffnm_fn, opt,
              cpti_fn=None,
              cpto_fn=gmx_npt1_cpto_fn)
 
     # NES
-    opt['restraints'] = False
-    stepLen = 2.0 * unit.femtoseconds
-    nsteps = int(round(opt['time'] / (stepLen.in_units_of(unit.nanoseconds) / unit.nanoseconds)))
+    nsteps = int(round(opt['time'] / (timestep.in_units_of(unit.nanoseconds) / unit.nanoseconds)))
 
     # Full decoupling lambda in [0,1]
     dlambda = 1.0 / nsteps
@@ -498,13 +440,14 @@ def gmx_run(gmx_gro, gmx_top, opt):
 
     gmx_fe_template = gromacs_min_nes_nvt_npt.format(restraints='',
                                                      integrator='md',
+                                                     timestep=timestep.value_in_unit(unit.picoseconds),
                                                      nsteps=nsteps,
                                                      temperature=opt['temperature'],
                                                      barostat='Parrinello-Rahman',
                                                      pressure=pressure.value_in_unit(unit.bar),
                                                      gen_vel='no',
                                                      continue_sim='yes',
-                                                     lincs_type=opt['lincs_type'],
+                                                     lincs_type=constraints,
                                                      cutoff=cutoff_distance.value_in_unit(unit.nanometer),
                                                      rvdwswitch=rvdw_switch.value_in_unit(unit.nanometer),
                                                      dlambda=dlambda,

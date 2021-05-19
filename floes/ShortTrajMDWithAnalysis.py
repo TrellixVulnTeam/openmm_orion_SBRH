@@ -19,17 +19,19 @@
 
 from os import path
 
-from floe.api import (WorkFloe,
-                      ParallelCubeGroup)
+from floe.api import WorkFloe
 
-from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
+from orionplatform.cubes import DatasetWriterCube
 
-from floes.SubfloeFunctions import (setup_MD_startup,
-                                    setup_PLComplex_for_MD,
-                                    setup_traj_analysis)
+from snowball import (ExceptHandlerCube,
+                      SuccessCounterCube)
 
-from MDOrion.System.cubes import (CollectionSetting,
-                                  ParallelRecordSizeCheck)
+from MDOrion.SubFloes.SubfloeFunctions import (setup_MD_startup,
+                                               setup_PLComplex_for_MD,
+                                               setup_traj_analysis)
+
+from MDOrion.Flask.cubes import (CollectionSetting,
+                                 ParallelRecordSizeCheck)
 
 
 job = WorkFloe('Short Trajectory MD with Analysis',
@@ -52,23 +54,26 @@ coll_close.set_parameters(open=False)
 
 check_rec = ParallelRecordSizeCheck("Record Check Success")
 
+exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
+
 ofs = DatasetWriterCube('ofs', title='MD Out')
 ofs.promote_parameter("data_out", promoted_name="out",
-                      title="MD Out", description="MD Dataset out")
+                      title="MD Out", description="MD Dataset out", order=2)
 
 fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
-                       description="MD Dataset Failures out")
+                       description="MD Dataset Failures out", order=3)
 
 ofs_du = DatasetWriterCube('ofs_du', title='MD Out DU Cluster Medoid')
 ofs_du.promote_parameter("data_out", promoted_name="du",
                          title="MD Out DU Cluster Medoid", description="DU Cluster Med MD Dataset out")
 
-job.add_cubes(coll_open, coll_close, check_rec, ofs, fail,ofs_du)
+job.add_cubes(coll_open, coll_close, check_rec,exceptions,  ofs, fail,ofs_du)
 
 # Call subfloe function to set up the solvated protein-ligand complex
 PLComplex_for_MD_options = {}
 PLComplex_for_MD_options['charge_ligands'] = True
+PLComplex_for_MD_options['n_md_starts'] = 1
 PLComplex_outcube = setup_PLComplex_for_MD(job, check_rec, PLComplex_for_MD_options)
 
 # Connections
@@ -80,7 +85,7 @@ coll_open.failure.connect(check_rec.fail_in)
 MD_startup_options = {}
 MD_startup_options['Prod_Default_Time_ns'] = 2.0
 MD_startup_options['Prod_Default_Traj_Intvl_ns'] = 0.004
-MD_outcube = setup_MD_startup(job, coll_open, check_rec, MD_startup_options)
+MD_outcube = setup_MD_startup(job, coll_open, check_rec,  MD_startup_options)
 
 # Call subfloe function to do the full trajectory analysis directly from the MD production run
 traj_anlys_outcube = setup_traj_analysis(job, MD_outcube, check_rec, ofs_du)
@@ -91,7 +96,8 @@ traj_anlys_outcube.failure.connect(check_rec.fail_in)
 coll_close.success.connect(check_rec.intake)
 coll_close.failure.connect(check_rec.fail_in)
 check_rec.success.connect(ofs.intake)
-check_rec.failure.connect(fail.intake)
+check_rec.failure.connect(exceptions.intake)
+exceptions.failure.connect(fail.intake)
 
 
 if __name__ == "__main__":

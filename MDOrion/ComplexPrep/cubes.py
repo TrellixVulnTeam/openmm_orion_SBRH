@@ -28,13 +28,17 @@ from floe.api import ComputeCube
 from orionplatform.mixins import RecordPortsMixin
 from orionplatform.ports import RecordInputPort
 
+from snowball.utils.log_params import LogFieldParam
+
 from openeye import oechem
+
+from MDOrion.ComplexPrep.utils import clash_detection
 
 
 class ComplexPrepCube(RecordPortsMixin, ComputeCube):
     title = "Complex Preparation"
     # version = "0.1.4"
-    classification = [["System Preparation"]]
+    classification = [["Flask Preparation"]]
     tags = ['Complex', 'Ligand', 'Protein']
     description = """
     This Cube assembles the complex made of a protein and its docked ligands. 
@@ -50,6 +54,9 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
     """
 
     uuid = "be2ac138-22ae-4412-9c38-886472c496b9"
+
+    # for Exception Handler
+    log_field = LogFieldParam()
 
     # Override defaults for some parameters
     parameter_overrides = {
@@ -75,7 +82,12 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
         return
 
     def process(self, record, port):
+
+        # Initialize ligand_title for exception handling
+        ligand_title = ''
+
         try:
+
             if port == 'intake':
 
                 if not record.has_value(Fields.primary_molecule):
@@ -101,12 +113,34 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                 if not oeommutils.check_shell(ligand, protein, 3):
                     raise ValueError("The Ligand is probably outside the Protein binding site")
 
-                # Remove Steric Clashes between the ligand and the other System components
+                # Remove Steric Clashes between the ligand and the other Flask components
                 for comp_name, comp in self.md_components.get_components.items():
 
-                    # Skip clashes between the ligand itself and the protein
-                    if comp_name in ['ligand', 'protein']:
+                    # Skip clashes between the ligand itself
+                    if comp_name in ['ligand']:
                         continue
+
+                    # Check clashes between the ligand and protein
+                    if comp_name == 'protein':
+                        protein_severe_clashes, protein_moderate_clashes, protein_no_clashes = clash_detection(ligand, comp)
+
+                        if len(protein_severe_clashes[0]) >= 2:
+                            raise ValueError("Severe clashes detected between the protein and the ligand: {}\n{}".format(ligand_title, protein_severe_clashes[1]))
+
+                        if len(protein_severe_clashes[0]) == 1:
+                            self.log.warn("One severe clash detected between the protein and the ligand: {}\n{}".format(
+                                ligand_title, protein_severe_clashes[1]))
+
+                        if protein_moderate_clashes[0]:
+                            self.log.warn("Moderate clashes detected between the protein and the ligand: {}\n{}".format(ligand_title, protein_moderate_clashes[1]))
+
+                    # Check clashes between the ligand and cofactors
+                    elif comp_name == 'cofactors' or comp_name == 'other_cofactors':
+                        cofactor_severe_clashes, cofactor_moderate_clashes, cofactor_no_clashes = clash_detection(ligand, comp)
+
+                        if len(cofactor_severe_clashes[0]) >= 1:
+                            raise ValueError("Severe clashes detected between the cofactors and the ligand: {}\n{}".format(
+                                ligand_title, cofactor_severe_clashes[1]))
 
                     # Remove Metal clashes if the distance between the metal and the ligand
                     # is less than 1A
@@ -114,20 +148,23 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                         metal_del = oeommutils.delete_shell(ligand, comp, 1.0, in_out='in')
 
                         if metal_del.NumAtoms() != comp.NumAtoms():
-                            self.opt['Logger'].info(
-                                "Detected steric-clashes between the ligand {} and metals".format(ligand_title))
+                            self.opt['Logger'].warn(
+                                "Detected steric-clashes between the ligand: {} and metals. "
+                                "The clashing metals are going to be removed".format(ligand_title))
 
                             self.md_components.set_metals(metal_del)
-                            # Remove  clashes if the distance between the selected component and the ligand
-                            # is less than 1.5A
+
+                    # Remove clashes if the distance between the selected component and the ligand
+                    # is less than 1.5A
                     else:
                         comp_del = oeommutils.delete_shell(ligand, comp, 1.5, in_out='in')
 
                         if comp_del.NumAtoms() != comp.NumAtoms():
-                            self.opt['Logger'].info(
-                                "Detected steric-clashes between the ligand {} and component {}".format(
+                            self.opt['Logger'].warn(
+                                "Detected steric-clashes between the ligand: {} and component {}. "
+                                "The clashing {} molecules are going to be removed".format(
                                     ligand_title,
-                                    comp_name))
+                                    comp_name, comp_name))
 
                             self.md_components.set_component_by_name(comp_name, comp_del)
 
@@ -163,9 +200,12 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                 self.success.emit(new_record)
 
         except Exception as e:
-            print("Failed to complete", str(e), flush=True)
-            self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+            msg = '{}: {} Cube exception: {}'.format(ligand_title, self.title, str(e))
+            self.opt['Logger'].info(msg)
             self.log.error(traceback.format_exc())
+            # Write field for Exception Handler
+            record.set_value(self.args.log_field, msg)
+            # Return failed mol
             self.failure.emit(record)
 
         return

@@ -37,7 +37,7 @@ from orionplatform.mixins import RecordPortsMixin
 class LigandChargeCube(RecordPortsMixin, ComputeCube):
     title = "Ligand Charge"
     # version = "0.1.4"
-    classification = [["System Preparation"]]
+    classification = [["Flask Preparation"]]
     tags = ["Ligand"]
     description = """
     This Cube charges small organic molecules by using the ELF10 charge method 
@@ -110,7 +110,7 @@ class LigandChargeCube(RecordPortsMixin, ComputeCube):
 class LigandSetting(RecordPortsMixin, ComputeCube):
     title = "Ligand Setting"
     # version = "0.1.4"
-    classification = [["System Preparation"]]
+    classification = [["Flask Preparation"]]
     tags = ['Ligand']
     description = """
     This Cube is used to set the ligand residue name as the cube parameter
@@ -136,6 +136,10 @@ class LigandSetting(RecordPortsMixin, ComputeCube):
     max_md_runs = parameters.IntegerParameter('max_md_runs',
                                               default=500,
                                               help_text='The maximum allowed number of md runs')
+
+    n_md_starts = parameters.IntegerParameter('n_md_starts',
+                                              default=1,
+                                              help_text='The number of md starts for each ligand/conformer')
 
     def begin(self):
         self.opt = vars(self.args)
@@ -186,6 +190,19 @@ class LigandSetting(RecordPortsMixin, ComputeCube):
                 residue = oechem.OEAtomGetResidue(at)
                 residue.SetName(self.args.lig_res_name)
                 oechem.OEAtomSetResidue(at, residue)
+
+            n_md_starts = self.args.n_md_starts
+            self.opt['Logger'].info('ligand {}: running {} independent MD starts for each ligand/conformer'.
+                format(lig_title,n_md_starts))
+            if n_md_starts>1:
+                newlig = oechem.OEMol(ligand)
+                newlig.DeleteConfs()
+                for baseconf in ligand.GetConfs():
+                    newlig.NewConf(baseconf)
+                    for start in range(1,self.args.n_md_starts):
+                        newlig.NewConf(baseconf)
+                record.set_value(Fields.primary_molecule, newlig)
+                ligand = newlig
 
             record.set_value(Fields.primary_molecule, ligand)
             record.set_value(Fields.ligid, self.ligand_count)

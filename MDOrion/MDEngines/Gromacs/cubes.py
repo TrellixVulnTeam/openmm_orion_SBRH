@@ -228,7 +228,7 @@ class GromacsRunCube(RecordPortsMixin, ComputeCube):
         opt['tpr'] = tpr
 
         if not record.has_value(Fields.prefix_name_field):
-            raise ValueError("System prefix name is missing")
+            raise ValueError("Flask prefix name is missing")
 
         opt['prefix_name'] = record.get_value(Fields.prefix_name_field)
 
@@ -261,7 +261,7 @@ class WriterRecordCube(SinkCube):
         cycle_id = record.get_value(Fields.cycle_id)
 
         if not record.has_value(Fields.prefix_name_field):
-            raise ValueError("System prefix name is missing")
+            raise ValueError("Flask prefix name is missing")
 
         prefix_name = record.get_value(Fields.prefix_name_field)
 

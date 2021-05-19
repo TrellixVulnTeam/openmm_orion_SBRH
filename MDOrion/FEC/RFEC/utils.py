@@ -64,7 +64,7 @@ import plotly.graph_objects as go
 
 from scipy.stats import norm
 
-from PIL import Image
+from parmed.gromacs.gromacstop import _Defaults
 
 import h5py
 
@@ -74,11 +74,9 @@ from datarecord import Meta
 
 import random
 
-from MDOrion.FEC.RFEC import stats
-
 from MDOrion.FEC.RFEC.freeenergyframework import wrangle
 
-import scipy as sc
+import MDOrion.TrjAnalysis.Affinity_FloeReport_utils as flrpt
 
 from MDOrion.FEC.RFEC.gmx_run import gmx_run
 
@@ -96,33 +94,42 @@ from MDOrion.Standards.standards import CollectionsNames
 
 import glob
 
+import subprocess
+
+
 def edge_map_grammar(word):
 
-    map_string = Word(printables) + ">>" + Word(printables)
+    try:
+        map_string = Word(printables) + ">>" + Word(printables)
 
-    expr = map_string.parseString(word)
-
-    # expr = word.rstrip().split()
-    # print(expr)
-
-    return expr
-
-
-def rbfe_file_grammar(word):
-
-    units = Combine(Literal("kcal/mol") | Literal("kJ/mol"))
-
-    lig_name = Word(printables)
-
-    DG = pyparsing_common.number
-
-    dg_err = Optional(pyparsing_common.number)
-
-    map_string = lig_name + DG + dg_err + units
-
-    expr = map_string.parseString(word)
+        expr = map_string.parseString(word)
+    except Exception as e:
+        raise ValueError("The syntax of the following line in the experimental file is not supported: {}\n"
+                         "The supported syntax is: <LigA_name> >> <LigB_name>".format(word))
 
     return expr
+
+
+def exp_file_grammar(word):
+
+    try:
+        units = Combine(Literal("kcal/mol") | Literal("kJ/mol"))
+
+        lig_name = Word(printables)
+
+        DG = pyparsing_common.number
+
+        dg_err = Optional(pyparsing_common.number)
+
+        map_string = lig_name + DG + dg_err + units
+
+        expr = map_string.parseString(word)
+
+        return expr
+    except Exception as e:
+        raise ValueError("The syntax of the following line in the experimental file is not supported: {}\n"
+                         "The supported syntax is: <Lig_name> <ExpAff> <ExpAffError> "
+                         "<Units in the form kcal/mol or kJ/mol>".format(word))
 
 
 def parmed_find_ligand(pmd, lig_res_name="LIG"):
@@ -143,13 +150,20 @@ def parmed_find_ligand(pmd, lig_res_name="LIG"):
 def fix_gromacs_water_names(pmd_flask):
 
     for r in pmd_flask.residues:
+
         if len(r.atoms) == 3:
-            oxy, = (a for a in r.atoms if a.atomic_number == 8)
-            hyd1, hyd2 = (a for a in r.atoms if a.atomic_number == 1)
-            if oxy and hyd1 and hyd2:
-                oxy.name = 'O'
-                hyd1.name = 'H1'
-                hyd2.name = 'H2'
+
+            try:
+                oxy, = (a for a in r.atoms if a.atomic_number == 8)
+
+                hyd1, hyd2 = (a for a in r.atoms if a.atomic_number == 1)
+
+                if oxy and hyd1 and hyd2:
+                    oxy.name = 'O'
+                    hyd1.name = 'H1'
+                    hyd2.name = 'H2'
+            except:
+                continue
 
     return pmd_flask
 
@@ -236,8 +250,11 @@ def gmx_chimera_topology_injection(pmd_flask, pmd_chimera_start, pmd_chimera_fin
         flask_top_fn = os.path.join(outputdir, "flask.top")
         gmx_chimera_fn_prefix = os.path.join(outputdir, "gmx_chimera")
 
+        defaults = _Defaults(fudgeLJ=0.5, fudgeQQ=0.8333, gen_pairs='yes')
+        pmd_flask.defaults = defaults
+
         top_gmx = parmed.gromacs.GromacsTopologyFile.from_structure(pmd_flask)
-        top_gmx.defaults = parmed.gromacs.gromacstop._Defaults(fudgeLJ=0.5, fudgeQQ=0.8333, gen_pairs='yes')
+        # top_gmx.defaults = parmed.gromacs.gromacstop._Defaults(fudgeLJ=0.5, fudgeQQ=0.8333, gen_pairs='yes')
         top_gmx.write(flask_top_fn)
 
         with open(flask_top_fn, 'r') as f:
@@ -365,7 +382,21 @@ def gmx_chimera_coordinate_injection(pmd_chimera, mdrecord, tot_frames, query_mo
 
         traj_dir = os.path.dirname(trj_fn)
         pdb_fn = glob.glob(os.path.join(traj_dir, '*.pdb'))[0]
-        trj = md.load_trr(trj_fn, top=pdb_fn)
+        tpr_fn = glob.glob(os.path.join(traj_dir, '*.tpr'))[0]
+
+        # To avoid issues with pbc conditions make whole the molecules
+        trj_whole_fn = os.path.join(traj_dir, "trj_whole.trr")
+        p = subprocess.Popen(['gmx',
+                              'trjconv',
+                              '-f', trj_fn,
+                              '-s', tpr_fn,
+                              '-o', trj_whole_fn,
+                              '-pbc', b'whole'],
+                             stdin=subprocess.PIPE)
+        # Select the entire Flask
+        p.communicate(b'0')
+
+        trj = md.load_trr(trj_whole_fn, top=pdb_fn)
 
         # Skip first frame which is the loaded pdb topology
         trj = trj[1:]
@@ -375,7 +406,7 @@ def gmx_chimera_coordinate_injection(pmd_chimera, mdrecord, tot_frames, query_mo
             indexes.append(a.index)
 
         # Velocities array shape = (frame, atoms, 3) units nm/ps
-        velocities = extract_trj_velocities(trj_fn, indexes=indexes, trj_type=md_engine)
+        velocities = extract_trj_velocities(trj_whole_fn, indexes=indexes, trj_type=md_engine)
 
     else:
         raise ValueError("The selected md engine is not currently support".format(md_engine))
@@ -390,8 +421,10 @@ def gmx_chimera_coordinate_injection(pmd_chimera, mdrecord, tot_frames, query_mo
 
     if morph == "A_to_B":
         pmd_initial = chimera.pmdA
+        pmd_final = chimera.pmdB
     else:
         pmd_initial = chimera.pmdB
+        pmd_final = chimera.pmdA
 
     pmd_flask = mdrecord.get_parmed(sync_stage_name="last")
 
@@ -467,6 +500,10 @@ def gmx_chimera_coordinate_injection(pmd_chimera, mdrecord, tot_frames, query_mo
         sorted_coords = np.array([p[1] for p in sorted(pmd_chimera_initial_coords.items())])
         pmd_chimera.coordinates = sorted_coords.reshape(len(pmd_chimera.atoms), 3)
 
+        # Optimize in place the pmd_chimera coordinates
+        optmize_initial_atom_idxs = list(map_excess_final_new_idxs.values())
+        chimera._optimize_chimera_coords(pmd_chimera, pmd_final, map_chimera_to_final_idxs, optmize_initial_atom_idxs)
+
         pmd_flask.coordinates = frame_xyz
         pmd_flask.box_vectors = bv
         pmd_flask.velocities = vel.in_units_of(unit.angstrom / unit.picosecond)
@@ -534,7 +571,8 @@ def gmx_chimera_coordinate_injection(pmd_chimera, mdrecord, tot_frames, query_mo
 
             # TODO PARMED ERROR
             try:
-                new_pmd_structure.save(flask_gro_fn, overwrite=True)
+                new_pmd_structure.save(flask_gro_fn, overwrite=True, combine='all')
+                # new_pmd_structure.save(flask_gro_fn, overwrite=True)
             except:
                 lig, lig_idx = parmed_find_ligand(new_pmd_structure, lig_res_name="CMR")
 
@@ -713,7 +751,7 @@ def make_edge_depiction(ligandA, ligandB):
     return edge_depiction_string, image
 
 
-def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_depiction_image):
+def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_depiction_string, units='kJ/mol'):
 
     def init(f_dic, r_dic):
 
@@ -726,6 +764,9 @@ def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_d
 
     def make_plots(frames_f, frames_r, work_f, work_r, figure, row):
 
+        work_f = work_f/conv_factor
+        work_r = work_r/conv_factor
+
         # Forward color
         color_f = 'rgb(255,0,0)'
 
@@ -733,14 +774,14 @@ def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_d
         color_r = 'rgb(0,0,255)'
 
         # Axis definition
-        x_left = 'x'+str(row+1)
-        x_right = 'x'+str(row+2)
-        y_left = 'y'+str(row+1)
-        y_right = 'y'+str(row+2)
+        x_left = 'x'+str(row)
+        x_right = 'x'+str(row+1)
+        y_left = 'y'+str(row)
+        y_right = 'y'+str(row+1)
 
         legend = False
 
-        if row == 2:
+        if row == 1:
             legend = True
 
         # Works vs Frames
@@ -816,21 +857,30 @@ def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_d
 
         return figure
 
+    ##############
+
+    display_units = units
+
+    if units == 'kcal/mol':
+        conv_factor = 4.184
+    else:
+        conv_factor = 1.0
+
     # Extract data from the frame:work dictionary
     bound_frames_f, bound_frames_r, bound_work_f, bound_work_r = init(f_bound, r_bound)
 
     unbound_frames_f, unbound_frames_r, unbound_work_f, unbound_work_r = init(f_unbound, r_unbound)
 
-    fig = make_subplots(rows=4, cols=2,
+    fig = make_subplots(rows=3, cols=2,
                         horizontal_spacing=0.01,
                         vertical_spacing=0.1,
                         column_widths=[0.7, 0.3],
                         shared_yaxes=True)
     # Bound Plot
-    make_plots(bound_frames_f, bound_frames_r, bound_work_f, bound_work_r, fig, row=2)
+    make_plots(bound_frames_f, bound_frames_r, bound_work_f, bound_work_r, fig, row=1)
 
     # Unbound Plot
-    make_plots(unbound_frames_f, unbound_frames_r, unbound_work_f, unbound_work_r, fig, row=3)
+    make_plots(unbound_frames_f, unbound_frames_r, unbound_work_f, unbound_work_r, fig, row=2)
 
     # Result table
     data = []
@@ -841,67 +891,60 @@ def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_d
 
     for met, fecs in results.items():
         methods.append(met)
-        ddg.append("{:.2f} \u00B1 {:.2f}".format(fecs[0], fecs[1]))
-        dgbound.append("{:.2f} \u00B1 {:.2f}".format(fecs[2], fecs[3]))
-        dgunbound.append("{:.2f} \u00B1 {:.2f}".format(fecs[4], fecs[5]))
-    #
+        ddg.append("{:.2f} \u00B1 {:.2f}".format(fecs[0]/conv_factor, fecs[1]/conv_factor))
+        dgbound.append("{:.2f} \u00B1 {:.2f}".format(fecs[2]/conv_factor, fecs[3]/conv_factor))
+        dgunbound.append("{:.2f} \u00B1 {:.2f}".format(fecs[4]/conv_factor, fecs[5]/conv_factor))
+
     data.append(methods)
     data.append(ddg)
     data.append(dgbound)
     data.append(dgunbound)
 
+    alpha_color = 'rgba(127, 166, 238, 0.4)'
     fig.add_trace(
         go.Table(
             header=dict(
-                values=["Method", "\u0394\u0394G kJ/mol", "\u0394G Bound kJ/mol", "\u0394G Unbound kJ/mol"],
+                values=["Method", "\u0394\u0394G {}".format(display_units),
+                        "\u0394G Bound {}".format(display_units),
+                        "\u0394G Unbound {}".format(display_units)],
                 font=dict(size=14),
                 align="center",
-                fill_color='paleturquoise',
+                fill_color=alpha_color,
             ),
             cells=dict(
                 values=data,
                 align="center"),
 
             domain=dict(x=[0, 1],
-                        y=[0, 0.15])
+                        y=[0, 0.25])
         )
 
     )
 
-    # Add edge depiction
-    with TemporaryDirectory() as outdir:
-
-        fn = os.path.join(outdir, "depiction.png")
-
-        oedepict.OEWriteImage(fn, edge_depiction_image)
-
-        image1 = Image.open(fn)
-
-        fig.add_layout_image(
-            dict(
-                source=image1,
-                xref="x1", yref="y1",
-                x=-0.5, y=5.8,
-                sizex=10, sizey=8,
-                xanchor="left", yanchor="top",
-                layer="above", opacity=1), row=1, col=1
-
-        )
-
-    # Muatuation Axes
+    # Bound data Frames vs Work
     xaxis1 = dict(
-        zeroline=False,
-        showgrid=False,
-        title="Mutation",
-        showticklabels=False,
-        visible=True
-
+        zeroline=True,
+        showgrid=True,
+        title="Frames"
     )
 
     yaxis1 = dict(
+        zeroline=True,
+        showgrid=True,
+        title="Work Bound {}".format(display_units)
+    )
+
+    # Bound data PDF
+    xaxis2 = dict(
         zeroline=False,
         showgrid=False,
-        title="Molecule",
+        visible=True,
+        title="PDF"
+    )
+
+    yaxis2 = dict(
+        zeroline=False,
+        showgrid=False,
         visible=False
     )
 
@@ -915,14 +958,13 @@ def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_d
     yaxis3 = dict(
         zeroline=True,
         showgrid=True,
-        title="Work Bound kJ/mol"
+        title="Work Unbound {}".format(display_units)
     )
 
     # Bound data PDF
     xaxis4 = dict(
         zeroline=False,
         showgrid=False,
-        visible=True,
         title="PDF"
     )
 
@@ -932,60 +974,30 @@ def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_d
         visible=False
     )
 
-    # Bound data Frames vs Work
-    xaxis5 = dict(
-        zeroline=True,
-        showgrid=True,
-        title="Frames"
-    )
-
-    yaxis5 = dict(
-        zeroline=True,
-        showgrid=True,
-        title="Work Unbound kJ/mol"
-    )
-
-    # Bound data PDF
-    xaxis6 = dict(
-        zeroline=False,
-        showgrid=False,
-        title="PDF"
-    )
-
-    yaxis6 = dict(
-        zeroline=False,
-        showgrid=False,
-        visible=False
-    )
-
     fig.update_layout(
 
-        legend=dict(x=0.7, y=0.8),
+        legend=dict(x=0.7, y=1.08),
 
         barmode='overlay',
         hovermode="closest",
         bargap=0,
         title="Non Equilibrium Switching Results: {}".format(title),
 
-        # Mutation axes
+        # Bound data frames
         xaxis1=xaxis1,
         yaxis1=yaxis1,
 
-        # Bound data frames
+        # Bound data PDF
+        xaxis2=xaxis2,
+        yaxis2=yaxis2,
+
+        # Unbound data frames
         xaxis3=xaxis3,
         yaxis3=yaxis3,
 
-        # Bound data PDF
+        # Unbound data PDF
         xaxis4=xaxis4,
         yaxis4=yaxis4,
-
-        # Unbound data frames
-        xaxis5=xaxis5,
-        yaxis5=yaxis5,
-
-        # Unbound data PDF
-        xaxis6=xaxis6,
-        yaxis6=yaxis6,
 
         # plot_bgcolor="rgba(0, 0, 0, 0)",
         # paper_bgcolor="rgba(0, 0, 0, 0)",
@@ -1013,6 +1025,26 @@ def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_d
         # Add the following lines for Orion CSS Plotly integration
         report_str = ""
 
+        edge_string = """
+        <style>
+            .mutation {
+                display: block;
+                width: 400px;
+                height: 250px;
+        }
+
+        .mutation svg {
+            display: block;
+            max-width: 100%;
+            }
+        </style>"""
+
+        edge_string += """
+        <main class="mutation">
+            {svg}
+        </main>\n
+        """.format(svg=edge_depiction_string)
+
         for idx in range(0, len(report_string_list)):
             line = report_string_list[idx]
             if "<head>" in line:
@@ -1025,122 +1057,157 @@ def plot_work_pdf(f_bound, r_bound, f_unbound, r_unbound, results, title, edge_d
 
             report_str += line
 
+        report_str = edge_string + "\n" + report_str
+
     return report_str
 
 
-def generate_plots_and_stats(exp_data_dic, predicted_data_dic, method='BAR', DDG_symmetrize=False):
+def generate_plots_and_stats(lig_pred_expt_dic, edge_pred_expt_dic,
+                             DDG_symmetrize=False, units='kcal/mol', dataset_name=''):
 
-    def calculate_statistics(exp, pred, plot_type='ddG'):
+    # Generate html table for predicted DGs, with corresponding expt DG where available
+    # We will make a floe report of this no matter what
+    html_predDGTable = flrpt.GeneratePredDGTable(lig_pred_expt_dic, units=units)
 
-        try:
-            mae = stats.bootstrap_statistic(exp, pred, statistic="MAE", plot_type=plot_type)
-            rae = stats.bootstrap_statistic(exp, pred, statistic="RAE", plot_type=plot_type)
-            rmse = stats.bootstrap_statistic(exp, pred, statistic="RMSE", plot_type=plot_type)
-            rrmse = stats.bootstrap_statistic(exp, pred, statistic="RRMSE", plot_type=plot_type)
-            r2 = stats.bootstrap_statistic(exp, pred, statistic="R2", plot_type=plot_type)
-            rho = stats.bootstrap_statistic(exp, pred, statistic="RHO", plot_type=plot_type)
-            ktau = stats.bootstrap_statistic(exp, pred, statistic="KTAU", plot_type=plot_type)
+    # DG graph/table: only make this if there are more than two points with expt and predicted
+    # Determine how many points there are to correlate
+    n_DG_expt_pred_points = 0
+    for name, data in lig_pred_expt_dic.items():
+        if data[2] is not None:
+            n_DG_expt_pred_points += 1
 
-            # Generate statistic without bootstraping
-            mae['data'] = stats.compute_statistic(exp, pred, "MAE")
-            rae['data'] = stats.compute_statistic(exp, pred, "RAE")
-            rmse['data'] = stats.compute_statistic(exp, pred, "RMSE")
-            rrmse['data'] = stats.compute_statistic(exp, pred, "RRMSE")
-            r2['data'] = stats.compute_statistic(exp, pred, "R2")
-            rho['data'] = stats.compute_statistic(exp, pred, "RHO")
-            ktau['data'] = stats.compute_statistic(exp, pred, "KTAU")
+    # Proceed with generating correlation graphs/table if there are more than two points to correlate
+    if n_DG_expt_pred_points > 2:
+        html_stats_DG, html_RLModel_DG, html_fig_DG = flrpt.GenerateAffinityGraphTablesHTML(
+            lig_pred_expt_dic, '\u0394G', units=units)
 
-            statistics = dict()
+    # Generate html table for predicted DGs, with corresponding expt DG where available
+    # We will make a floe report of this no matter what
+    html_predDDGTable = flrpt.GeneratePredDGTable(edge_pred_expt_dic, units=units,
+                                                  glabel='\u0394\u0394G')
 
-            statistics['MAE'] = mae
-            statistics['RAE'] = rae
-            statistics['RMSE'] = rmse
-            statistics['RRMSE'] = rrmse
-            statistics['R2'] = r2
-            statistics['RHO'] = rho
-            statistics['KTAU'] = ktau
+    # DDG graph/table: only make this if there are more than two points with expt and predicted
+    # Determine how many points there are to correlate
+    n_DDG_expt_pred_points = 0
+    for name, data in edge_pred_expt_dic.items():
+        if data[2] is not None:
+            n_DDG_expt_pred_points += 1
 
-            return statistics
+    # Proceed with generating correlation graphs/table if there are more than two points to correlate
+    if n_DDG_expt_pred_points > 2:
+        html_stats_DDG, html_RLModel_DDG, html_fig_DDG = flrpt.GenerateAffinityGraphTablesHTML(
+            edge_pred_expt_dic, '\u0394\u0394G', units=units, symmetrize=DDG_symmetrize)
 
-        except Exception as e:
-            return None
+    # html for the title for the correlation floe report
+    dataset_name = ''
+    if dataset_name != '':
+        dataset_name += ': '
+    #
+    html_DG_corr_report_title = '''
+    <div class="affinity-report-wrapper">  <br>
+      <h1 style="text-align: center;">{}Binding Free Energy Predictions by {}</h1>
+      <hr style="max-width: 1000px;">
+    </div>
+    '''.format(dataset_name, 'NES')
 
-    def sub_plot(x, err_x, y, err_y, figure, hover_text, col, range):
+    htmlString = (flrpt._affnty_floe_report_header +
+                  flrpt._statsTableStyle +
+                  flrpt._RLModelTableStyle +
+                  flrpt._affnty_style_footer)
 
-        if col == 1:
-            hov_label = "<b>%{text}</b><br><br>" + "\u0394\u0394G_Exp: %{x:.2f}<br>" + "\u0394\u0394G_Pred: %{y:.2f}<br>"
+    htmlString += html_DG_corr_report_title
+
+    if n_DG_expt_pred_points > 2:
+        htmlString += flrpt.GenerateGraphTablesHeaderHTML('\u0394G')
+        htmlString += html_fig_DG + '\n  </div>\n\n'
+        htmlString += flrpt._AffinityTableSectionHeader
+        htmlString += html_stats_DG
+        htmlString += html_RLModel_DG
+        htmlString += '\n  </div>\n</div>\n\n'
+    else:
+        print('Not writing DG Graph/Tables in floe report; not enough points')
+
+    htmlString += html_predDGTable
+
+    if n_DDG_expt_pred_points > 2:
+        htmlString += flrpt._section_divider
+        htmlString += flrpt.GenerateGraphTablesHeaderHTML('\u0394\u0394G')
+        htmlString += html_fig_DDG + '\n  </div>\n\n'
+        htmlString += flrpt._AffinityTableSectionHeader
+        htmlString += html_stats_DDG
+        htmlString += html_RLModel_DDG
+        htmlString += '\n  </div>\n</div>\n\n'
+    else:
+        print('Not writing DDG Graph/Tables in floe report; not enough points')
+
+    htmlString += html_predDDGTable
+
+    htmlString += flrpt._html_trailer
+
+    return htmlString
+
+
+def CombineAndOffsetPredExptDGs(affinity_pred, lig_expt):
+
+    if lig_expt is not None:
+        lig_names = set(lig_expt.keys())
+    else:
+        lig_names = list()
+
+    combined = dict()
+
+    if affinity_pred is not None:
+        for lig_name in affinity_pred.keys():
+            combined[lig_name] = affinity_pred[lig_name]
+            if lig_name in lig_names:
+                # Append experimental binding affinity & error
+
+                # Experimental binding affinity error
+                combined[lig_name] = combined[lig_name] + [lig_expt[lig_name][0], lig_expt[lig_name][1]]
+            else:
+                combined[lig_name] = combined[lig_name] + [None, None]
+
+        # Select data with both predicted and experimental data to figure out DG offset
+        exp_DG = []
+
+        pred_DG_with_expt = []
+
+        for lig_name in combined.keys():
+            lig = combined[lig_name]
+            if lig[2] is not None:
+                pred_DG_with_expt.append(lig[0])
+                exp_DG.append(lig[2])
+
+        # Offset Predicted DGs to have the same mean as that of the experimental DGs
+        if len(exp_DG) > 0:
+            exp_DG_mean = sum(exp_DG)/len(exp_DG)
+            pred_DG_arr = np.array(pred_DG_with_expt)
+            offset = exp_DG_mean - pred_DG_arr.mean()
         else:
-            hov_label = "<b>%{text}</b><br><br>" + "\u0394G_Exp: %{x:.2f}<br>" + "\u0394G_Pred: %{y:.2f}<br>"
+            offset = 0
 
-        figure.add_trace(go.Scatter(x=x, y=y,
-                                    text=hover_text,
-                                    hovertemplate=hov_label,
-                                    name='\u0394\u0394G',
-                                    mode='markers',
-                                    xaxis='x1',
-                                    yaxis='y1',
-                                    showlegend=False,
-                                    error_x=dict(
-                                        type='data',
-                                        array=err_x,
-                                        color='purple',
-                                        visible=True),
-                                    error_y=dict(
-                                        type='data',
-                                        array=err_y,
-                                        color='purple',
-                                        visible=True),
+        for lig_name in combined.keys():
+            combined[lig_name][0] += offset
+    else:
+        combined = {name: [None, None] + lig_expt[name] for name in lig_expt}
 
-                                    marker=dict(color='purple', size=8)
-                                    ),
-                         row=1, col=col)
+    return combined
 
-        slope, intercept, r_value, p_value, std_err = sc.stats.linregress(np.array(x),
-                                                                          np.array(y))
 
-        x_plt = np.linspace(range[0], range[1], 100, endpoint=True)
+def predictDGsfromDDGs(predicted_data_dic):
 
-        line = slope * np.array(x_plt) + intercept
-
-        # Best fit line
-        figure.add_trace(go.Scatter(
-            x=x_plt,
-            y=line,
-            hovertext="y = {:.2f} * x + {:.2f}".format(slope, intercept),
-            hoverinfo="text",
-            mode="lines",
-            showlegend=False,
-            line=dict(color='red', width=2)),
-            row=1, col=col
-        )
-
-        # Theoretical line
-        figure.add_trace(go.Scatter(
-            x=x_plt,
-            y=x_plt,
-            hovertext="1:1",
-            hoverinfo="text",
-            mode="lines",
-            showlegend=False,
-            line=dict(color='black', width=2, dash='dash')),
-            row=1, col=col
-        )
-
-        return
+    # print('predicted_data_dic:',predicted_data_dic)
 
     raw_results = []
 
-    if len(exp_data_dic) != len(predicted_data_dic):
-        raise ValueError("Experimental vs Predicted data mismatch number: {} vs {}".
-                         format(len(exp_data_dic), len(predicted_data_dic)))
-
-    for edge_name, exp_val in exp_data_dic.items():
+    for edge_name, exp_val in predicted_data_dic.items():
         ligA_name = edge_name.split()[0]
         ligB_name = edge_name.split()[2]
 
         res = wrangle.Result(ligA_name, ligB_name,
-                             exp_val[0], exp_val[1],
-                             predicted_data_dic[edge_name][0], predicted_data_dic[edge_name][1], 0.0)
+                             predicted_data_dic[edge_name][0],
+                             predicted_data_dic[edge_name][1],
+                             0.0)
 
         raw_results.append(res)
 
@@ -1148,269 +1215,39 @@ def generate_plots_and_stats(exp_data_dic, predicted_data_dic, method='BAR', DDG
 
     network.check_weakly_connected()
 
-    # Relative Binding Affinity
-    exp_DDG = np.asanyarray([x.exp_DDG for x in network.results])
-    dexp_DDG = np.asanyarray([x.dexp_DDG for x in network.results])
-    ligA_names = [x.ligandA for x in network.results]
-
-    pred_DDG = np.asanyarray([y.calc_DDG for y in network.results])
-    dpred_DDG = np.asanyarray([y.mbar_dDDG for y in network.results])
-    ligB_names = [y.ligandB for y in network.results]
-
-    hov_edge = []
-    for lna, lnb in zip(ligA_names, ligB_names):
-        hov_edge.append("{} to {}".format(lna, lnb))
-
-    if DDG_symmetrize:
-        exp_DDG = np.asarray([x.exp_DDG for x in network.results] + [-x.exp_DDG for x in network.results])
-        dexp_DDG = np.asarray([x.dexp_DDG for x in network.results] + [x.dexp_DDG for x in network.results])
-
-        pred_DDG = np.asarray([y.calc_DDG for y in network.results] + [-y.calc_DDG for y in network.results])
-        dpred_DDG = np.asarray([y.mbar_dDDG for y in network.results] + [y.mbar_dDDG for y in network.results])
-        for lna, lnb in zip(ligB_names, ligA_names):
-            hov_edge.append("{} to {}".format(lna, lnb))
-
-    # Relative statistics
-    relative_statistics = calculate_statistics(exp_DDG, pred_DDG, plot_type="ddG")
-
     if network.weakly_connected:
-        figure = make_subplots(rows=2, cols=2,
-                               subplot_titles=("Relative Binding Affinity",
-                                               "Centered Binding Affinity"),
-                               vertical_spacing=0.0,
-                               row_heights=[0.5, 0.5],
-                               )
-    else:
-        figure = make_subplots(rows=2, cols=2, subplot_titles=("Relative Binding Affinity",
-                                                               "Centered Binding Affinity Not Available"))
 
-    # Axis range:
-    conc_DDG = np.concatenate((exp_DDG, pred_DDG))
-
-    min_range_DDG = np.min(conc_DDG)
-    max_range_DDG = np.max(conc_DDG)
-
-    conc_dDDG = np.concatenate((dexp_DDG, dpred_DDG))
-
-    max_dDDG = np.max(conc_dDDG)
-
-    # Correct for the error bars
-    min_range_DDG -= max_dDDG
-    max_range_DDG += max_dDDG
-
-    padding = int(round((np.abs(min_range_DDG) + np.abs(max_range_DDG)) * 0.05))
-
-    min_range_DDG -= padding
-    max_range_DDG += padding
-
-    range_axis_DDG = [min_range_DDG, max_range_DDG]
-
-    sub_plot(exp_DDG, dexp_DDG, pred_DDG, dpred_DDG, figure, hov_edge, 1, range_axis_DDG)
-
-    xaxis1 = dict(
-        zeroline=True,
-        showgrid=True,
-        tickfont=dict(
-            size=18,
-        ),
-        range=range_axis_DDG,
-        constrain='domain',
-        title="Experimental \u0394\u0394G kJ/mol",
-        titlefont=dict(
-            size=20
-        )
-    )
-
-    yaxis1 = dict(
-        zeroline=True,
-        showgrid=True,
-        tickfont=dict(
-            size=18,
-        ),
-        scaleanchor="x1",
-        scaleratio=1,
-        range=range_axis_DDG,
-        title="Predicted \u0394\u0394G kJ/mol",
-        titlefont=dict(
-            size=20
-        )
-    )
-
-    figure.update_layout(
-        title='Method used to estimate \u0394\u0394G: {}'.format(method),
-        xaxis1=xaxis1,
-        yaxis1=yaxis1,
-        autosize=False,
-        width=1100,
-        height=1000,
-    )
-
-    if network.weakly_connected:
+        affinity_dic = dict()
 
         # Absolute Binding Affinity from Hanna's code
         graph = network.graph
 
-        exp_DG = np.asarray([node[1]['f_i_exp'] for node in graph.nodes(data=True)])
         pred_DG = np.asarray([node[1]['f_i_calc'] for node in graph.nodes(data=True)])
-        dexp_DG = np.asarray([node[1]['df_i_exp'] for node in graph.nodes(data=True)])
         dpred_DG = np.asarray([node[1]['df_i_calc'] for node in graph.nodes(data=True)])
 
         # centralising
         # this should be replaced by providing one experimental result
-        exp_DG = exp_DG - np.mean(exp_DG)
+        # exp_DG = exp_DG - np.mean(exp_DG)
         pred_DG = pred_DG - np.mean(pred_DG)
-
-        if relative_statistics is not None:
-            # Absolute statistics
-            absolute_statistics = calculate_statistics(exp_DG, pred_DG, plot_type="dG")
 
         # Assuming that dic is in Order
         hov_ligs = []
         for name, id in network._name_to_id.items():
             hov_ligs.append(name)
 
-        # Axis range:
-        conc_DG = np.concatenate((exp_DG, pred_DG))
+        if not (len(hov_ligs) == len(pred_DG) == len(dpred_DG)):
+            raise ValueError("List size mismatch")
 
-        min_range_DG = np.min(conc_DG)
-        max_range_DG = np.max(conc_DG)
+        for name, pred, pred_err in zip(hov_ligs, pred_DG, dpred_DG):
+            affinity_dic[name] = [pred, pred_err]
 
-        conc_dDG = np.concatenate((dexp_DG, dpred_DG))
-        max_dDG = np.max(conc_dDG)
+#        for name, l in affinity_dic.items():
+#            print("name {} pred {} +- {}".format(name, l[0], l[1]))
 
-        # Correct for the error bars
-        min_range_DG -= max_dDG
-        max_range_DG += max_dDG
-
-        padding = int(round((np.abs(min_range_DG) + np.abs(max_range_DG)) * 0.05))
-
-        min_range_DG -= padding
-        max_range_DG += padding
-
-        range_axis_DG = [min_range_DG, max_range_DG]
-
-        sub_plot(exp_DG, dexp_DG, pred_DG, dpred_DG, figure, hov_ligs, 2, range_axis_DG)
-
-        xaxis2 = dict(
-            zeroline=True,
-            showgrid=True,
-            tickfont=dict(
-                size=18,
-            ),
-
-            range=range_axis_DG,
-            constrain='domain',
-            title="Experimental \u0394G kJ/mol",
-            titlefont=dict(
-                size=20
-            )
-        )
-
-        yaxis2 = dict(
-            zeroline=True,
-            showgrid=True,
-            tickfont=dict(
-                size=18,
-            ),
-            scaleanchor="x2",
-            scaleratio=1,
-            range=range_axis_DG,
-            title="Predicted \u0394G kJ/mol",
-            titlefont=dict(
-                size=20
-            )
-        )
-
-        figure.update_layout(
-            xaxis2=xaxis2,
-            yaxis2=yaxis2
-        )
+    if network.weakly_connected:
+        return affinity_dic
     else:
-        print('Graph is not connected enough to compute absolute values')
-
-    data = []
-    methods = []
-    values = []
-
-    if relative_statistics is not None:
-
-        for meth, val in relative_statistics.items():
-            if meth == 'RAE':
-                meth = "Relative MAE"
-            if meth == 'RRMSE':
-                meth = "Relative RMSE"
-            if meth == 'R2':
-                meth = "Pearson's R\N{SUPERSCRIPT TWO}"
-            if meth == 'RHO':
-                meth = "Spearman's \u03C1"
-            if meth == "KTAU":
-                meth = "Kendall's \u03C4"
-
-            methods.append(meth)
-
-            vl_line = "{:.2f} [ {:.2f} {:.2f}]".format(val['data'], val['low'], val['high'])
-            values.append(vl_line)
-
-        data.append(methods)
-        data.append(values)
-
-        data.append([])
-
-        values = []
-
-        if network.weakly_connected:
-            for meth, val in absolute_statistics.items():
-                vl_line = "{:.2f} [ {:.2f} {:.2f}]".format(val['data'], val['low'], val['high'])
-                values.append(vl_line)
-
-        data.append(methods)
-        data.append(values)
-
-        # Add Table with statistics. Data in kJ/mol
-        figure.add_trace(
-            go.Table(
-                header=dict(
-                    values=["Method", "\u0394\u0394G kJ/mol", "", "Method", "\u0394G kJ/mol"],
-                    font=dict(size=14),
-                    align="center",
-                    fill_color='paleturquoise',
-                ),
-                cells=dict(
-                    values=data,
-                    align="center"),
-
-                domain=dict(x=[0, 1],
-                            y=[0, 0.25])
-            )
-        )
-
-    # figure.show()
-
-    with TemporaryDirectory() as outdir:
-
-        fn = os.path.join(outdir, "report.html")
-
-        plotly.offline.plot(figure, filename=fn)
-
-        with open(fn, 'r') as f:
-            report_string_list = f.readlines()
-
-        # Add the following lines for Orion CSS Plotly integration
-        report_str = ""
-
-        for idx in range(0, len(report_string_list)):
-            line = report_string_list[idx]
-            if "<head>" in line:
-                report_str += """<head><meta charset="utf-8" />   
-                   <style>
-                       .modebar { display:unset; }
-                       .js-plotly-plot { min-height: 900px; }
-                       .js-plotly-plot { min-width: 900px; }
-                   </style></head>\n"""
-
-            report_str += line
-
-    return report_str
+        return None
 
 
 def upload_gmx_files(tar_fn, record, shard_name=""):
