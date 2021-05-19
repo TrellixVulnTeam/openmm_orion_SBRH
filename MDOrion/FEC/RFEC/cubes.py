@@ -84,7 +84,7 @@ from orionclient.session import in_orion
 
 class BoundUnboundSwitchCube(RecordPortsMixin, ComputeCube):
     title = "Bound and UnBound Switching Cube"
-    # version = "0.1.4"
+    
     classification = [["Simulation Flask Preparation"]]
     tags = ['Simulation', 'Complex', 'Protein', 'Ligand']
     description = """
@@ -666,7 +666,7 @@ class NESGMXChimera(RecordPortsMixin, ComputeCube):
 
 class NESGMX(RecordPortsMixin, ComputeCube):
     title = "NES GMX"
-    # version = "0.1.4"
+    
     classification = [["Free Energy"]]
     tags = ["Ligand", "Protein", "Free Energy", "Non Equilibrium"]
     description = """
@@ -1146,7 +1146,7 @@ class NESAnalysis(RecordPortsMixin, ComputeCube):
 
 class PlotNESResults(RecordPortsMixin, ComputeCube):
     title = "RBFE Plot"
-    # version = "0.1.4"
+    
     classification = [["RBFE Analysis"]]
     tags = ['Complex', 'Protein', 'Ligand']
     description = """
@@ -1320,7 +1320,7 @@ class PlotNESResults(RecordPortsMixin, ComputeCube):
 
 class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
     title = "PredictDG FromDDG Plot"
-    # version = "0.1.4"
+    
     classification = [["FEC Analysis"]]
     tags = ['Protein', 'Ligand', 'FEC', 'RBFE', 'NES']
     description = """
@@ -1344,7 +1344,6 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
     
     Data Record Stream - Streamed-out of records containing  predicted relative 
     and absolute binding affinities used to feed the plot affinity cube
-
     """
 
     uuid = "9d8e9390-eb0d-4b97-afec-b0f6482f2843"

@@ -34,11 +34,14 @@ from openeye import oechem
 
 from MDOrion.ComplexPrep.utils import clash_detection
 
+from oemdtoolbox.ForceField.md_components import MDComponents
+
 
 class ComplexPrepCube(RecordPortsMixin, ComputeCube):
     title = "Complex Preparation"
-    # version = "0.1.4"
+
     classification = [["Flask Preparation"]]
+
     tags = ['Complex', 'Ligand', 'Protein']
     description = """
     This Cube assembles the complex made of a protein and its docked ligands. 
@@ -69,15 +72,16 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
     protein_port = RecordInputPort("protein_port", initializer=True)
 
     def begin(self):
+
+        self.opt = vars(self.args)
+        self.opt['Logger'] = self.log
+
+        self.md_components = None
+
         for record in self.protein_port:
 
-            self.opt = vars(self.args)
-            self.opt['Logger'] = self.log
-
-            if not record.has_value(Fields.md_components):
-                raise ValueError("MD Components Field is missing")
-
-            self.md_components = record.get_value(Fields.md_components)
+            if record.has_value(Fields.md_components):
+                self.md_components = record.get_value(Fields.md_components)
 
         return
 
@@ -89,6 +93,26 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
         try:
 
             if port == 'intake':
+
+                if self.md_components is None:
+                    self.log.warn("Protein has not been found on the protein port. Looking on the ligand port")
+
+                    if record.has_value(Fields.design_unit_from_spruce):
+
+                        du = record.get_value(Fields.design_unit_from_spruce)
+
+                        md_components = MDComponents(du, components_title=du.GetTitle()[0:12])
+
+                        # print(md_components)
+
+                        if md_components.has_protein:
+                            self.log.info("...Protein found: {}".format(md_components.get_protein.GetTitle()))
+                        else:
+                            raise ValueError("It was not possible to detect the Protein Component "
+                                             "from the protein nor from the ligand ports")
+
+                else:
+                    md_components = self.md_components
 
                 if not record.has_value(Fields.primary_molecule):
                     raise ValueError("Missing the ligand primary molecule field")
@@ -105,16 +129,16 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                 else:
                     ligand_title = record.get_value(Fields.title)
 
-                protein = self.md_components.get_protein
+                protein = md_components.get_protein
 
-                self.md_components.set_ligand(ligand)
+                md_components.set_ligand(ligand)
 
                 # Check if the ligand is inside the binding site. Cutoff distance 3A
                 if not oeommutils.check_shell(ligand, protein, 3):
                     raise ValueError("The Ligand is probably outside the Protein binding site")
 
-                # Remove Steric Clashes between the ligand and the other Flask components
-                for comp_name, comp in self.md_components.get_components.items():
+                # Remove Steric Clashes between the ligand and the other System components
+                for comp_name, comp in md_components.get_components.items():
 
                     # Skip clashes between the ligand itself
                     if comp_name in ['ligand']:
@@ -152,7 +176,7 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                                 "Detected steric-clashes between the ligand: {} and metals. "
                                 "The clashing metals are going to be removed".format(ligand_title))
 
-                            self.md_components.set_metals(metal_del)
+                            md_components.set_metals(metal_del)
 
                     # Remove clashes if the distance between the selected component and the ligand
                     # is less than 1.5A
@@ -166,11 +190,11 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                                     ligand_title,
                                     comp_name, comp_name))
 
-                            self.md_components.set_component_by_name(comp_name, comp_del)
+                            md_components.set_component_by_name(comp_name, comp_del)
 
-                complex_title = 'p' + self.md_components.get_title + '_l' + ligand_title
+                complex_title = 'p' + md_components.get_title + '_l' + ligand_title
 
-                mdcomp = self.md_components.copy
+                mdcomp = md_components.copy
                 mdcomp.set_title(complex_title)
 
                 # Check Ligand

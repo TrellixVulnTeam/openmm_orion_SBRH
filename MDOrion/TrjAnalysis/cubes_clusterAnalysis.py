@@ -70,7 +70,7 @@ from MDOrion.TrjAnalysis.dowload_fr_utils import download_report
 
 class MDFloeReportCube(RecordPortsMixin, ComputeCube):
     title = "MDFloeReportCube"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Report']
     description = """
@@ -236,7 +236,7 @@ class MDFloeReportCube(RecordPortsMixin, ComputeCube):
 
 class ClusterOETrajCube(RecordPortsMixin, ComputeCube):
     title = 'Cluster Ligand Traj OEMol'
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Clustering', 'Ligand', 'Protein']
 
@@ -841,7 +841,7 @@ class TrajAnalysisReportDataset(RecordPortsMixin, ComputeCube):
 
 class MDTrajAnalysisClusterReport(RecordPortsMixin, ComputeCube):
     title = 'Extract relevant outputs of MD Traj Cluster  Analysis'
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Ligand', 'Protein']
 
@@ -1105,7 +1105,7 @@ class MDTrajAnalysisClusterReport(RecordPortsMixin, ComputeCube):
 
 class ExtractMDDataCube(RecordPortsMixin, ComputeCube):
     title = "MDExtractDataCube"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Report']
     description = """

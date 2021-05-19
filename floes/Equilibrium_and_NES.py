@@ -26,6 +26,8 @@ from MDOrion.FEC.RFEC.cubes import BoundUnboundSwitchCube
 
 from MDOrion.SubFloes.SubfloeFunctions import nes_gmx_subfloe
 
+from snowball.utils.dataset_reader_opt import DatasetReaderOptCube
+
 job = WorkFloe("Equilibrium and Non Equilibrium Switching", title="Equilibrium and Non Equilibrium Switching")
 
 job.description = """
@@ -69,7 +71,7 @@ md_lig_components.set_parameters(multiple_flasks=True)
 
 # Protein Reading cube. The protein prefix parameter is used to select a name for the
 # output system files
-iprot = DatasetReaderCube("ProteinReader", title="Protein Reader")
+iprot = DatasetReaderOptCube("ProteinReader", title="Protein Reader")
 iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input Dataset',
                         description="Protein Dataset", order=0)
 
