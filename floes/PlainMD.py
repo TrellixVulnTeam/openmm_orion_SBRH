@@ -33,16 +33,20 @@ from MDOrion.Flask.cubes import (IDSettingCube,
                                  CollectionSetting,
                                  ParallelRecordSizeCheck)
 
-job = WorkFloe('Solvate and Run MD',
-               title='Solvate and Run MD')
+
+floe_title = 'Solvate and Run MD'
+tags_for_floe = ['MDPrep', 'MD']
+#
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = open(path.join(path.dirname(__file__), 'PlainMD_desc.rst'), 'r').read()
 # Locally the floe can be invoked by running the terminal command:
 # python floes/PlainMD.py --ligands ligands.oeb --protein protein.oeb --out prod.oeb
 
-job.classification = [['General MD']]
 job.uuid = "266481fc-b257-41e9-b2f9-a92bf028b701"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 ifs = DatasetReaderCube("SystemReader", title="Flask Reader")
 ifs.promote_parameter("data_in", promoted_name="solute", title='Solute Input File',

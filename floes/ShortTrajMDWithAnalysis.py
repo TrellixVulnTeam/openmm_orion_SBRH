@@ -37,8 +37,8 @@ from MDOrion.Flask.cubes import (CollectionSetting,
 floe_title = 'Short Trajectory MD with Analysis'
 tags_for_floe = ['MDPrep', 'MD', 'MDAnlys']
 #
-job = WorkFloe(floe_title.join(' [{}]'.format(tag) for tag in tags_for_floe),
-               title=floe_title)
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
 job.classification = [tags_for_floe]
 job.tags = tags_for_floe
 

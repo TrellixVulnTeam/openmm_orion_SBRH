@@ -25,12 +25,12 @@ from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 floe_title = 'Non-Equilibrium Switching'
 tags_for_floe = ['MD', 'FEC']
 #
-job = WorkFloe(floe_title.join(' [{}]'.format(tag) for tag in tags_for_floe),
-               title=floe_title)
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
 job.classification = [tags_for_floe]
 job.tags = tags_for_floe
 
-job.description = open(path.join(path.dirname(__file__), 'NonEquilSwch.rst'), 'r').read()
+job.description = open(path.join(path.dirname(__file__), 'NonEquilSwch_desc.rst'), 'r').read()
 
 job.uuid = "74cd690f-f98a-47e0-bfa4-1858e4080dc3"
 

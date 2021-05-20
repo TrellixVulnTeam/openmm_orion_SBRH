@@ -33,11 +33,11 @@ from snowball import (ExceptHandlerCube,
                       SuccessCounterCube)
 
 
-floe_title = 'Solvate and Run Protein-Ligand MD'
+floe_title = 'Bound Protein-Ligand MD'
 tags_for_floe = ['MDPrep', 'MD']
 #
-job = WorkFloe(floe_title.join(' [{}]'.format(tag) for tag in tags_for_floe),
-               title=floe_title)
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
 job.classification = [tags_for_floe]
 job.tags = tags_for_floe
 

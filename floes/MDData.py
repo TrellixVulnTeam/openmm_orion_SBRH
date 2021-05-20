@@ -29,8 +29,8 @@ from os import path
 floe_title = 'Extract Short Trajectory MD Results for Download'
 tags_for_floe = ['Helper']
 #
-job = WorkFloe(floe_title.join(' [{}]'.format(tag) for tag in tags_for_floe),
-               title=floe_title)
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
 job.classification = [tags_for_floe]
 job.tags = tags_for_floe
 

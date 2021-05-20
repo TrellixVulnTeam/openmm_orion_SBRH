@@ -23,16 +23,19 @@ from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 from MDOrion.FEC.RFEC.cubes import BoundUnboundSwitchCube
 
 
-job = WorkFloe("MD of Ligand Bound and Unbound to Protein",
-               title="MD of Ligand Bound and Unbound to Protein")
+floe_title = 'Bound and Unbound Protein-Ligand MD'
+tags_for_floe = ['MDPrep', 'MD']
+#
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = """
 TBD
 """
 
-job.classification = [['MD', 'Protein-Ligand', 'FEC']]
 job.uuid = "537f64c5-0d84-4537-ad74-c55037304e07"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 # Ligand setting
 iligs = DatasetReaderCube("LigandReader", title="Ligand Reader")
