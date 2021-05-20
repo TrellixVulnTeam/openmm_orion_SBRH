@@ -1,3 +1,6 @@
+
+from os import path
+
 from floe.api import (WorkFloe,
                       ParallelCubeGroup)
 
@@ -23,7 +26,7 @@ from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 from MDOrion.FEC.RFEC.cubes import BoundUnboundSwitchCube
 
 
-floe_title = 'Bound and Unbound Protein-Ligand MD'
+floe_title = 'Ligand Bound and Unbound Equilibration for NES'
 tags_for_floe = ['MDPrep', 'MD']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
@@ -31,15 +34,15 @@ job = WorkFloe(floe_title, title=floe_title+tag_str)
 job.classification = [tags_for_floe]
 job.tags = tags_for_floe
 
-job.description = """
-TBD
-"""
+job.description = open(path.join(path.dirname(__file__),
+                                 'ProteinLigandMD_Bound_UnBound_desc.rst'), 'r').read()
 
 job.uuid = "537f64c5-0d84-4537-ad74-c55037304e07"
 
 # Ligand setting
 iligs = DatasetReaderCube("LigandReader", title="Ligand Reader")
-iligs.promote_parameter("data_in", promoted_name="ligands", title="Ligand Input Dataset", description="Ligand Dataset")
+iligs.promote_parameter("data_in", promoted_name="ligands",
+                        title="Ligand Input Dataset", description="Ligand Dataset")
 
 ligset = LigandSetting("Ligand Setting", title="Ligand Setting")
 ligset.set_parameters(lig_res_name='LIG')

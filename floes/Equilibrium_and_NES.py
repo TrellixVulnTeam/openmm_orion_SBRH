@@ -1,4 +1,6 @@
 
+from os import path
+
 from floe.api import (WorkFloe,
                       ParallelCubeGroup)
 
