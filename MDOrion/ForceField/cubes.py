@@ -44,7 +44,7 @@ from snowball.utils.log_params import LogFieldParam
 
 class ForceFieldCube(RecordPortsMixin, ComputeCube):
     title = "Force Field Application"
-    # version = "0.1.4"
+    
     classification = [["Force Field"]]
     tags = ['ForceField']
     description = """

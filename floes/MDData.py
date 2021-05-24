@@ -25,15 +25,18 @@ from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
 from os import path
 
-job = WorkFloe("Extract Short Trajectory MD Results for Download",
-               title="Extract Short Trajectory MD Results for Download")
 
+floe_title = 'Extract Short Trajectory MD Results for Download'
+tags_for_floe = ['Helper']
+#
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = open(path.join(path.dirname(__file__), 'MDData_desc.rst'), 'r').read()
 
-job.classification = [['MD Data']]
 job.uuid = "6665ca20-6014-4f3b-8d02-4b5d15b75ee3"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 ifs = DatasetReaderCube("SystemReader", title="Flask Reader")
 ifs.promote_parameter("data_in", promoted_name="system",

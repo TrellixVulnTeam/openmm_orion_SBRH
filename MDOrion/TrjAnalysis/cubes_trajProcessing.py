@@ -37,7 +37,7 @@ from MDOrion.TrjAnalysis.water_utils import nmax_waters
 
 from openeye import oechem
 
-import os,math
+import os, math
 
 import traceback
 
@@ -56,7 +56,7 @@ magic_big_float_to_replace_NaN = 4.0e+256
 
 class TrajToOEMolCube(RecordPortsMixin, ComputeCube):
     title = 'Traj to OEMol Cube'
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Trajectory', 'Ligand', 'Protein']
 
@@ -148,8 +148,8 @@ class TrajToOEMolCube(RecordPortsMixin, ComputeCube):
                 raise ValueError("The Reference Ligand and the Ligand MD component mismatch."
                                  " Isomeric Smiles String check failure: {} vs {}".format(smi_lig_comp, smi_lig_ref))
 
-            ptraj, ltraj, wtraj = utl.extract_aligned_prot_lig_wat_traj(md_components, flask, traj_fn, opt,
-                                                                        water_cutoff=opt['water_cutoff'])
+            pext_traj, ltraj, wtraj = utl.extract_aligned_prot_lig_wat_traj(md_components, flask, traj_fn, opt,
+                                                                            water_cutoff=opt['water_cutoff'])
 
             if not record.has_value(Fields.ligand_name):
                 raise ValueError("The ligand name is missing from the record")
@@ -158,10 +158,10 @@ class TrajToOEMolCube(RecordPortsMixin, ComputeCube):
                 raise ValueError("The protein name is missing from the record")
 
             ltraj.SetTitle(record.get_value(Fields.ligand_name))
-            ptraj.SetTitle(record.get_value(Fields.protein_name))
+            pext_traj.SetTitle(record.get_value(Fields.protein_name))
 
-            opt['Logger'].info('{} #atoms, #confs in protein traj OEMol: {}, {}'.format(
-                system_title, ptraj.NumAtoms(), ptraj.NumConfs()))
+            opt['Logger'].info('{} #atoms, #confs in extended protein traj OEMol: {}, {}'.format(
+                system_title, pext_traj.NumAtoms(), pext_traj.NumConfs()))
             opt['Logger'].info('{} #atoms, #confs in ligand traj OEMol: {}, {}'.format(
                 system_title, ltraj.NumAtoms(), ltraj.NumConfs()))
             opt['Logger'].info('{} #atoms, #confs in water traj OEMol: {}, {}'.format(
@@ -180,7 +180,7 @@ class TrajToOEMolCube(RecordPortsMixin, ComputeCube):
 
             mdrecord_traj = MDDataRecord(oetrajRecord)
 
-            mdrecord_traj.set_protein_traj(ptraj, shard_name="ProteinTrajConfs_")
+            mdrecord_traj.set_protein_traj(pext_traj, shard_name="ProteinTrajConfs_")
 
             record.set_value(Fields.Analysis.oetraj_rec, oetrajRecord)
 
@@ -193,7 +193,7 @@ class TrajToOEMolCube(RecordPortsMixin, ComputeCube):
 
             record.set_value(Fields.Analysis.analysesDone, analysesDone)
 
-            opt['Logger'].info('{}: saved protein, ligand  and water traj OEMols'.format(system_title))
+            opt['Logger'].info('{}: saved extended protein, ligand  and water traj OEMols'.format(system_title))
 
             self.success.emit(record)
 
@@ -214,7 +214,7 @@ class TrajToOEMolCube(RecordPortsMixin, ComputeCube):
 
 class ConcatenateTrajMMPBSACube(RecordPortsMixin, ComputeCube):
     title = "Concatenate Trajectory MMPBSA Energy Components"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['OEChem', 'TrajAnalysis', 'MMPBSA']
     description = """
@@ -296,7 +296,7 @@ class ConcatenateTrajMMPBSACube(RecordPortsMixin, ComputeCube):
 
 class TrajPBSACube(RecordPortsMixin, ComputeCube):
     title = "Trajectory Poisson-Boltzmann and Surface Area Energies"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['OEChem', 'Zap', 'TrajAnalysis', 'MMPBSA']
     description = """
@@ -418,7 +418,7 @@ class TrajPBSACube(RecordPortsMixin, ComputeCube):
                 # change any NaNs to a really big float or else Orion WriterCube fails on JSON dict
                 for i, x in enumerate(PBSAdata[key]):
                     if math.isnan(x):
-                        opt['Logger'].info('{} found a NaN at PBSAdata[{}][{}]'.format(system_title,key,i))
+                        opt['Logger'].info('{} found a NaN at PBSAdata[{}][{}]'.format(system_title, key, i))
                         PBSAdata[key][i] = magic_big_float_to_replace_NaN
 
             # Add the PBSAdata dict to the record
@@ -444,7 +444,7 @@ class TrajPBSACube(RecordPortsMixin, ComputeCube):
 
 class TrajInteractionEnergyCube(RecordPortsMixin, ComputeCube):
     title = "Trajectory Interaction Energies"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['OEChem', 'OpenMM', 'TrajAnalysis', 'MMPBSA']
     description = """
@@ -510,11 +510,10 @@ class TrajInteractionEnergyCube(RecordPortsMixin, ComputeCube):
 
             prmed = mdrecord.get_parmed(sync_stage_name='last')
 
-            # Compute interaction energies for the protein, ligand, complex and water subsystems
-            intEdata = mmpbsa.ProtLigWatInteractionEFromParmedOETraj(prmed, ligTraj, protTraj, water_traj, opt)
+            md_components = mdrecord.get_md_components
 
-            if intEdata is None:
-                raise ValueError('{} Calculation of Interaction Energies failed'.format(system_title))
+            # Compute interaction energies for the protein, ligand, complex and water subsystems
+            intEdata = mmpbsa.ProtLigWatInteractionEFromParmedOETraj(md_components, prmed, ligTraj, protTraj, water_traj, opt)
 
             # protein and ligand traj OEMols now have parmed charges on them; save these
             oetrajRecord.set_value(OEField('LigTraj', Types.Chem.Mol), ligTraj)
@@ -534,7 +533,7 @@ class TrajInteractionEnergyCube(RecordPortsMixin, ComputeCube):
             record.set_value(Fields.Analysis.oeintE_dict, intEdata)
 
             # Add the trajIntE record to the parent record
-            #record.set_value(Fields.Analysis.oeintE_rec, trajIntE)
+            # record.set_value(Fields.Analysis.oeintE_rec, trajIntE)
 
             analysesDone.append('TrajIntE')
             record.set_value(Fields.Analysis.analysesDone, analysesDone)
@@ -547,7 +546,7 @@ class TrajInteractionEnergyCube(RecordPortsMixin, ComputeCube):
 
         except Exception as e:
             print("Failed to complete", str(e), flush=True)
-            opt['Logger'].info('Exception {} in TrajInteractionEnergyCube on {}'.format(str(e),system_title) )
+            self.opt['Logger'].info('Exception {} in TrajInteractionEnergyCube on {}'.format(str(e), system_title) )
             self.log.error(traceback.format_exc())
             # Return failed mol
             self.failure.emit(record)
@@ -557,7 +556,7 @@ class TrajInteractionEnergyCube(RecordPortsMixin, ComputeCube):
 
 class ConfTrajsToLigTraj(RecordPortsMixin, ComputeCube):
     title = 'Conf Trajs To Ligand Traj'
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Clustering', 'Ligand', 'Protein']
 
@@ -697,7 +696,7 @@ class ConfTrajsToLigTraj(RecordPortsMixin, ComputeCube):
 
 class ConformerGatheringData(RecordPortsMixin, ComputeCube):
     title = "MD Conformer Gathering Data"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Ligand', 'Protein']
 
@@ -816,7 +815,7 @@ class ConformerGatheringData(RecordPortsMixin, ComputeCube):
 
 class NMaxWatersLigProt(RecordPortsMixin, ComputeCube):
     title = "NMax Waters"
-    # version = "0.1.4"
+    
     classification = [["Analysis"]]
     tags = ['Ligand', 'Protein', 'Waters']
 

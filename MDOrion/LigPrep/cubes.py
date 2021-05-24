@@ -36,8 +36,9 @@ from orionplatform.mixins import RecordPortsMixin
 
 class LigandChargeCube(RecordPortsMixin, ComputeCube):
     title = "Ligand Charge"
-    # version = "0.1.4"
+
     classification = [["Flask Preparation"]]
+
     tags = ["Ligand"]
     description = """
     This Cube charges small organic molecules by using the ELF10 charge method 
@@ -109,8 +110,9 @@ class LigandChargeCube(RecordPortsMixin, ComputeCube):
 
 class LigandSetting(RecordPortsMixin, ComputeCube):
     title = "Ligand Setting"
-    # version = "0.1.4"
+
     classification = [["Flask Preparation"]]
+
     tags = ['Ligand']
     description = """
     This Cube is used to set the ligand residue name as the cube parameter
@@ -157,6 +159,9 @@ class LigandSetting(RecordPortsMixin, ComputeCube):
             # place the entire initial record as a sub-record, to be restored when conformer runs are gathered
             record = OERecord()
             record.set_value(Fields.ligInit_rec, initialRecord)
+
+            if initialRecord.has_field(Fields.design_unit_from_spruce):
+                record.set_value(Fields.design_unit_from_spruce, initialRecord.get_value(Fields.design_unit_from_spruce))
 
             if oechem.OECalculateMolecularWeight(ligand) > 1500.0:  # Units are in Dalton
                 raise ValueError("[{}] The molecule {} seems to have a large molecular weight for a "

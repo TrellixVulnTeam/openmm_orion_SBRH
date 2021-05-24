@@ -37,6 +37,8 @@ from MDOrion.Flask.cubes import (IDSettingCube,
                                  CollectionSetting,
                                  ParallelRecordSizeCheck)
 
+from snowball.utils.dataset_reader_opt import DatasetReaderOptCube
+
 job = WorkFloe('Complex prep for Short Trajectory MD',
                title='Complex prep for Short Trajectory MD')
 
@@ -89,7 +91,7 @@ ligid = IDSettingCube("Ligand Ids")
 
 # Protein Reading cube. The protein prefix parameter is used to select a name for the
 # output system files
-iprot = DatasetReaderCube("ProteinReader", title="Protein Reader")
+iprot = DatasetReaderOptCube("ProteinReader", title="Protein Reader")
 iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input Dataset',
                         description="Protein Dataset")
 
@@ -105,7 +107,7 @@ solvate.modify_parameter(solvate.close_solvent, promoted=False, default=False)
 # Force Field Application
 ff = ParallelForceFieldCube("ForceField", title="Apply Force Field")
 ff.promote_parameter('protein_forcefield', promoted_name='protein_ff', default='Amber99SBildn')
-ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='Gaff2')
+ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.0')
 
 mdcomp = MDComponentCube("MDComponentSetting", title="MDComponentSetting")
 # mdcomp.promote_parameter("flask_title", promoted_name="flask_title", default='MCL1')

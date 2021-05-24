@@ -18,7 +18,6 @@
 from orionplatform.mixins import RecordPortsMixin
 
 from floe.api import (ParallelMixin,
-                      parameters,
                       ComputeCube)
 
 from MDOrion.Standards import Fields
@@ -26,7 +25,6 @@ from MDOrion.Standards import Fields
 import MDOrion.TrjAnalysis.utils as utl
 import oetrajanalysis.trajOEHint_utils as hint
 
-from openeye import oechem
 
 import traceback
 
@@ -38,6 +36,7 @@ from MDOrion.Standards.mdrecord import MDDataRecord
 
 class BintScoreInitialPoseAndTrajectory(RecordPortsMixin, ComputeCube):
     title = 'Compute BintScore for Initial Pose and Trajectory'
+
     classification = [["Analysis"]]
     tags = ['Binding Interactions', 'Ligand', 'Protein']
 

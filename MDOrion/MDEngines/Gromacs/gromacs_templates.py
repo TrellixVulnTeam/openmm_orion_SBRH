@@ -55,7 +55,7 @@ fourierspacing	= 0.16		; grid spacing for FFT
 
 ; Temperature coupling is on
 tcoupl		= V-rescale	            ; modified Berendsen thermostat
-tc-grps		= Flask	;
+tc-grps		= System	;
 tau_t		= 0.1	    ; time constant, in ps
 ref_t		= {temperature:f} ; reference temperature in K
 
@@ -117,7 +117,7 @@ gromacs_pos_restraints = "{:<{digits}}\t{:<}  {:<5.2f}  {:<5.2f}  {:<5.2f}\n"
 #
 # ; Temperature coupling is on
 # tcoupl		= no
-# tc-grps		= Flask	;
+# tc-grps		= System	;
 # tau_t		= 0.1	    ; time constant, in ps
 # ref_t		= {temperature:f} ; reference temperature in K
 #

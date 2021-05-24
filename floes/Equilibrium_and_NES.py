@@ -1,4 +1,6 @@
 
+from os import path
+
 from floe.api import (WorkFloe,
                       ParallelCubeGroup)
 
@@ -26,28 +28,20 @@ from MDOrion.FEC.RFEC.cubes import BoundUnboundSwitchCube
 
 from MDOrion.SubFloes.SubfloeFunctions import nes_gmx_subfloe
 
-job = WorkFloe("Equilibrium and Non Equilibrium Switching", title="Equilibrium and Non Equilibrium Switching")
+from snowball.utils.dataset_reader_opt import DatasetReaderOptCube
 
-job.description = """
-The Non Equilibrium Switching (NES) floe performs Relative Binding Affinity Calculations
-between a set of provided ligands and the relate provided target protein. The floe
-requires also a text file with the map of the edges between the different relative
-free energy calculations to run. The file format of the text file is a set of lines
-with the syntax:
 
-ligA_name >> ligB_name
+floe_title = 'Equilibrium and Non Equilibrium Switching'
+tags_for_floe = ['MDPrep', 'MD', 'FEC']
+#
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
-where ligA_name and ligB_name are respectively strings of the ligand names for the 
-ligand in the starting state A and  the ligand name in the final state B. Because the 
-edges to run are defined by ligand names it is important that all the submitted ligands 
-have unique names. At the end of the calculations the NES floe will produce a floe 
-report where the insight of each edge calculation is reported with different metrics 
-used to compute the relative binding affinity.
-"""
+job.description = open(path.join(path.dirname(__file__), 'Equilibrium_and_NES_desc.rst'), 'r').read()
 
-job.classification = [['FEC']]
 job.uuid = "45776760-785d-4128-972e-1be13baddfc0"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 # Ligand setting
 iligs = DatasetReaderCube("LigandReader", title="Ligand Reader")
@@ -69,7 +63,7 @@ md_lig_components.set_parameters(multiple_flasks=True)
 
 # Protein Reading cube. The protein prefix parameter is used to select a name for the
 # output system files
-iprot = DatasetReaderCube("ProteinReader", title="Protein Reader")
+iprot = DatasetReaderOptCube("ProteinReader", title="Protein Reader")
 iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input Dataset',
                         description="Protein Dataset", order=0)
 
@@ -267,10 +261,10 @@ ofs_prot.promote_parameter("data_out", promoted_name="out_bound",
                            title="Equilibrium Bound Out",
                            description="Equilibrium Bound Out", order=3)
 
-ofs_abfe = DatasetWriterCube('ofs_abfe', title='ABFE Out')
+ofs_abfe = DatasetWriterCube('ofs_abfe', title='Affinity Out')
 ofs_abfe.promote_parameter("data_out", promoted_name="abfe",
                            title="ABFE Out",
-                           description="Absolute Binding Affinity Out", order=5)
+                           description="Binding Affinity Out", order=5)
 
 job.add_cubes(iligs, ligset, chargelig, ligid, md_lig_components, coll_open,
               iprot, md_prot_components, complx, solvate, ff, switch,

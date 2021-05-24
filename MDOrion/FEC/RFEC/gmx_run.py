@@ -97,7 +97,7 @@ epsilon_surface          = 0
 ; Temperature coupling  
 tcoupl                   = v-rescale
 ; Groups to couple separately
-tc-grps                  = Flask
+tc-grps                  = System
 ; Time constant (ps) and reference temperature (K)
 tau-t                    = 2.0
 ref-t                    = {temperature:f} ; reference temperature in K

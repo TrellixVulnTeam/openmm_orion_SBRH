@@ -21,6 +21,7 @@ from floe.api import ParallelCubeGroup
 
 from orionplatform.cubes import DatasetReaderCube
 
+
 from MDOrion.Flask.cubes import (IDSettingCube,
                                  ParallelSolvationCube,
                                  MDComponentCube)
@@ -59,6 +60,8 @@ from MDOrion.TrjAnalysis.cubes_clusterAnalysis import (ParallelClusterOETrajCube
                                                        MDFloeReportCube,)
 
 from MDOrion.TrjAnalysis.cubes_hintAnalysis import (ParallelBintScoreInitialPoseAndTrajectory)
+
+from snowball.utils.dataset_reader_opt import DatasetReaderOptCube
 
 
 def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
@@ -180,7 +183,7 @@ def setup_PLComplex_for_MD(input_floe, fail_cube, options):
 
     # Protein Reading cube. The protein prefix parameter is used to select a name for the
     # output system files
-    iprot = DatasetReaderCube("ProteinReader", title="Protein Reader")
+    iprot = DatasetReaderOptCube("ProteinReader", title="Protein Reader")
     iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input Dataset',
                             description="Protein Dataset", order=0)
 
