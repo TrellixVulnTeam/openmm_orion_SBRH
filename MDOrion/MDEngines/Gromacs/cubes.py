@@ -27,7 +27,7 @@ from floe.api import (ParallelMixin,
                       SinkCube)
 
 from datarecord import OERecord
-from datarecord.utils import TemporaryPath
+from orionclient.utils import TemporaryPath
 
 from floe.api import parameters
 

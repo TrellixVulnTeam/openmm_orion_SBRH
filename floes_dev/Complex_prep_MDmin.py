@@ -21,6 +21,8 @@ from floe.api import WorkFloe
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
+from snowball.utils import DatasetReaderOptCube
+
 from MDOrion.LigPrep.cubes import LigandSetting
 from MDOrion.LigPrep.cubes import ParallelLigandChargeCube
 
@@ -77,7 +79,7 @@ ligset.set_parameters(lig_res_name='LIG')
 
 ligid = IDSettingCube("Ligand Ids")
 
-iprot = DatasetReaderCube("Protein Reader", title="Protein Reader")
+iprot = DatasetReaderOptCube("Protein Reader", title="Protein Reader")
 iprot.promote_parameter("data_in", promoted_name="protein", title="Protein Input File", description="Protein file name")
 
 complx = ComplexPrepCube("Complex")
@@ -91,7 +93,7 @@ solvate.set_parameters(close_solvent=True)
 
 ff = ParallelForceFieldCube("ForceField", title="Flask Parametrization")
 ff.promote_parameter('protein_forcefield', promoted_name='protein_ff', default='Amber99SBildn')
-ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='Gaff2')
+ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.0')
 
 mdcomp = MDComponentCube("MDComponentSetting", title="MDComponentSetting")
 mdcomp.promote_parameter("flask_title", promoted_name="slack_title", default="")

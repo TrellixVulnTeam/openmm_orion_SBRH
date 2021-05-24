@@ -261,10 +261,10 @@ ofs_prot.promote_parameter("data_out", promoted_name="out_bound",
                            title="Equilibrium Bound Out",
                            description="Equilibrium Bound Out", order=3)
 
-ofs_abfe = DatasetWriterCube('ofs_abfe', title='ABFE Out')
+ofs_abfe = DatasetWriterCube('ofs_abfe', title='Affinity Out')
 ofs_abfe.promote_parameter("data_out", promoted_name="abfe",
                            title="ABFE Out",
-                           description="Absolute Binding Affinity Out", order=5)
+                           description="Binding Affinity Out", order=5)
 
 job.add_cubes(iligs, ligset, chargelig, ligid, md_lig_components, coll_open,
               iprot, md_prot_components, complx, solvate, ff, switch,

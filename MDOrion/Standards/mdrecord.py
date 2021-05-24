@@ -475,7 +475,7 @@ class MDDataRecord(object):
         """
 
         if not isinstance(sys_id, int):
-            raise ValueError("The system id must be an integer: {}".format(sys_id))
+            raise ValueError("The Flask id must be an integer: {}".format(sys_id))
 
         self.rec.set_value(Fields.ligid, sys_id)
 
