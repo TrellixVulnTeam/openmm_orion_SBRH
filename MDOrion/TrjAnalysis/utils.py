@@ -141,7 +141,7 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
     water_max_frames = []
 
     # TODO DEBUG
-    # trjImaged = trjImaged[:10]
+    # trjImaged = trjImaged[:50]
 
     for frame in trjImaged:
         # print("{}/{}".format(count, len(trjImaged)-1, flush=True))
@@ -222,6 +222,29 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
 
     count = 0
 
+    prot_idx_ext = prot_idx
+
+    if 'other_ligands' in map_dic:
+        prot_idx_ext += map_dic['other_ligands']
+    if 'cofactors' in map_dic:
+        prot_idx_ext += map_dic['cofactors']
+    if 'other_cofactors' in map_dic:
+        prot_idx_ext += map_dic['other_cofactors']
+
+    if len(prot_idx_ext) != prot_idx:
+        protein_name = protein_reference.GetTitle()
+        bv = oechem.OEBitVector(flask.GetMaxAtomIdx())
+        bv.ClearBits()
+        for at in flask.GetAtoms():
+            if at.GetIdx() in prot_idx_ext:
+                bv.SetBitOn(at.GetIdx())
+
+        pred_vec = oechem.OEAtomIdxSelected(bv)
+
+        oechem.OESubsetMol(protein_reference, flask, pred_vec)
+
+        protein_reference.SetTitle(protein_name)
+
     # Create the multi conformer protein, ligand and water molecules
     for frame in trjImaged.xyz:
         # print("Trj Image loop", count, flush=True)
@@ -258,7 +281,7 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
         oechem.OESubsetMol(water_nmax_reference, flask, pred_vec)
 
         # TODO The following solution to extract the waters
-        #  keep the water order but is it seems extremely inefficient
+        #  keep the water order but it is extremely inefficient
 
         # water_list = []
         # for pair in water_list_sorted_max:
@@ -289,7 +312,7 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
         lig_xyz_list = [10 * frame[idx] for idx in lig_idx]
         lig_confxyz = oechem.OEFloatArray(np.array(lig_xyz_list).ravel())
 
-        prot_xyz_list = [10 * frame[idx] for idx in prot_idx]
+        prot_xyz_list = [10 * frame[idx] for idx in prot_idx_ext]
         prot_confxyz = oechem.OEFloatArray(np.array(prot_xyz_list).ravel())
 
         # Initialize the protein, ligand and water molecule topologies
