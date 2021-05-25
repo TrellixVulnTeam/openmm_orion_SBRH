@@ -619,7 +619,7 @@ class GromacsSimulations(MDSimulations):
             f = open(opt['grm_ndx_fn'], "a+")
 
             atom_idx = range(1, len(new_system_structure.atoms) + 1)
-            f.write("[ Flask ]\n")
+            f.write("[ System ]\n")
 
             for idx in atom_idx:
                 f.write("{:>{digits}}".format(idx, digits=MAX_DIGITS))
