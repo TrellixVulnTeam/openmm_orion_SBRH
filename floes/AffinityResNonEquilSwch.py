@@ -27,11 +27,10 @@ from os import path
 
 from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
-job = WorkFloe("Plot the Affinity results for NES",
-               title="Plot the Affinity results for the Non-Equilibrium Switching floe")
+job = WorkFloe("Compare Experimental Affinity with NES Results",
+               title="Compare Experimental Affinity with NES Results")
 
-
-job.description = open(path.join(path.dirname(__file__), 'AffinityResNonEquilSwch.rst'), 'r').read()
+job.description = open(path.join(path.dirname(__file__), 'AffinityResNonEquilSwch_desc.rst'), 'r').read()
 
 job.classification = [['NES Results']]
 job.uuid = "e50c2e49-63a0-4bb3-aba7-b65dc4f92ab9"
@@ -42,6 +41,12 @@ ifs.promote_parameter("data_in", promoted_name="plot",
                       title='Plot Input File',
                       description="The Dataset produced by the Short Trajectory MD with Analysis floe", order=0)
 
+bnd_eq = DatasetReaderCube("BoundEqReader", title="Bound Equilibrium Reader")
+bnd_eq.promote_parameter("data_in", promoted_name="bound",
+                         title='Bound Equilibrium Reader',
+                         description="The Equilibrium Bound Dataset")
+
+
 ddg_to_dg_sub = PredictDGFromDDG("RBFE to ABFE", title="RBFE to Affinity Estimate")
 ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp', required=True)
 
@@ -50,12 +55,20 @@ plot = PlotNESResults("PlotAffinities", title="Plot Affinities")
 fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", description="Fail Data Set", order=2)
 
+ofs_abfe = DatasetWriterCube('ofs_abfe', title='Affinity Out')
+ofs_abfe.promote_parameter("data_out", promoted_name="abfe",
+                           title="Affinity Out",
+                           description="Affinity Out")
+
 rec_check = ParallelRecordSizeCheck("Record Check Success", title="Record Size Checking")
 
-job.add_cubes(ifs, ddg_to_dg_sub, plot, fail, rec_check)
+job.add_cubes(ifs, bnd_eq, ddg_to_dg_sub, plot, fail, rec_check, ofs_abfe)
 
 ifs.success.connect(ddg_to_dg_sub.intake)
+
+bnd_eq.success.connect(ddg_to_dg_sub.bound_port)
 ddg_to_dg_sub.graph_port.connect(plot.intake)
+ddg_to_dg_sub.bound_port.connect(ofs_abfe.intake)
 
 ddg_to_dg_sub.failure.connect(rec_check.fail_in)
 plot.failure.connect(rec_check.fail_in)
