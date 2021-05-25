@@ -94,6 +94,11 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
 
             if port == 'intake':
 
+                if not record.has_value(Fields.primary_molecule):
+                    raise ValueError("Missing the ligand primary molecule field")
+
+                ligand = record.get_value(Fields.primary_molecule)
+
                 if self.md_components is None:
                     self.log.warn("Protein has not been found on the protein port. Looking on the ligand port")
 
@@ -110,14 +115,13 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                         else:
                             raise ValueError("It was not possible to detect the Protein Component "
                                              "from the protein nor from the ligand ports")
+                    else:
+                        raise ValueError("Protein has not been found on either the protein port "
+                                         "nor the ligand port. no protein to complex with ligand {}".format(
+                            ligand.GetTitle()))
 
                 else:
                     md_components = self.md_components
-
-                if not record.has_value(Fields.primary_molecule):
-                    raise ValueError("Missing the ligand primary molecule field")
-
-                ligand = record.get_value(Fields.primary_molecule)
 
                 if ligand.NumConfs() > 1:
                     raise ValueError("The ligand {} has multiple conformers: {}".format(ligand.GetTitle(),

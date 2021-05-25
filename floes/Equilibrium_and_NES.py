@@ -1,4 +1,6 @@
 
+from os import path
+
 from floe.api import (WorkFloe,
                       ParallelCubeGroup)
 
@@ -28,28 +30,18 @@ from MDOrion.SubFloes.SubfloeFunctions import nes_gmx_subfloe
 
 from snowball.utils.dataset_reader_opt import DatasetReaderOptCube
 
-job = WorkFloe("Equilibrium and Non Equilibrium Switching", title="Equilibrium and Non Equilibrium Switching")
 
-job.description = """
-The Non Equilibrium Switching (NES) floe performs Relative Binding Affinity Calculations
-between a set of provided ligands and the relate provided target protein. The floe
-requires also a text file with the map of the edges between the different relative
-free energy calculations to run. The file format of the text file is a set of lines
-with the syntax:
+floe_title = 'Equilibrium and Non Equilibrium Switching'
+tags_for_floe = ['MDPrep', 'MD', 'FEC']
+#
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
-ligA_name >> ligB_name
+job.description = open(path.join(path.dirname(__file__), 'Equilibrium_and_NES_desc.rst'), 'r').read()
 
-where ligA_name and ligB_name are respectively strings of the ligand names for the 
-ligand in the starting state A and  the ligand name in the final state B. Because the 
-edges to run are defined by ligand names it is important that all the submitted ligands 
-have unique names. At the end of the calculations the NES floe will produce a floe 
-report where the insight of each edge calculation is reported with different metrics 
-used to compute the relative binding affinity.
-"""
-
-job.classification = [['FEC']]
 job.uuid = "45776760-785d-4128-972e-1be13baddfc0"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 # Ligand setting
 iligs = DatasetReaderCube("LigandReader", title="Ligand Reader")
