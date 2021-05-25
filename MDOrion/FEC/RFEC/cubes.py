@@ -177,8 +177,8 @@ class RBFECEdgeGathering(RecordPortsMixin, ComputeCube):
         "item_count": {"default": 1}  # 1 molecule at a time
     }
 
-    map_file = FileInputParameter("map_file", title="RBFEC Mapping file",
-                                  description="RBFEC mapping file", required=True,
+    map_file = FileInputParameter("map_file", title="Ligand Edge Map file",
+                                  description="Ligand Edge Map file", required=True,
                                   default=None)
 
     bound_port = RecordInputPort("bound_port", initializer=False)
