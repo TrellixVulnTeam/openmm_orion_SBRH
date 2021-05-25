@@ -134,13 +134,14 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     chimera_sub.success.connect(unbound_nes_sub.intake)
     unbound_nes_sub.success.connect(nes_analysis_sub.intake)
 
-    nes_analysis_sub.success.connect(report_sub.intake)
     nes_analysis_sub.success.connect(ddg_to_dg_sub.intake)
     ddg_to_dg_sub.success.connect(output_abfe_port)
-    ddg_to_dg_sub.graph_port.connect(plot_aff_sub.intake)
+    ddg_to_dg_sub.graph_port.connect(report_sub.intake)
+    report_sub.success.connect(plot_aff_sub.intake)
+
     input_bound_port.connect(ddg_to_dg_sub.bound_port)
 
-    report_sub.success.connect(output_nes_port)
+    plot_aff_sub.success.connect(output_nes_port)
 
     # Fail port connections
     switch_sub.failure.connect(output_fail_port)
@@ -153,7 +154,6 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     nes_analysis_sub.failure.connect(output_fail_port)
     ddg_to_dg_sub.failure.connect(output_fail_port)
     plot_aff_sub.failure.connect(output_fail_port)
-
     report_sub.failure.connect(output_fail_port)
 
     return True
