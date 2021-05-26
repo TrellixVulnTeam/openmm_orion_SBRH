@@ -19,12 +19,13 @@ from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
 
 from MDOrion.ForceField.cubes import ParallelForceFieldCube
 
-from MDOrion.Flask.cubes import MDComponentCube
+from MDOrion.Flask.cubes import MDComponentCube, ParallelRecordSizeCheck
 
 from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 
 from MDOrion.FEC.RFEC.cubes import BoundUnboundSwitchCube
 
+from snowball import ExceptHandlerCube
 
 floe_title = 'Ligand Bound and Unbound Equilibration for NES'
 tags_for_floe = ['MDPrep', 'MD']
@@ -42,7 +43,7 @@ job.uuid = "537f64c5-0d84-4537-ad74-c55037304e07"
 # Ligand setting
 iligs = DatasetReaderCube("LigandReader", title="Ligand Reader")
 iligs.promote_parameter("data_in", promoted_name="ligands",
-                        title="Ligand Input Dataset", description="Ligand Dataset")
+                        title="Ligand Input Dataset", description="Ligand Dataset", order=1)
 
 ligset = LigandSetting("Ligand Setting", title="Ligand Setting")
 ligset.set_parameters(lig_res_name='LIG')
@@ -61,7 +62,7 @@ md_lig_components.set_parameters(multiple_flasks=True)
 # output system files
 iprot = DatasetReaderCube("ProteinReader", title="Protein Reader")
 iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input Dataset',
-                        description="Protein Dataset")
+                        description="Protein Dataset", order=0)
 
 md_prot_components = MDComponentCube("MD Protein Components", title="MD Protein Components")
 md_prot_components.promote_parameter("flask_title", promoted_name="flask_title",
@@ -238,6 +239,11 @@ ofs_unbound.promote_parameter("data_out", promoted_name="out_unbound", title="Un
 ofs_bound = DatasetWriterCube('ofs_bound', title='Bound Out')
 ofs_bound.promote_parameter("data_out", promoted_name="out_bound", title="Bound Dataset Out", description="Bound Dataset Out")
 
+exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
+
+check_bound_rec = ParallelRecordSizeCheck("Bound Record Check Success", title="Bound Record Check Success")
+check_unbound_rec = ParallelRecordSizeCheck("Unbound Record Check Success", title="Unbound Record Check Success")
+
 fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
                        description="Dataset Failures out")
@@ -247,7 +253,7 @@ job.add_cubes(iligs, ligset, chargelig, ligid, md_lig_components, coll_open,
               minimize_bns, warmup_bns, equil1_bns,
               equil2_bns, equil3_bns, equil4_bns, prod_bns,
               minimize_uns, warmup_uns, equil_uns, prod_uns,
-              coll_close, switch_out, fail, ofs_unbound, ofs_bound)
+              coll_close, switch_out, exceptions, check_unbound_rec, check_bound_rec, fail, ofs_unbound, ofs_bound)
 
 # Ligand Setting
 iligs.success.connect(ligset.intake)
@@ -285,36 +291,45 @@ equil4_bns.success.connect(prod_bns.intake)
 prod_bns.success.connect(coll_close.intake)
 
 coll_close.success.connect(switch_out.intake)
-switch_out.success.connect(ofs_unbound.intake)
-switch_out.bound_port.connect(ofs_bound.intake)
+
+switch_out.success.connect(check_unbound_rec.intake)
+check_unbound_rec.success.connect(ofs_unbound.intake)
+
+switch_out.bound_port.connect(check_bound_rec.intake)
+check_bound_rec.success.connect(ofs_bound.intake)
 
 # Fail port connections
-ligset.failure.connect(fail.intake)
-chargelig.failure.connect(fail.intake)
-ligid.failure.connect(fail.intake)
-md_lig_components.failure.connect(fail.intake)
-md_prot_components.failure.connect(fail.intake)
-complx.failure.connect(fail.intake)
-coll_open.failure.connect(fail.intake)
-solvate.failure.connect(fail.intake)
-ff.failure.connect(fail.intake)
-switch.failure.connect(fail.intake)
+ligset.failure.connect(check_bound_rec.fail_in)
+chargelig.failure.connect(check_bound_rec.fail_in)
+ligid.failure.connect(check_bound_rec.fail_in)
+md_lig_components.failure.connect(check_bound_rec.fail_in)
+md_prot_components.failure.connect(check_bound_rec.fail_in)
+complx.failure.connect(check_bound_rec.fail_in)
+coll_open.failure.connect(check_bound_rec.fail_in)
+solvate.failure.connect(check_bound_rec.fail_in)
+ff.failure.connect(check_bound_rec.fail_in)
+switch.failure.connect(check_bound_rec.fail_in)
 
-minimize_uns.failure.connect(fail.intake)
-warmup_uns.failure.connect(fail.intake)
-equil_uns.failure.connect(fail.intake)
-prod_uns.failure.connect(fail.intake)
+minimize_uns.failure.connect(check_unbound_rec.fail_in)
+warmup_uns.failure.connect(check_unbound_rec.fail_in)
+equil_uns.failure.connect(check_unbound_rec.fail_in)
+prod_uns.failure.connect(check_unbound_rec.fail_in)
 
-minimize_bns.failure.connect(fail.intake)
-warmup_bns.failure.connect(fail.intake)
-equil1_bns.failure.connect(fail.intake)
-equil2_bns.failure.connect(fail.intake)
-equil3_bns.failure.connect(fail.intake)
-equil4_bns.failure.connect(fail.intake)
-prod_bns.failure.connect(fail.intake)
+minimize_bns.failure.connect(check_bound_rec.fail_in)
+warmup_bns.failure.connect(check_bound_rec.fail_in)
+equil1_bns.failure.connect(check_bound_rec.fail_in)
+equil2_bns.failure.connect(check_bound_rec.fail_in)
+equil3_bns.failure.connect(check_bound_rec.fail_in)
+equil4_bns.failure.connect(check_bound_rec.fail_in)
+prod_bns.failure.connect(check_bound_rec.fail_in)
 
-coll_close.failure.connect(fail.intake)
-switch_out.failure.connect(fail.intake)
+coll_close.failure.connect(check_bound_rec.fail_in)
+switch_out.failure.connect(check_bound_rec.fail_in)
+
+check_bound_rec.failure.connect(exceptions.intake)
+check_unbound_rec.failure.connect(exceptions.intake)
+
+exceptions.failure.connect(fail.intake)
 
 if __name__ == "__main__":
     job.run()

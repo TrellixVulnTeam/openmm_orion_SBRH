@@ -21,6 +21,7 @@ from MDOrion.Flask.cubes import CollectionSetting
 
 from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
+from snowball import ExceptHandlerCube
 
 floe_title = 'Non-Equilibrium Switching'
 tags_for_floe = ['MD', 'FEC']
@@ -53,6 +54,7 @@ coll_close.set_parameters(open=False)
 
 rec_check = ParallelRecordSizeCheck("Record Check Success", title="Record Size Checking")
 rec_check_abfe = ParallelRecordSizeCheck("Record Check Success ABFE", title="Affinity Record Size Checking")
+rec_check_recovery = ParallelRecordSizeCheck("Record Check Recovery", title="Recovery Record Size Checking")
 
 ofs_nes = DatasetWriterCube('ofs', title='NES Out')
 ofs_nes.promote_parameter("data_out", promoted_name="out",
@@ -64,11 +66,19 @@ ofs_abfe.promote_parameter("data_out", promoted_name="abfe",
                            title="Affinity Out",
                            description="Affinity Out", order=5)
 
+ofs_recovery = DatasetWriterCube('ofs_recovery', title='Recovery Out')
+ofs_recovery.promote_parameter("data_out", promoted_name="recovery",
+                               title="Recovery Out",
+                               description="Recovery Out", order=6)
+
 fail = DatasetWriterCube('fail', title='NES Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="NES Failures",
                        description="NES Dataset Failures out", order=6)
 
-job.add_cubes(iun, ibn, coll_open, coll_close, rec_check, rec_check_abfe, ofs_nes, ofs_abfe, fail)
+exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
+
+job.add_cubes(iun, ibn, coll_open, coll_close, rec_check, rec_check_abfe, rec_check_recovery,
+              ofs_recovery, exceptions, ofs_nes, ofs_abfe, fail)
 
 nes_subfloe_options = dict()
 nes_subfloe_options['edge_map_file'] = 'map'
@@ -79,7 +89,9 @@ input_port_dic = {'input_open_collection_port': coll_open.success,
                   'input_bound_port': ibn.success}
 output_port_dic = {'output_nes_port': coll_close.intake,
                    'output_abfe_port': rec_check_abfe.intake,
+                   'output_recovery': rec_check_recovery.intake,
                    'output_fail_port': rec_check.fail_in}
+
 
 nes_gmx_subfloe(job, input_port_dic, output_port_dic, nes_subfloe_options)
 
@@ -88,11 +100,15 @@ ibn.success.connect(coll_open.intake)
 coll_close.success.connect(rec_check.intake)
 rec_check.success.connect(ofs_nes.intake)
 rec_check_abfe.success.connect(ofs_abfe.intake)
+rec_check_recovery.success.connect(ofs_recovery.intake)
 
 coll_open.failure.connect(rec_check.fail_in)
 coll_close.failure.connect(rec_check.fail_in)
-rec_check.failure.connect(fail.intake)
-rec_check_abfe.failure.connect(fail.intake)
+rec_check.failure.connect(exceptions.intake)
+rec_check_recovery.failure.connect(exceptions.intake)
+exceptions.failure.connect(fail.intake)
+
+rec_check_abfe.failure.connect(exceptions.intake)
 
 if __name__ == "__main__":
     job.run()

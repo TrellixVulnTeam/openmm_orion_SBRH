@@ -223,6 +223,13 @@ def _run_gmx(mdp_fn, gro_fn, top_fn, tpr_fn, deffnm_fn, opt, cpti_fn=None, cpto_
 
     try:
 
+        # # TODO DEBUGGING IN PROGRESS
+        # print(">>>>>>>DEBUG: ",
+        #       opt['gmx_openmp_threads'],
+        #       opt['gmx_mpi_threads'],
+        #       str(opt['gmx_openmp_threads']),
+        #       str(opt['gmx_mpi_threads']))
+
         if opt['verbose']:
 
             # Assemble the Gromacs system to run

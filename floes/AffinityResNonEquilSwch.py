@@ -36,16 +36,14 @@ job.classification = [['NES Results']]
 job.uuid = "e50c2e49-63a0-4bb3-aba7-b65dc4f92ab9"
 job.tags = [tag for lists in job.classification for tag in lists]
 
-ifs = DatasetReaderCube("SystemReader", title="Plot Reader")
+ifs = DatasetReaderCube("NESInputReader", title="NES Input Reader")
 ifs.promote_parameter("data_in", promoted_name="plot",
-                      title='Plot Input File',
-                      description="The Dataset produced by the Short Trajectory MD with Analysis floe", order=0)
-
+                      title='NES Input Reader',
+                      description="The Dataset produced by the Non-Equilibrium Switching", order=0)
 bnd_eq = DatasetReaderCube("BoundEqReader", title="Bound Equilibrium Reader")
 bnd_eq.promote_parameter("data_in", promoted_name="bound",
                          title='Bound Equilibrium Reader',
                          description="The Equilibrium Bound Dataset")
-
 
 ddg_to_dg_sub = PredictDGFromDDG("RBFE to ABFE", title="RBFE to Affinity Estimate")
 ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp', required=True)
@@ -68,7 +66,7 @@ ifs.success.connect(ddg_to_dg_sub.intake)
 
 bnd_eq.success.connect(ddg_to_dg_sub.bound_port)
 ddg_to_dg_sub.graph_port.connect(plot.intake)
-ddg_to_dg_sub.bound_port.connect(ofs_abfe.intake)
+ddg_to_dg_sub.success.connect(ofs_abfe.intake)
 
 ddg_to_dg_sub.failure.connect(rec_check.fail_in)
 plot.failure.connect(rec_check.fail_in)

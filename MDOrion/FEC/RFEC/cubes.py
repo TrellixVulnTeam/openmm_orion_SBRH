@@ -81,6 +81,8 @@ import tarfile
 
 from orionclient.session import in_orion
 
+from snowball.utils.log_params import LogFieldParam
+
 
 class BoundUnboundSwitchCube(RecordPortsMixin, ComputeCube):
     title = "Bound and UnBound Switching Cube"
@@ -332,8 +334,6 @@ class RBFECEdgeGathering(RecordPortsMixin, ComputeCube):
                 del self.Unbound_records[ln]
 
         except Exception as e:
-
-            print("Failed to complete", str(e), flush=True)
             self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
             self.log.error(traceback.format_exc())
             self.failure.emit(record)
@@ -373,6 +373,9 @@ class NESGMXChimera(RecordPortsMixin, ComputeCube):
     Bound and Unbound data.
     """
 
+    # for Exception Handler
+    log_field = LogFieldParam()
+
     uuid = "0ccfad69-bada-48fa-a890-348d7784d7ea"
 
     # Override defaults for some parameters
@@ -400,6 +403,9 @@ class NESGMXChimera(RecordPortsMixin, ComputeCube):
         self.opt['Logger'] = self.log
 
     def process(self, record, port):
+
+        edge_name = ''
+
         try:
 
             edge_id = record.get_value(Fields.FEC.RBFEC.edgeid)
@@ -658,9 +664,13 @@ class NESGMXChimera(RecordPortsMixin, ComputeCube):
             self.opt['Logger'].info("GMX Chimera {} Processed".format(edge_name))
 
         except Exception as e:
-            print("Failed to complete", str(e), flush=True)
-            self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+
+            msg = '{}: {} Cube exception: {}'.format(edge_name, self.title, str(e))
+            self.opt['Logger'].info(msg)
             self.log.error(traceback.format_exc())
+            # Write field for Exception Handler
+            record.set_value(self.args.log_field, msg)
+            # Return failed mol
             self.failure.emit(record)
 
 
@@ -891,6 +901,9 @@ class NESAnalysis(RecordPortsMixin, ComputeCube):
    
     """
 
+    # for Exception Handler
+    log_field = LogFieldParam()
+
     uuid = "50ccc16d-67ae-4b4f-9a98-2e6b8ecb1868"
 
     # Override defaults for some parameters
@@ -923,6 +936,8 @@ class NESAnalysis(RecordPortsMixin, ComputeCube):
 
     def process(self, record, port):
 
+        edge_name = ''
+
         try:
             lig_name = record.get_value(Fields.ligand_name)
             md_components = record.get_value(Fields.md_components)
@@ -930,6 +945,7 @@ class NESAnalysis(RecordPortsMixin, ComputeCube):
             ligand.SetTitle(lig_name)
             leg_type = record.get_value(Fields.FEC.RBFEC.thd_leg_type)
             edgeid = record.get_value(Fields.FEC.RBFEC.edgeid)
+            edge_name = record.get_value(Fields.FEC.RBFEC.edge_name)
 
             if not len(self.collections):
                 self.collections = record.get_value(Fields.collections)
@@ -984,9 +1000,12 @@ class NESAnalysis(RecordPortsMixin, ComputeCube):
 
         except Exception as e:
 
-            print("Failed to complete", str(e), flush=True)
-            self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+            msg = '{}: {} Cube exception: {}'.format(edge_name, self.title, str(e))
+            self.opt['Logger'].info(msg)
             self.log.error(traceback.format_exc())
+            # Write field for Exception Handler
+            record.set_value(self.args.log_field, msg)
+            # Return failed mol
             self.failure.emit(record)
 
         return
@@ -1172,6 +1191,9 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
     and absolute binding affinities used to feed the plot affinity cube
     """
 
+    # for Exception Handler
+    log_field = LogFieldParam()
+
     uuid = "9d8e9390-eb0d-4b97-afec-b0f6482f2843"
 
     # Override defaults for some parameters
@@ -1182,8 +1204,8 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
         "item_count": {"default": 1}  # 1 molecule at a time
     }
 
-    lig_exp_file = FileInputParameter("lig_exp_file", title="OPTIONAL - Ligand Experimental file results",
-                                      description="OPTIONAL - Ligand Experimental Results",
+    lig_exp_file = FileInputParameter("lig_exp_file", title="Ligand Experimental Results",
+                                      description="Ligand Experimental Results",
                                       required=False,
                                       default=None)
 
@@ -1191,7 +1213,7 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
         'units',
         choices=['kcal/mol', 'kJ/mol'],
         default='kcal/mol',
-        help_text='Units to use for the ABFE output record values'
+        help_text='Units to use for the Affinity output record values'
     )
 
     graph_port = RecordOutputPort("graph_port")
@@ -1272,6 +1294,9 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
             self.exp_dic = None
 
     def process(self, record, port):
+
+        edge_name = ''
+
         try:
             if not record.has_field(Fields.FEC.RBFEC.edge_name):
                 raise ValueError("The current record is missing the edge name field")
@@ -1304,15 +1329,18 @@ class PredictDGFromDDG(RecordPortsMixin, ComputeCube):
 
         except Exception as e:
 
-            print("Failed to complete", str(e), flush=True)
-            self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+            msg = '{}: {} Cube exception: {}'.format(edge_name, self.title, str(e))
+            self.opt['Logger'].info(msg)
             self.log.error(traceback.format_exc())
+            # Write field for Exception Handler
+            record.set_value(self.args.log_field, msg)
+            # Return failed mol
             self.failure.emit(record)
 
     def end(self):
 
         try:
-            self.opt['Logger'].info("....Predicting ABFEs from RBFEs")
+            self.opt['Logger'].info("....Predicting Affinities from RBFEs")
 
             # Internally all the RBFE/ABFE results are in kJ/mol
             affinity_dic = utils.predictDGsfromDDGs(self.edge_pred_dic)
@@ -1438,6 +1466,9 @@ class PlotNESResults(RecordPortsMixin, ComputeCube):
     Floe Report
     """
 
+    # for Exception Handler
+    log_field = LogFieldParam()
+
     uuid = "a62fd733-132b-4619-bb8b-68f373020a79"
 
     # Override defaults for some parameters
@@ -1475,6 +1506,9 @@ class PlotNESResults(RecordPortsMixin, ComputeCube):
             self.floe_report = LocalFloeReport.start_report("Affinity Report")
 
     def process(self, record, port):
+
+        edge_name = ''
+
         try:
             if not record.has_field(Fields.FEC.RBFEC.edge_name):
                 raise ValueError("The current record is missing the edge name field")
@@ -1548,9 +1582,12 @@ class PlotNESResults(RecordPortsMixin, ComputeCube):
             self.success.emit(record)
         except Exception as e:
 
-            print("Failed to complete", str(e), flush=True)
-            self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+            msg = '{}: {} Cube exception: {}'.format(edge_name, self.title, str(e))
+            self.opt['Logger'].info(msg)
             self.log.error(traceback.format_exc())
+            # Write field for Exception Handler
+            record.set_value(self.args.log_field, msg)
+            # Return failed mol
             self.failure.emit(record)
 
     def end(self):
@@ -1591,6 +1628,7 @@ class PlotNESResults(RecordPortsMixin, ComputeCube):
             self.opt['Logger'].warn("It was not possible to generate the floe report: {}".format(str(e)))
 
         return
+
 
 class ParallelNESGMXChimera(ParallelMixin, NESGMXChimera):
     title = "Parallel " + NESGMXChimera.title
