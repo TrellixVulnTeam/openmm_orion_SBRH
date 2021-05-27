@@ -27,19 +27,24 @@ from os import path
 
 from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
-job = WorkFloe("Compare Experimental Affinity with NES Results",
-               title="Compare Experimental Affinity with NES Results")
+
+floe_title = 'Compare Experimental Affinity with NES Results'
+tags_for_floe = ['FECalc']
+#
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = open(path.join(path.dirname(__file__), 'AffinityResNonEquilSwch_desc.rst'), 'r').read()
 
-job.classification = [['NES Results']]
 job.uuid = "e50c2e49-63a0-4bb3-aba7-b65dc4f92ab9"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 ifs = DatasetReaderCube("NESInputReader", title="NES Input Reader")
 ifs.promote_parameter("data_in", promoted_name="plot",
                       title='NES Input Reader',
                       description="The Dataset produced by the Non-Equilibrium Switching", order=0)
+
 bnd_eq = DatasetReaderCube("BoundEqReader", title="Bound Equilibrium Reader")
 bnd_eq.promote_parameter("data_in", promoted_name="bound",
                          title='Bound Equilibrium Reader',
