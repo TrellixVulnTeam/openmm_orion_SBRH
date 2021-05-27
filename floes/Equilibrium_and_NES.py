@@ -383,7 +383,8 @@ coll_close.failure.connect(rec_check.fail_in)
 rec_check.failure.connect(exceptions.intake)
 rec_check_abfe.failure.connect(exceptions.intake)
 rec_check_recovery.failure.connect(exceptions.intake)
-
+rec_check_bound.failure.connect(exceptions.intake)
+rec_check_unbound.failure.connect(exceptions.intake)
 
 if __name__ == "__main__":
     job.run()
