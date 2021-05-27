@@ -23,7 +23,7 @@ from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
 
 floe_title = 'Non-Equilibrium Switching'
-tags_for_floe = ['MD', 'FEC']
+tags_for_floe = ['MD', 'FECalc']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)
