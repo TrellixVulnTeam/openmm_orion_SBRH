@@ -222,14 +222,6 @@ def check_gmx_grompp(gro, top, sim_type=None, verbose=False):
 def _run_gmx(mdp_fn, gro_fn, top_fn, tpr_fn, deffnm_fn, opt, cpti_fn=None, cpto_fn=None):
 
     try:
-
-        # # TODO DEBUGGING IN PROGRESS
-        # print(">>>>>>>DEBUG: ",
-        #       opt['gmx_openmp_threads'],
-        #       opt['gmx_mpi_threads'],
-        #       str(opt['gmx_openmp_threads']),
-        #       str(opt['gmx_mpi_threads']))
-
         if opt['verbose']:
 
             # Assemble the Gromacs system to run

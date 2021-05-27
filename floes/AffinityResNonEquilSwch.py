@@ -59,14 +59,17 @@ ofs_abfe.promote_parameter("data_out", promoted_name="abfe",
                            description="Affinity Out")
 
 rec_check = ParallelRecordSizeCheck("Record Check Success", title="Record Size Checking")
+rec_check_abfe = ParallelRecordSizeCheck("Record Check Success ABFE", title="Affinity Record Size Checking")
 
-job.add_cubes(ifs, bnd_eq, ddg_to_dg_sub, plot, fail, rec_check, ofs_abfe)
+
+job.add_cubes(ifs, bnd_eq, ddg_to_dg_sub, plot, fail, rec_check, rec_check_abfe, ofs_abfe)
 
 ifs.success.connect(ddg_to_dg_sub.intake)
 
 bnd_eq.success.connect(ddg_to_dg_sub.bound_port)
 ddg_to_dg_sub.graph_port.connect(plot.intake)
-ddg_to_dg_sub.success.connect(ofs_abfe.intake)
+ddg_to_dg_sub.success.connect(rec_check.intake)
+rec_check.success.connect(ofs_abfe.intake)
 
 ddg_to_dg_sub.failure.connect(rec_check.fail_in)
 plot.failure.connect(rec_check.fail_in)

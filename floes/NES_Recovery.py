@@ -93,9 +93,9 @@ ines.success.connect(nes_analysis.intake)
 ibn.success.connect(ddg_to_dg.bound_port)
 
 nes_analysis.success.connect(ddg_to_dg.intake)
-nes_analysis.success.connect(report.intake)
 ddg_to_dg.success.connect(rec_check_abfe.intake)
-ddg_to_dg.graph_port.connect(plot_aff.intake)
+ddg_to_dg.graph_port.connect(report.intake)
+report.success.connect(plot_aff.intake)
 plot_aff.success.connect(coll_close.intake)
 coll_close.success.connect(rec_check.intake)
 

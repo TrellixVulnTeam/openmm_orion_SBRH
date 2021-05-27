@@ -244,6 +244,8 @@ coll_close.set_parameters(open=False)
 rec_check = ParallelRecordSizeCheck("Record Check Success")
 rec_check_abfe = ParallelRecordSizeCheck("Record Check Success ABFE", title="Affinity Record Size Checking")
 rec_check_recovery = RecordSizeCheck("Record Check Recovery", title="Recovery Record Size Checking")
+rec_check_unbound = ParallelRecordSizeCheck("Record Check Unbound", title="Unbound Record Size Checking")
+rec_check_bound = ParallelRecordSizeCheck("Record Check Bound", title="Bound Record Size Checking")
 
 
 ofs_nes = DatasetWriterCube('ofs', title='NES Out')
@@ -284,7 +286,7 @@ job.add_cubes(iligs, ligset, chargelig, ligid, md_lig_components, coll_open,
               minimize_bns, warmup_bns, equil1_bns,
               equil2_bns, equil3_bns, equil4_bns, prod_bns,
               coll_write, coll_close,
-              rec_check, rec_check_abfe, rec_check_recovery,
+              rec_check, rec_check_abfe, rec_check_recovery, rec_check_unbound, rec_check_bound,
               ofs_abfe, ofs_nes, ofs_recovery, exceptions, fail, ofs_lig, ofs_prot)
 
 
@@ -328,7 +330,8 @@ warmup_uns.success.connect(equil_uns.intake)
 equil_uns.success.connect(prod_uns.intake)
 prod_uns.success.connect(coll_write.intake)
 
-prod_uns.success.connect(ofs_lig.intake)
+prod_uns.success.connect(rec_check_unbound.intake)
+rec_check_unbound.success.connect(ofs_lig.intake)
 
 # Bound MD run
 switch.bound_port.connect(minimize_bns.intake)
@@ -340,7 +343,8 @@ equil3_bns.success.connect(equil4_bns.intake)
 equil4_bns.success.connect(prod_bns.intake)
 prod_bns.success.connect(coll_write.intake)
 
-prod_bns.success.connect(ofs_prot.intake)
+prod_bns.success.connect(rec_check_bound.intake)
+rec_check_bound.success.connect(ofs_prot.intake)
 
 coll_close.success.connect(rec_check.intake)
 rec_check.success.connect(ofs_nes.intake)

@@ -139,13 +139,12 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     unbound_nes_sub.success.connect(output_recovery_port)
 
     nes_analysis_sub.success.connect(ddg_to_dg_sub.intake)
-    nes_analysis_sub.success.connect(report_sub.intake)
-
     input_bound_port.connect(ddg_to_dg_sub.bound_port)
 
     ddg_to_dg_sub.success.connect(output_abfe_port)
 
-    ddg_to_dg_sub.graph_port.connect(plot_aff_sub.intake)
+    ddg_to_dg_sub.graph_port.connect(report_sub.intake)
+    report_sub.success.connect(plot_aff_sub.intake)
     plot_aff_sub.success.connect(output_nes_port)
 
     # Fail port connections
