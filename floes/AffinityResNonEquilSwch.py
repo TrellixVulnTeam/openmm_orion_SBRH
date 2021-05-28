@@ -29,7 +29,7 @@ from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
 
 floe_title = 'Compare Experimental Affinity with NES Results'
-tags_for_floe = ['FECalc']
+tags_for_floe = ['Helper','FECalc']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)
