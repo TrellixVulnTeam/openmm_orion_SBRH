@@ -126,7 +126,7 @@ coll_open.set_parameters(open=True)
 # Force Field Application
 ff = ParallelForceFieldCube("ForceField", title="Flask Parametrization")
 ff.promote_parameter('protein_forcefield', promoted_name='protein_ff', default='Amber99SBildn')
-ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='Gaff2')
+ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='Gaff_2.11')
 
 prod = ParallelMDNptCube("Production", title="Production")
 prod.promote_parameter('time', promoted_name='prod_ns', default=0.5,
