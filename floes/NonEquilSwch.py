@@ -19,7 +19,7 @@ from MDOrion.SubFloes.SubfloeFunctions import nes_gmx_subfloe
 
 from MDOrion.Flask.cubes import CollectionSetting
 
-from MDOrion.Flask.cubes import ParallelRecordSizeCheck
+from MDOrion.Flask.cubes import ParallelRecordSizeCheck, RecordSizeCheck
 
 from snowball import ExceptHandlerCube
 
@@ -54,7 +54,7 @@ coll_close.set_parameters(open=False)
 
 rec_check = ParallelRecordSizeCheck("Record Check Success", title="Record Size Checking")
 rec_check_DG = ParallelRecordSizeCheck("Record Check Success DG", title="Affinity Record Size Checking")
-rec_check_recovery = ParallelRecordSizeCheck("Record Check Recovery", title="Recovery Record Size Checking")
+rec_check_recovery = RecordSizeCheck("Record Check Recovery", title="Recovery Record Size Checking")
 
 ofs_nes = DatasetWriterCube('ofs', title='NES Out')
 ofs_nes.promote_parameter("data_out", promoted_name="out",
