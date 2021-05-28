@@ -70,7 +70,7 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     input_open_collection_port = input_port_dic['input_open_collection_port']
 
     output_nes_port = output_port_dic['output_nes_port']
-    output_abfe_port = output_port_dic['output_abfe_port']
+    output_DG_port = output_port_dic['output_DG_port']
     output_recovery_port = output_port_dic['output_recovery']
     output_fail_port = output_port_dic['output_fail_port']
 
@@ -141,7 +141,7 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     nes_analysis_sub.success.connect(ddg_to_dg_sub.intake)
     input_bound_port.connect(ddg_to_dg_sub.bound_port)
 
-    ddg_to_dg_sub.success.connect(output_abfe_port)
+    ddg_to_dg_sub.success.connect(output_DG_port)
 
     ddg_to_dg_sub.graph_port.connect(report_sub.intake)
     report_sub.success.connect(plot_aff_sub.intake)
