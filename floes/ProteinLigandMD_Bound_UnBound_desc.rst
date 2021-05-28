@@ -14,6 +14,7 @@ separately, and the bound and unbound simulations are then carried out.
 The ligands need to have coordinates, all atoms, and correct chemistry. Each
 ligand can have multiple conformers but each conformer will be run separately
 as a different ligand.
+Currently only one of the conformers will be used in the NES calculations.
 The protein needs to be prepared to MD standards: protein chains must be capped,
 all atoms in protein residues (including hydrogens) must be present, and missing
 protein loops resolved. Crystallographic internal waters should be retained where

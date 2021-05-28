@@ -77,6 +77,8 @@ class TestMDOrionFloes(FloeTestCase):
 
         unbound_file = OutputDatasetWrapper(extension=".oedb")
         bound_file = OutputDatasetWrapper(extension=".oedb")
+        out_DG_file = OutputDatasetWrapper(extension=".oedb")
+        out_recovery_file = OutputDatasetWrapper(extension=".oedb")
 
         output_nes_file = OutputDatasetWrapper(extension=".oedb")
         fail_output_file = OutputDatasetWrapper(extension=".oedb")
@@ -89,6 +91,8 @@ class TestMDOrionFloes(FloeTestCase):
                     "map": map_file.identifier,
                     "out_unbound": unbound_file.identifier,
                     "out_bound": bound_file.identifier,
+                    "DG": out_DG_file.identifier,
+                    "recovery":  out_recovery_file.identifier,
                     "out": output_nes_file.identifier,
                     "fail": fail_output_file.identifier
                 },

@@ -12,7 +12,8 @@ from MDOrion.LigPrep.cubes import (ParallelLigandChargeCube,
 from MDOrion.Flask.cubes import (IDSettingCube,
                                  CollectionSetting,
                                  ParallelSolvationCube,
-                                 ParallelRecordSizeCheck)
+                                 ParallelRecordSizeCheck,
+                                 RecordSizeCheck)
 
 from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
                                      ParallelMDNvtCube,
@@ -30,9 +31,10 @@ from MDOrion.SubFloes.SubfloeFunctions import nes_gmx_subfloe
 
 from snowball.utils.dataset_reader_opt import DatasetReaderOptCube
 
+from snowball import ExceptHandlerCube
 
 floe_title = 'Equilibrium and Non Equilibrium Switching'
-tags_for_floe = ['MDPrep', 'MD', 'FEC']
+tags_for_floe = ['MDPrep', 'MD', 'FECalc']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)
@@ -234,21 +236,26 @@ coll_write = CollectionSetting("WriteNESCollection", title="WriteNESCollection")
 coll_write.set_parameters(open=True)
 coll_write.set_parameters(write_new_collection='NES_OPLMD')
 
-
 # This cube is necessary for the correct working of collections and shards
 coll_close = CollectionSetting("CloseCollection", title="Close Collection")
 coll_close.set_parameters(open=False)
 
-check_rec = ParallelRecordSizeCheck("Record Check Success")
+rec_check = ParallelRecordSizeCheck("Record Check Success")
+rec_check_DG = ParallelRecordSizeCheck("Record Check Success DG", title="Affinity Record Size Checking")
+rec_check_recovery = RecordSizeCheck("Record Check Recovery", title="Recovery Record Size Checking")
+rec_check_unbound = ParallelRecordSizeCheck("Record Check Unbound", title="Unbound Record Size Checking")
+rec_check_bound = ParallelRecordSizeCheck("Record Check Bound", title="Bound Record Size Checking")
 
-ofs = DatasetWriterCube('ofs', title='NES Out')
-ofs.promote_parameter("data_out", promoted_name="out",
-                      title="NES Dataset Out",
-                      description="NES Dataset Out", order=5)
+ofs_nes = DatasetWriterCube('ofs', title='NES Out')
+ofs_nes.promote_parameter("data_out", promoted_name="out",
+                          title="NES Dataset Out",
+                          description="NES Dataset Out", order=5)
 
 fail = DatasetWriterCube('fail', title='NES Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="NES Failures",
                        description="NES Dataset Failures out", order=6)
+
+exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
 
 # TODO DEBUG ONLY TO BE REMOVED
 ofs_lig = DatasetWriterCube('ofs_unbound', title='Equilibrium Unbound Out')
@@ -261,19 +268,24 @@ ofs_prot.promote_parameter("data_out", promoted_name="out_bound",
                            title="Equilibrium Bound Out",
                            description="Equilibrium Bound Out", order=3)
 
-ofs_abfe = DatasetWriterCube('ofs_abfe', title='Affinity Out')
-ofs_abfe.promote_parameter("data_out", promoted_name="abfe",
-                           title="ABFE Out",
-                           description="Binding Affinity Out", order=5)
+ofs_DG = DatasetWriterCube('ofs_Dg', title='Affinity Out')
+ofs_DG.promote_parameter("data_out", promoted_name="DG",
+                         title="Affinity Out",
+                         description="Binding Affinity Out", order=5)
+
+ofs_recovery = DatasetWriterCube('ofs_recovery', title='Recovery Out')
+ofs_recovery.promote_parameter("data_out", promoted_name="recovery",
+                               title="Recovery Out",
+                               description="Recovery Out", order=6)
 
 job.add_cubes(iligs, ligset, chargelig, ligid, md_lig_components, coll_open,
               iprot, md_prot_components, complx, solvate, ff, switch,
               minimize_uns, warmup_uns, equil_uns, prod_uns,
               minimize_bns, warmup_bns, equil1_bns,
               equil2_bns, equil3_bns, equil4_bns, prod_bns,
-              coll_write,   coll_close,
-              check_rec, ofs_abfe, ofs, fail, ofs_lig, ofs_prot)
-
+              coll_write, coll_close,
+              rec_check, rec_check_DG, rec_check_recovery, rec_check_unbound, rec_check_bound,
+              ofs_DG, ofs_nes, ofs_recovery, exceptions, fail, ofs_lig, ofs_prot)
 
 # Call subfloe function to start up the MD, equilibrate, and do the production run
 nes_subfloe_options = dict()
@@ -284,8 +296,9 @@ nes_subfloe_options['nes_switch_time_in_ns'] = 0.05
 input_port_dic = {'input_open_collection_port': coll_write.success,
                   'input_bound_port': prod_bns.success}
 output_port_dic = {'output_nes_port': coll_close.intake,
-                   'output_abfe_port': ofs_abfe.intake,
-                   'output_fail_port': check_rec.intake}
+                   'output_DG_port': rec_check_DG.intake,
+                   'output_recovery': rec_check_recovery.intake,
+                   'output_fail_port': rec_check.fail_in}
 
 nes_gmx_subfloe(job, input_port_dic, output_port_dic, nes_subfloe_options)
 
@@ -314,7 +327,8 @@ warmup_uns.success.connect(equil_uns.intake)
 equil_uns.success.connect(prod_uns.intake)
 prod_uns.success.connect(coll_write.intake)
 
-prod_uns.success.connect(ofs_lig.intake)
+prod_uns.success.connect(rec_check_unbound.intake)
+rec_check_unbound.success.connect(ofs_lig.intake)
 
 # Bound MD run
 switch.bound_port.connect(minimize_bns.intake)
@@ -326,41 +340,48 @@ equil3_bns.success.connect(equil4_bns.intake)
 equil4_bns.success.connect(prod_bns.intake)
 prod_bns.success.connect(coll_write.intake)
 
-prod_bns.success.connect(ofs_prot.intake)
+prod_bns.success.connect(rec_check_bound.intake)
+rec_check_bound.success.connect(ofs_prot.intake)
 
-coll_close.success.connect(check_rec.intake)
-check_rec.success.connect(ofs.intake)
+coll_close.success.connect(rec_check.intake)
+rec_check.success.connect(ofs_nes.intake)
+rec_check_DG.success.connect(ofs_DG.intake)
+rec_check_recovery.success.connect(ofs_recovery.intake)
+exceptions.failure.connect(fail.intake)
 
 # Fail port connections
-ligset.failure.connect(check_rec.fail_in)
-chargelig.failure.connect(check_rec.fail_in)
-ligid.failure.connect(check_rec.fail_in)
-md_lig_components.failure.connect(check_rec.fail_in)
-md_prot_components.failure.connect(check_rec.fail_in)
-complx.failure.connect(check_rec.fail_in)
-coll_open.failure.connect(check_rec.fail_in)
-solvate.failure.connect(check_rec.fail_in)
-ff.failure.connect(check_rec.fail_in)
-switch.failure.connect(check_rec.fail_in)
+ligset.failure.connect(rec_check.fail_in)
+chargelig.failure.connect(rec_check.fail_in)
+ligid.failure.connect(rec_check.fail_in)
+md_lig_components.failure.connect(rec_check.fail_in)
+md_prot_components.failure.connect(rec_check.fail_in)
+complx.failure.connect(rec_check.fail_in)
+coll_open.failure.connect(rec_check.fail_in)
+solvate.failure.connect(rec_check.fail_in)
+ff.failure.connect(rec_check.fail_in)
+switch.failure.connect(rec_check.fail_in)
 
-minimize_uns.failure.connect(check_rec.fail_in)
-warmup_uns.failure.connect(check_rec.fail_in)
-equil_uns.failure.connect(check_rec.fail_in)
-prod_uns.failure.connect(check_rec.fail_in)
+minimize_uns.failure.connect(rec_check.fail_in)
+warmup_uns.failure.connect(rec_check.fail_in)
+equil_uns.failure.connect(rec_check.fail_in)
+prod_uns.failure.connect(rec_check.fail_in)
 
-minimize_bns.failure.connect(check_rec.fail_in)
-warmup_bns.failure.connect(check_rec.fail_in)
-equil1_bns.failure.connect(check_rec.fail_in)
-equil2_bns.failure.connect(check_rec.fail_in)
-equil3_bns.failure.connect(check_rec.fail_in)
-equil4_bns.failure.connect(check_rec.fail_in)
-prod_bns.failure.connect(check_rec.fail_in)
+minimize_bns.failure.connect(rec_check.fail_in)
+warmup_bns.failure.connect(rec_check.fail_in)
+equil1_bns.failure.connect(rec_check.fail_in)
+equil2_bns.failure.connect(rec_check.fail_in)
+equil3_bns.failure.connect(rec_check.fail_in)
+equil4_bns.failure.connect(rec_check.fail_in)
+prod_bns.failure.connect(rec_check.fail_in)
 
-coll_write.failure.connect(check_rec.fail_in)
+coll_write.failure.connect(rec_check.fail_in)
 
-coll_close.failure.connect(check_rec.fail_in)
-check_rec.failure.connect(fail.intake)
-
+coll_close.failure.connect(rec_check.fail_in)
+rec_check.failure.connect(exceptions.intake)
+rec_check_DG.failure.connect(exceptions.intake)
+rec_check_recovery.failure.connect(exceptions.intake)
+rec_check_bound.failure.connect(exceptions.intake)
+rec_check_unbound.failure.connect(exceptions.intake)
 
 if __name__ == "__main__":
     job.run()

@@ -70,7 +70,8 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     input_open_collection_port = input_port_dic['input_open_collection_port']
 
     output_nes_port = output_port_dic['output_nes_port']
-    output_abfe_port = output_port_dic['output_abfe_port']
+    output_DG_port = output_port_dic['output_DG_port']
+    output_recovery_port = output_port_dic['output_recovery']
     output_fail_port = output_port_dic['output_fail_port']
 
     # Switching Bound and Unbound runs
@@ -134,13 +135,17 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     chimera_sub.success.connect(unbound_nes_sub.intake)
     unbound_nes_sub.success.connect(nes_analysis_sub.intake)
 
-    nes_analysis_sub.success.connect(report_sub.intake)
+    bound_nes_sub.success.connect(output_recovery_port)
+    unbound_nes_sub.success.connect(output_recovery_port)
+
     nes_analysis_sub.success.connect(ddg_to_dg_sub.intake)
-    ddg_to_dg_sub.success.connect(output_abfe_port)
-    ddg_to_dg_sub.graph_port.connect(plot_aff_sub.intake)
     input_bound_port.connect(ddg_to_dg_sub.bound_port)
 
-    report_sub.success.connect(output_nes_port)
+    ddg_to_dg_sub.success.connect(output_DG_port)
+
+    ddg_to_dg_sub.graph_port.connect(report_sub.intake)
+    report_sub.success.connect(plot_aff_sub.intake)
+    plot_aff_sub.success.connect(output_nes_port)
 
     # Fail port connections
     switch_sub.failure.connect(output_fail_port)
@@ -153,7 +158,6 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     nes_analysis_sub.failure.connect(output_fail_port)
     ddg_to_dg_sub.failure.connect(output_fail_port)
     plot_aff_sub.failure.connect(output_fail_port)
-
     report_sub.failure.connect(output_fail_port)
 
     return True
@@ -411,6 +415,76 @@ def setup_MDsmallmol_startup(input_floe, input_cube, fail_cube, options):
     return prod_small
 
 
+def setup_traj_mmpbsa(input_floe, input_cube, fail_cube):
+    trajCube = ParallelTrajToOEMolCube("TrajToOEMolCube", title="Trajectory To OEMols")
+    IntECube = ParallelTrajInteractionEnergyCube("TrajInteractionEnergyCube", title="MM Energies")
+    PBSACube = ParallelTrajPBSACube("TrajPBSACube", title="PBSA Energies")
+
+    trajproc_group = ParallelCubeGroup(cubes=[trajCube, IntECube, PBSACube])
+    input_floe.add_group(trajproc_group)
+
+    input_floe.add_cubes(trajCube, IntECube, PBSACube)
+
+    # Success Connections
+    input_cube.success.connect(trajCube.intake)
+    trajCube.success.connect(IntECube.intake)
+    IntECube.success.connect(PBSACube.intake)
+
+    # Fail Connections
+    trajCube.failure.connect(fail_cube.fail_in)
+    IntECube.failure.connect(fail_cube.fail_in)
+
+    return PBSACube
+
+
+def setup_gather_cluster(input_floe, input_cube, fail_cube):
+    confGather = ConformerGatheringData("Gathering Conformer Records", title="Gathering Conformer Records")
+    catLigTraj = ParallelConfTrajsToLigTraj("ConfTrajsToLigTraj", title="Combine Pose Trajectories")
+    catLigMMPBSA = ParallelConcatenateTrajMMPBSACube('ConcatenateTrajMMPBSACube', title="Concatenate MMPBSA Energies")
+    trajBints = ParallelBintScoreInitialPoseAndTrajectory("TrajBintsCube", title="Trajectory Binding Interactions")
+    clusCube = ParallelClusterOETrajCube("ClusterOETrajCube", title="Clustering")
+    clusPop = ParallelClusterPopAnalysis('ClusterPopAnalysis', title="Clustering Analysis")
+    clusOEMols = ParallelMakeClusterTrajOEMols('MakeClusterTrajOEMols', title="Per-Cluster Analysis")
+    prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Analysis Report")
+    report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Relevant Output Extraction")
+
+    analysis_group = ParallelCubeGroup(cubes=[catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop,
+                                              clusOEMols, prepDataset, report_gen])
+    input_floe.add_group(analysis_group)
+
+    report = MDFloeReportCube("report", title="Floe Report")
+
+    input_floe.add_cubes(confGather,
+                  catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop, clusOEMols,
+                  prepDataset, report_gen, report)
+
+    # Success Connections
+    input_cube.success.connect(confGather.intake)
+    confGather.success.connect(catLigTraj.intake)
+    catLigTraj.success.connect(catLigMMPBSA.intake)
+    catLigMMPBSA.success.connect(trajBints.intake)
+    trajBints.success.connect(clusCube.intake)
+    clusCube.success.connect(clusPop.intake)
+    clusPop.success.connect(clusOEMols.intake)
+    clusOEMols.success.connect(prepDataset.intake)
+    prepDataset.success.connect(report_gen.intake)
+    report_gen.success.connect(report.intake)
+
+    # Fail Connections
+    confGather.failure.connect(fail_cube.fail_in)
+    catLigTraj.failure.connect(fail_cube.fail_in)
+    catLigMMPBSA.failure.connect(fail_cube.fail_in)
+    trajBints.failure.connect(fail_cube.fail_in)
+    clusCube.failure.connect(fail_cube.fail_in)
+    clusPop.failure.connect(fail_cube.fail_in)
+    clusOEMols.failure.connect(fail_cube.fail_in)
+    prepDataset.failure.connect(fail_cube.fail_in)
+    report_gen.failure.connect(fail_cube.fail_in)
+
+    return report
+
+
+
 def setup_traj_analysis(input_floe, input_cube, fail_cube, du_output_cube):
     trajCube = ParallelTrajToOEMolCube("TrajToOEMolCube", title="Trajectory To OEMols")
     IntECube = ParallelTrajInteractionEnergyCube("TrajInteractionEnergyCube", title="MM Energies")
@@ -455,12 +529,12 @@ def setup_traj_analysis(input_floe, input_cube, fail_cube, du_output_cube):
 
     # Fail Connections
     trajCube.failure.connect(fail_cube.fail_in)
-    trajBints.failure.connect(fail_cube.fail_in)
     IntECube.failure.connect(fail_cube.fail_in)
     PBSACube.failure.connect(fail_cube.fail_in)
     confGather.failure.connect(fail_cube.fail_in)
     catLigTraj.failure.connect(fail_cube.fail_in)
     catLigMMPBSA.failure.connect(fail_cube.fail_in)
+    trajBints.failure.connect(fail_cube.fail_in)
     clusCube.failure.connect(fail_cube.fail_in)
     clusPop.failure.connect(fail_cube.fail_in)
     clusOEMols.failure.connect(fail_cube.fail_in)
@@ -469,13 +543,3 @@ def setup_traj_analysis(input_floe, input_cube, fail_cube, du_output_cube):
 
     return report
 
-
-def setup_bint(input_floe, input_cube, fail_cube):
-
-    trajBints = ParallelBintScoreInitialPoseAndTrajectory("TrajBintsCube", title="Trajectory Binding Interactions")
-
-    input_floe.add_cubes(trajBints)
-
-    input_cube.success.connect(trajBints.intake)
-
-    return trajBints
