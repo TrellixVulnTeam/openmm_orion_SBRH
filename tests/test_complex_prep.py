@@ -122,10 +122,13 @@ class TestMDOrionFloes(FloeTestCase):
             self.assertEqual(record.get_value(Fields.protein).NumAtoms(), 2432)
 
             complx = mdrecord.get_flask
-            protein_split, ligand_split, water, excipients = oeommutils.split(complx)
+            protein_split, ligand_split, water, cofactors, lipids, metals, excipients = oeommutils.split(complx)
             self.assertEqual(protein_split.NumAtoms(), 2432)
             self.assertEqual(ligand_split.NumAtoms(), 43)
             self.assertEqual(water.NumAtoms(), 20022)
+            self.assertEqual(cofactors.NumAtoms(), 0)
+            self.assertEqual(lipids.NumAtoms(), 0)
+            self.assertEqual(metals.NumAtoms(), 0)
             self.assertEqual(excipients.NumAtoms(), 17)
 
             stages = mdrecord.get_stages
