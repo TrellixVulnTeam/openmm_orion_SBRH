@@ -29,7 +29,7 @@ from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
 
 floe_title = 'Compare Experimental Affinity with NES Results'
-tags_for_floe = ['Helper','FECalc']
+tags_for_floe = ['Helper', 'FECalc']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)
@@ -50,30 +50,33 @@ bnd_eq.promote_parameter("data_in", promoted_name="bound",
                          title='Bound Equilibrium Reader',
                          description="The Equilibrium Bound Dataset")
 
-ddg_to_dg_sub = PredictDGFromDDG("RBFE to ABFE", title="RBFE to Affinity Estimate")
+ddg_to_dg_sub = PredictDGFromDDG("RBFE to Affinity Estimate", title="RBFE to Affinity Estimate")
 ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp', required=True)
 
 plot = PlotNESResults("PlotAffinities", title="Plot Affinities")
 
-fail = DatasetWriterCube('fail', title='Failures')
-fail.promote_parameter("data_out", promoted_name="fail", description="Fail Data Set", order=2)
+ofs_DG = DatasetWriterCube('ofs_DG', title='Affinity Out')
+ofs_DG.promote_parameter("data_out", promoted_name="DG",
+                         title="Affinity Out",
+                         description="Affinity Out", order=1)
 
-ofs_abfe = DatasetWriterCube('ofs_abfe', title='Affinity Out')
-ofs_abfe.promote_parameter("data_out", promoted_name="abfe",
-                           title="Affinity Out",
-                           description="Affinity Out")
+fail = DatasetWriterCube('fail', title='Failures')
+fail.promote_parameter("data_out", promoted_name="fail",
+                       title="Failures",
+                       description="Fail Data Set", order=2)
+
 
 rec_check = ParallelRecordSizeCheck("Record Check Success", title="Record Size Checking")
 
 
-job.add_cubes(ifs, bnd_eq, ddg_to_dg_sub, plot, fail, rec_check, ofs_abfe)
+job.add_cubes(ifs, bnd_eq, ddg_to_dg_sub, plot, fail, rec_check, ofs_DG)
 
 ifs.success.connect(ddg_to_dg_sub.intake)
 
 bnd_eq.success.connect(ddg_to_dg_sub.bound_port)
 ddg_to_dg_sub.graph_port.connect(plot.intake)
 ddg_to_dg_sub.success.connect(rec_check.intake)
-rec_check.success.connect(ofs_abfe.intake)
+rec_check.success.connect(ofs_DG.intake)
 
 ddg_to_dg_sub.failure.connect(rec_check.fail_in)
 plot.failure.connect(rec_check.fail_in)
