@@ -68,6 +68,64 @@ import shutil
 from MDOrion.TrjAnalysis.dowload_fr_utils import download_report
 
 
+class MDFloeMakeClusterCentricDataset(RecordPortsMixin, ComputeCube):
+    title = "MDFloeWriteClusterCentricDataset"
+
+    classification = [["Analysis"]]
+    tags = ['Dataset Writer']
+    description = """
+    This cube extracts and writes out per-cluster results from ligand-centric
+    output from MD Traj analysis.
+    """
+
+    uuid = "67a685ec-57a9-46e7-b29a-4f91ac99774e"
+
+    # Override defaults for some parameters
+    parameter_overrides = {
+        "memory_mb": {"default": 14000},
+        "spot_policy": {"default": "Prohibited"},
+        "prefetch_count": {"default": 1},  # 1 molecule at a time
+        "item_count": {"default": 1}  # 1 molecule at a time
+    }
+
+    def begin(self):
+        self.opt = vars(self.args)
+        self.opt['Logger'] = self.log
+        return
+
+    def process(self, record, port):
+        try:
+            # The copy of the dictionary option as local variable
+            # is necessary to avoid filename collisions due to
+            # the parallel cube processes
+            opt = dict(self.opt)
+
+            # Logger string
+            opt['Logger'].info(' Beginning MDFloeWriteClusterCentricDataset')
+            system_title = utl.RequestOEFieldType(record, Fields.title)
+            opt['Logger'].info('{} Attempting to write a cluster-centric MD Traj Analysis output dataset'
+                .format(system_title) )
+
+            # Get ligand floe report URL
+            if not record.has_value(Fields.floe_report_URL):
+                raise ValueError('{}: Missing the ligand floe report URL'.format(system_title))
+
+            page_link = record.get_value(Fields.floe_report_URL)
+
+            for rec in record.get_value(Fields.Analysis.ClusterDURecs_fld):
+                rec.set_value(Fields.floe_report_URL, page_link)
+                self.success.emit(rec)
+
+        except Exception as e:
+
+            print("Failed to complete", str(e), flush=True)
+            self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+            self.log.error(traceback.format_exc())
+            self.failure.emit(record)
+
+        return
+
+
 class MDFloeReportCube(RecordPortsMixin, ComputeCube):
     title = "MDFloeReportCube"
     
@@ -90,9 +148,14 @@ class MDFloeReportCube(RecordPortsMixin, ComputeCube):
         "item_count": {"default": 1}  # 1 molecule at a time
     }
 
-    du_success = RecordOutputPort("du_success")
+    max_hitlist_size = parameters.IntegerParameter(
+        'max_hitlist_size',
+        default=100,
+        help_text=""""Maximum Size of Hit List in Floe Report""")
 
-    floe_report_title = parameters.StringParameter("floe_report_title", default="MD Report")
+    #du_success = RecordOutputPort("du_success")
+
+    floe_report_title = parameters.StringParameter("floe_report_title", default="MD Traj Analysis")
 
     def begin(self):
         self.opt = vars(self.args)
@@ -128,7 +191,7 @@ class MDFloeReportCube(RecordPortsMixin, ComputeCube):
                 sort_key = mdrecord.get_lig_id
 
             if not record.has_value(Fields.floe_report):
-                raise ValueError("Missing the report field for the system {}".format(system_title))
+                raise ValueError("Missing the report field for the flask {}".format(system_title))
 
             report_string = record.get_value(Fields.floe_report)
 
@@ -168,9 +231,9 @@ class MDFloeReportCube(RecordPortsMixin, ComputeCube):
 
             self.success.emit(record)
 
-            for rec in record.get_value(Fields.Analysis.ClusterDURecs_fld):
-                rec.set_value(Fields.floe_report_URL, page_link)
-                self.du_success.emit(rec)
+            #for rec in record.get_value(Fields.Analysis.ClusterDURecs_fld):
+            #    rec.set_value(Fields.floe_report_URL, page_link)
+             #   self.du_success.emit(rec)
 
             del mdrecord
 
@@ -216,7 +279,10 @@ class MDFloeReportCube(RecordPortsMixin, ComputeCube):
                <main class="grid">
                """
             # Sort the dictionary keys by using the ligand ID
-            for key in sorted(self.floe_report_dic.keys()):
+            sorted_keys = sorted(self.floe_report_dic.keys())
+
+            # publish to the floe report up to the maximum hit list size
+            for key in sorted_keys[:self.opt['max_hitlist_size']]:
                 page_link, ligand_svg, label = self.floe_report_dic[key]
 
                 index_content += """
@@ -392,6 +458,7 @@ class MakeClusterTrajOEMols(RecordPortsMixin, ComputeCube):
             system_title = utl.RequestOEFieldType(record, Fields.title)
             opt['Logger'].info('{} Attempting to make trajectory OEMols for Ligand and Protein by Cluster'
                                .format(system_title))
+            lig_name = utl.RequestOEFieldType(record, Fields.ligand_name)
 
             if not record.has_field(Fields.Analysis.oeclus_rec):
                 raise ValueError('{} does not have TrajClus record'.format(system_title))
@@ -429,16 +496,31 @@ class MakeClusterTrajOEMols(RecordPortsMixin, ComputeCube):
 
             del mdtrajrecord
 
-            # Generate average and median protein and ligand OEMols from ligTraj, protTraj
+            # Generate traj average and median protein and ligand OEMols from ligTraj, protTraj
             opt['Logger'].info('{} Generating entire trajectory median and average OEMols for protein and ligand '.
                                format(system_title))
             ligMedian, protMedian, ligAverage, protAverage = oetrjutl.AnalyseProteinLigandTrajectoryOEMols(
                 ligTraj, protTraj)
 
-            # Add prot and lig medians and averages to OETraj record
+            # Add DUs from traj prot and lig medians and averages to OETraj record
+            cluster_styler = utl.DUClusterStyler()
+            clusMedDU = oechem.OEDesignUnit()
+            clusMedDU.GetImpl().SetProtein(protMedian)
+            oechem.OEUpdateDesignUnit(clusMedDU, ligMedian, oechem.OEDesignUnitComponents_Ligand)
+            clusMedDU.SetTitle('{}_Traj_Median'.format(lig_name))
+            cluster_styler.apply_style(clusMedDU)
+            oetrajRecord.set_value(Fields.Analysis.MedianDU_fld, clusMedDU)
+
+            clusAvgDU = oechem.OEDesignUnit()
+            clusAvgDU.GetImpl().SetProtein(protAverage)
+            oechem.OEUpdateDesignUnit(clusAvgDU, ligAverage, oechem.OEDesignUnitComponents_Ligand)
+            clusAvgDU.SetTitle('{}_Traj_Average'.format(lig_name))
+            cluster_styler.apply_style(clusAvgDU)
+            oetrajRecord.set_value(Fields.Analysis.AverageDU_fld, clusAvgDU)
+
             #oetrajRecord.set_value(OEField('LigMedian', Types.Chem.Mol), ligMedian)
             #oetrajRecord.set_value(OEField('ProtMedian', Types.Chem.Mol), protMedian)
-            oetrajRecord.set_value(OEField('LigAverage', Types.Chem.Mol), ligAverage)
+            #oetrajRecord.set_value(OEField('LigAverage', Types.Chem.Mol), ligAverage)
             #oetrajRecord.set_value(OEField('ProtAverage', Types.Chem.Mol), protAverage)
 
             # Generate interactive trajectory SVG for the whole trajectory and place on oetrajRecord
@@ -454,23 +536,20 @@ class MakeClusterTrajOEMols(RecordPortsMixin, ComputeCube):
             # Generate per-cluster info for major clusters
             nMajorClusters = trajClus['nMajorClusters']
             byClusTrajSVG = []
-            cluster_styler = utl.DUClusterStyler()
             if nMajorClusters > 0:
-                opt['Logger'].info('{}: Making cluster mols for {} major clusters'.format(system_title,nMajorClusters))
-                clusLigAvgMol = oechem.OEMol(ligTraj)
-                clusLigAvgMol.DeleteConfs()
-                clusProtAvgMol = oechem.OEMol(protTraj)
-                clusProtAvgMol.DeleteConfs()
-                clusLigMedMol = oechem.OEMol(ligTraj)
-                clusLigMedMol.DeleteConfs()
-                clusProtMedMol = oechem.OEMol(protTraj)
-                clusProtMedMol.DeleteConfs()
+                opt['Logger'].info('{}: Making cluster DUs for {} major clusters'.format(system_title,nMajorClusters))
+                #clusLigAvgMol = oechem.OEMol(ligTraj)
+                #clusLigAvgMol.DeleteConfs()
+                #clusProtAvgMol = oechem.OEMol(protTraj)
+                #clusProtAvgMol.DeleteConfs()
+                #clusLigMedMol = oechem.OEMol(ligTraj)
+                #clusLigMedMol.DeleteConfs()
+                #clusProtMedMol = oechem.OEMol(protTraj)
+                #clusProtMedMol.DeleteConfs()
 
                 # for each major cluster generate SVG and average and median for protein and ligand
                 for clusID in range(nMajorClusters):
                     cluster_record = OERecord()
-                    clusMedDU = oechem.OEDesignUnit()
-                    clusAvgDU = oechem.OEDesignUnit()
 
                     opt['Logger'].info('Extracting cluster {} from {}'.format( clusID, system_title ))
                     clusLig = clusutl.TrajOEMolFromCluster( ligTraj, trajClus['ClusterVec'], clusID)
@@ -482,36 +561,35 @@ class MakeClusterTrajOEMols(RecordPortsMixin, ComputeCube):
 
                     ligMed, protMed, ligAvg, protAvg = oetrjutl.AnalyseProteinLigandTrajectoryOEMols(clusLig, clusProt)
 
-                    confTitle = 'clus '+str(clusID)
-                    conf = clusLigAvgMol.NewConf(ligAvg)
-                    conf.SetTitle(confTitle)
-                    conf = clusProtAvgMol.NewConf(protAvg)
-                    conf.SetTitle(confTitle)
-                    conf = clusLigMedMol.NewConf(ligMed)
-                    conf.SetTitle(confTitle)
-                    conf = clusProtMedMol.NewConf(protMed)
-                    conf.SetTitle(confTitle)
+                    #confTitle = 'clus '+str(clusID)
+                    #conf = clusLigAvgMol.NewConf(ligAvg)
+                    #conf.SetTitle(confTitle)
+                    #conf = clusProtAvgMol.NewConf(protAvg)
+                    #conf.SetTitle(confTitle)
+                    #conf = clusLigMedMol.NewConf(ligMed)
+                    #conf.SetTitle(confTitle)
+                    #conf = clusProtMedMol.NewConf(protMed)
+                    #conf.SetTitle(confTitle)
 
                     clusMedDU.GetImpl().SetProtein(protMed)
                     oechem.OEUpdateDesignUnit(clusMedDU, ligMed, oechem.OEDesignUnitComponents_Ligand)
-                    if len(clusMedDU.GetTitle()) > 1 and clusMedDU.GetTitle()[0] == "(":
-                        clusMedDU.SetTitle(protMed.GetTitle() + clusMedDU.GetTitle() + "_Cluster_" + str(clusID))
+                    clusMedDU.SetTitle('{}_clus{}_Med'.format(lig_name,str(clusID)))
                     cluster_styler.apply_style(clusMedDU)
-                    cluster_record.set_value(Fields.Analysis.ClusMedDU_fld, clusMedDU)
+                    #record.set_value(Fields.Analysis.MedianDU_fld, clusMedDU)
+                    cluster_record.set_value(Fields.Analysis.MedianDU_fld, clusMedDU)
 
                     clusAvgDU.GetImpl().SetProtein(protAvg)
                     oechem.OEUpdateDesignUnit(clusAvgDU, ligAvg, oechem.OEDesignUnitComponents_Ligand)
-                    if len(clusAvgDU.GetTitle()) > 1 and clusAvgDU.GetTitle()[0] == "(":
-                        clusAvgDU.SetTitle(protAvg.GetTitle() + clusAvgDU.GetTitle() + "_Cluster_" + str(clusID))
-
+                    clusAvgDU.SetTitle('{}_clus{}_Avg'.format(lig_name,str(clusID)))
                     cluster_styler.apply_style(clusAvgDU)
+                    #record.set_value(Fields.Analysis.AverageDU_fld, clusAvgDU)
                     sub_rec = OERecord()
-                    sub_rec.set_value(Fields.Analysis.ClusAvgDU_fld, clusAvgDU)
-                    cluster_record.set_value(Fields.Analysis.ClusterAvgDURec_fld, sub_rec)
+                    sub_rec.set_value(Fields.Analysis.AverageDU_fld, clusAvgDU)
+                    cluster_record.set_value(Fields.Analysis.ExtraDURec_fld, sub_rec)
 
                     cluster_record.set_value(Fields.Analysis.ClusID_fld, clusID)
                     cluster_record.set_value(Fields.Analysis.n_major_clusters, nMajorClusters)
-                    cluster_record.set_value(Fields.Analysis.LigID_fld, clusLigAvgMol.GetTitle())
+                    cluster_record.set_value(Fields.ligand_name, lig_name)
 
                     cluster_records.append(cluster_record)
 
@@ -520,70 +598,67 @@ class MakeClusterTrajOEMols(RecordPortsMixin, ComputeCube):
                     byClusTrajSVG.append(clusSVG)
 
                 # style the molecules and put the results on trajClus record
-                clusLigAvgMol.SetTitle('Average '+clusLigAvgMol.GetTitle())
-                clusProtAvgMol.SetTitle('Average '+clusProtAvgMol.GetTitle())
-                utl.StyleTrajProteinLigandClusters(clusProtAvgMol,clusLigAvgMol)
-                trajClusRecord.set_value(Fields.Analysis.ClusLigAvg_fld, clusLigAvgMol)
-                trajClusRecord.set_value(Fields.Analysis.ClusProtAvg_fld, clusProtAvgMol)
+                #clusLigAvgMol.SetTitle('Average '+lig_name)
+                #clusProtAvgMol.SetTitle('Average '+clusProtAvgMol.GetTitle())
+                #utl.StyleTrajProteinLigandClusters(clusProtAvgMol,clusLigAvgMol)
+                #trajClusRecord.set_value(Fields.Analysis.ClusLigAvg_fld, clusLigAvgMol)
+                #trajClusRecord.set_value(Fields.Analysis.ClusProtAvg_fld, clusProtAvgMol)
                 #
-                clusLigMedMol.SetTitle('Median '+clusLigMedMol.GetTitle())
-                clusProtMedMol.SetTitle('Median '+clusProtMedMol.GetTitle())
-                utl.StyleTrajProteinLigandClusters(clusProtMedMol,clusLigMedMol)
-                trajClusRecord.set_value(Fields.Analysis.ClusLigMed_fld, clusLigMedMol)
-                trajClusRecord.set_value(Fields.Analysis.ClusProtMed_fld, clusProtMedMol)
+                #clusLigMedMol.SetTitle('Median '+lig_name)
+                #clusProtMedMol.SetTitle('Median '+clusProtMedMol.GetTitle())
+                #utl.StyleTrajProteinLigandClusters(clusProtMedMol,clusLigMedMol)
+                #trajClusRecord.set_value(Fields.Analysis.ClusLigMed_fld, clusLigMedMol)
+                #trajClusRecord.set_value(Fields.Analysis.ClusProtMed_fld, clusProtMedMol)
 
-            # case when no major clusters are found
-            else:  # number of clusters is zero
+            else:  # number of major clusters is zero
                 clusID = 0
                 cluster_record = OERecord()
-                clusMedDU = oechem.OEDesignUnit()
-                clusAvgDU = oechem.OEDesignUnit()
 
                 opt['Logger'].info('No major clusters found for {}'.format(system_title))
                 # In lieu of cluster mols, copy traj and median mols to top level
-                #clusLigAvgMol = utl.RequestOEField( oetrajRecord, 'LigAverage', Types.Chem.Mol)
-                #clusProtAvgMol = utl.RequestOEField( oetrajRecord, 'ProtAverage', Types.Chem.Mol)
-                clusLigAvgMol = ligAverage
-                clusProtAvgMol = protAverage
-                clusLigAvgMol.SetTitle('Average '+clusLigAvgMol.GetTitle())
-                clusProtAvgMol.SetTitle('Average '+clusProtAvgMol.GetTitle())
-                utl.SetProteinLigandVizStyle(clusProtAvgMol, clusLigAvgMol)
+                #clusLigAvgMol = ligAverage
+                #clusProtAvgMol = protAverage
+                #clusLigAvgMol.SetTitle('Average '+lig_name)
+                #clusProtAvgMol.SetTitle('Average '+clusProtAvgMol.GetTitle())
+                #utl.SetProteinLigandVizStyle(clusProtAvgMol, clusLigAvgMol)
 
                 #
-                #clusLigMedMol = utl.RequestOEField( oetrajRecord, 'LigMedian', Types.Chem.Mol)
-                #clusProtMedMol = utl.RequestOEField( oetrajRecord, 'ProtMedian', Types.Chem.Mol)
-                clusLigMedMol = ligMedian
-                clusProtMedMol = protMedian
-                clusLigMedMol.SetTitle('Median '+clusLigMedMol.GetTitle())
-                clusProtMedMol.SetTitle('Median '+clusProtMedMol.GetTitle())
-                utl.SetProteinLigandVizStyle(clusProtMedMol, clusLigMedMol)
+                #clusLigMedMol = ligMedian
+                #clusProtMedMol = protMedian
+                #clusLigMedMol.SetTitle('Median '+lig_name)
+                #clusProtMedMol.SetTitle('Median '+clusProtMedMol.GetTitle())
+                #utl.SetProteinLigandVizStyle(clusProtMedMol, clusLigMedMol)
 
-                clusMedDU.GetImpl().SetProtein(clusProtMedMol)
-                oechem.OEUpdateDesignUnit(clusMedDU, clusLigMedMol, oechem.OEDesignUnitComponents_Ligand)
-                if len(clusMedDU.GetTitle()) > 1 and clusMedDU.GetTitle()[0] == "(":
-                    clusMedDU.SetTitle(clusProtMedMol.GetTitle() + clusMedDU.GetTitle() + "_Cluster_" + str(clusID))
+                clusMedDU.GetImpl().SetProtein(protMedian)
+                oechem.OEUpdateDesignUnit(clusMedDU, ligMedian, oechem.OEDesignUnitComponents_Ligand)
+                clusMedDU.SetTitle('{}_clus{}_Med'.format(lig_name,str(clusID)))
+
                 cluster_styler.apply_style(clusMedDU)
-                cluster_record.set_value(Fields.Analysis.ClusMedDU_fld, clusMedDU)
+                record.set_value(Fields.Analysis.MedianDU_fld, clusMedDU)
+                cluster_record.set_value(Fields.Analysis.MedianDU_fld, clusMedDU)
 
-                clusAvgDU.GetImpl().SetProtein(clusProtAvgMol)
-                oechem.OEUpdateDesignUnit(clusAvgDU, clusLigAvgMol, oechem.OEDesignUnitComponents_Ligand)
-                if len(clusAvgDU.GetTitle()) > 1 and clusAvgDU.GetTitle()[0] == "(":
-                    clusAvgDU.SetTitle(clusProtAvgMol.GetTitle() + clusAvgDU.GetTitle() + "_Cluster_" + str(clusID))
+                clusAvgDU.GetImpl().SetProtein(protAverage)
+                oechem.OEUpdateDesignUnit(clusAvgDU, ligAverage, oechem.OEDesignUnitComponents_Ligand)
+                clusAvgDU.SetTitle('{}_clus{}_Avg'.format(lig_name,str(clusID)))
+
                 cluster_styler.apply_style(clusAvgDU)
+                record.set_value(Fields.Analysis.AverageDU_fld, clusAvgDU)
                 sub_rec = OERecord()
-                sub_rec.set_value(Fields.Analysis.ClusAvgDU_fld, clusAvgDU)
-                cluster_record.set_value(Fields.Analysis.ClusterAvgDURec_fld, sub_rec)
+                sub_rec.set_value(Fields.Analysis.AverageDU_fld, clusAvgDU)
+                cluster_record.set_value(Fields.Analysis.ExtraDURec_fld, sub_rec)
 
                 cluster_record.set_value(Fields.Analysis.ClusID_fld, clusID)
                 cluster_record.set_value(Fields.Analysis.n_major_clusters, nMajorClusters)
-                cluster_record.set_value(Fields.Analysis.LigID_fld, clusLigAvgMol.GetTitle())
+                cluster_record.set_value(Fields.ligand_named, lig_name)
                 cluster_records.append(cluster_record)
 
+                byClusTrajSVG.append(trajSVG)
+
             # Set prot and lig clus average mols on top-level record for 3D vis
-            record.set_value(Fields.Analysis.ClusLigAvg_fld, clusLigAvgMol)
-            record.set_value(Fields.Analysis.ClusProtAvg_fld, clusProtAvgMol)
-            record.set_value(Fields.Analysis.ClusLigMed_fld, clusLigMedMol)
-            record.set_value(Fields.Analysis.ClusProtMed_fld, clusProtMedMol)
+            #record.set_value(Fields.Analysis.ClusLigAvg_fld, clusLigAvgMol)
+            #record.set_value(Fields.Analysis.ClusProtAvg_fld, clusProtAvgMol)
+            #record.set_value(Fields.Analysis.ClusLigMed_fld, clusLigMedMol)
+            #record.set_value(Fields.Analysis.ClusProtMed_fld, clusProtMedMol)
             record.set_value(Fields.Analysis.ClusterDURecs_fld, cluster_records)
 
             # put highlighted carbon styling on the default molecule (initial pose ligand)
@@ -788,7 +863,7 @@ class TrajAnalysisReportDataset(RecordPortsMixin, ComputeCube):
                 raise ValueError('{} could not find the poseId vector'.format(system_title))
             poseIdVec = utl.RequestOEFieldType(record, Fields.Analysis.poseIdVec)
 
-            # Copy InitBintScore and TrajBintScore from the oebint_rec record to the top level
+            # Copy TrajBintScore and poseStability from the oebint_rec record to the top level
             if not record.has_field(Fields.Bint.oebint_rec):
                 raise ValueError('{} could not find the BintScore record'.format(system_title))
             opt['Logger'].info('{} found the BintScore record'.format(system_title))
@@ -803,6 +878,28 @@ class TrajAnalysisReportDataset(RecordPortsMixin, ComputeCube):
             record.set_value(Fields.Bint.trajBintStderr, trajBintStderr)
             record.set_value(Fields.Bint.poseStability, poseStability)
             record.set_value(Fields.Bint.poseStabilityStderr, poseStabilityStderr)
+
+            # Copy the Median and Average DUs from the cluster records to the top level
+            # Note: now each cluster Med/Avg must have its own field on the record
+            record_vec = record.get_value(Fields.Analysis.ClusterDURecs_fld)
+            for rec in record_vec:
+                clusID = utl.RequestOEFieldType(rec, Fields.Analysis.ClusID_fld)
+                # clusID<0 identifies the catchall "other" cluster which we skip
+                if clusID<0:
+                    continue
+                if rec.has_field(Fields.Analysis.MedianDU_fld):
+                    ClusMedDU = utl.RequestOEFieldType(rec, Fields.Analysis.MedianDU_fld)
+                    MedianDU_fld_name = Fields.Analysis.MedianDU_fld.get_name()
+                    ClusIDMedDU_fld = OEField(MedianDU_fld_name + '_clus' + str(clusID), Types.Chem.DesignUnit)
+                    opt['Logger'].info('Write ClusMedDU to field {}'.format(ClusIDMedDU_fld.get_name()))
+                    record.set_value(ClusIDMedDU_fld, ClusMedDU)
+                    if rec.has_field(Fields.Analysis.ExtraDURec_fld):
+                        AvgDU_rec = utl.RequestOEFieldType(rec, Fields.Analysis.ExtraDURec_fld)
+                        ClusAvgDU = utl.RequestOEFieldType(AvgDU_rec, Fields.Analysis.AverageDU_fld)
+                        AverageDU_fld_name = Fields.Analysis.AverageDU_fld.get_name()
+                        ClusIDAvgDU_fld = OEField(AverageDU_fld_name + '_clus' + str(clusID), Types.Chem.DesignUnit)
+                        opt['Logger'].info('Write ClusAvgDU to field {}'.format(ClusIDAvgDU_fld.get_name()))
+                        record.set_value(ClusIDAvgDU_fld, ClusAvgDU)
 
             # Get the clustering results dict from the traj clustering record
             if not record.has_field(Fields.Analysis.oeclus_rec):
@@ -837,16 +934,15 @@ class TrajAnalysisReportDataset(RecordPortsMixin, ComputeCube):
             #trajClus.set_value(rmsdInit_field, rmsdInit_svg)
             #
 
-            # Set the TrajClus record on the top-level record
+            # Reset the TrajClus record (with the new info) on the top-level record
             record.set_value(Fields.Analysis.oeclus_rec, oeclusRecord)
             opt['Logger'].info('{} added report info to oeclusRecord OERecord'.format(system_title) )
 
-            # This last section is about setting the trajectory ensemble MMPBSA value. There are 2 cases:
-            # 1) There is at least one major cluster, so make a Boltzmann-weighted average of all major clusters
-            # 2) There are no major clusters, so make a simple ensemble average of the whole traj.
+            # This last section is about setting cluster info. There are 2 cases:
+            # 1) There is at least one major cluster (Boltzmann-weighted MMPBSA average of all major clusters)
+            # 2) There are no major clusters (simple MMPBSA ensemble average of the whole traj).
             floe_report_label = ""
             #
-            record_vec = record.get_value(Fields.Analysis.ClusterDURecs_fld)
             if nMajorClusters>0:
                 # 1) There is at least one major cluster, so make a Boltzmann-weighted average of all major clusters:
                 #
@@ -930,17 +1026,16 @@ class TrajAnalysisReportDataset(RecordPortsMixin, ComputeCube):
 
 
 class MDTrajAnalysisClusterReport(RecordPortsMixin, ComputeCube):
-    title = 'Extract relevant outputs of MD Traj Cluster  Analysis'
+    title = 'Generate Ligand Floe Report HTML from Protein-Ligand MD Traj Analysis.'
     
     classification = [["Analysis"]]
     tags = ['Ligand', 'Protein']
 
     description = """
-    Extract relevant outputs of Ligand and Protein
-    Short Traj MD Traj Analysis and write them to files.
+    Generate the per-Ligand Floe Report HTML from Protein-Ligand MD Traj Analysis.
 
-    This Cube takes as input the OERecord containing the work
-    product of trajectory analysis on Short Traj MD results.
+    This Cube takes as input the OERecord resulting from
+    trajectory analysis on MD results.
     """
 
     uuid = "42f2eef0-60aa-46f8-8d55-c8f10576e319"
@@ -991,7 +1086,8 @@ class MDTrajAnalysisClusterReport(RecordPortsMixin, ComputeCube):
             oetrajRecord = utl.RequestOEFieldType(record, Fields.Analysis.oetraj_rec)
             opt['Logger'].info('{} found OETraj record'.format(system_title))
             trajSVG = utl.RequestOEField(oetrajRecord, 'TrajSVG', Types.String)
-            ligand_bfactor = utl.RequestOEField(oetrajRecord, 'LigAverage', Types.Chem.Mol)
+            AverageDU = utl.RequestOEFieldType(oetrajRecord, Fields.Analysis.AverageDU_fld)
+            ligand_bfactor = AverageDU.GetImpl().GetLigand()
 
             # Extract the three plots from the TrajClus record
             if not record.has_field(Fields.Analysis.oeclus_rec):
@@ -1232,6 +1328,10 @@ class ExtractMDDataCube(RecordPortsMixin, ComputeCube):
     def process(self, record, port):
 
         try:
+            # The copy of the dictionary option as local variable
+            # is necessary to avoid filename collisions due to
+            # the parallel cube processes
+            opt = dict(self.opt)
 
             # TODO CHANGE TO THE SCRATCH DIRS FOR ORION
             if not record.has_field(Fields.title):
@@ -1257,42 +1357,24 @@ class ExtractMDDataCube(RecordPortsMixin, ComputeCube):
 
             self.dirs.append(title)
 
-            if not record.has_field(Fields.Analysis.oeclus_rec):
-                raise ValueError("Cluster record field is missing")
+            # Write out cluster Average and Median DesignUnits found at the top level
+            for fd in record.get_fields():
+                if fd.get_type() != oechem.Types.Chem.DesignUnit:
+                    continue
 
-            oeclus_rec = record.get_value(Fields.Analysis.oeclus_rec)
+                fd_name = fd.get_name()
+                if fd_name.find('Average')<0 and fd_name.find('Median')<0:
+                    continue
 
-            for fd in oeclus_rec.get_fields():
+                du = record.get_value(fd)
+                fn = os.path.join(title,fd_name+'.oedu')
+                opt['Logger'].info('{} : Writing DesignUnit {}'.format(title,fn))
 
-                name = fd.get_name()
-
-                if name in "ClusLigAvgMol":
-                    clus_lig_avg = oeclus_rec.get_value(fd)
-                    clus_lig_avg.SetTitle("ClusLigAvg")
-                    fn = os.path.join(title, "cluster_ligand_average.oeb")
-                    with oechem.oemolostream(fn) as ofs:
-                        oechem.OEWriteConstMolecule(ofs, clus_lig_avg)
-
-                elif name in "ClusLigMedMol":
-                    clus_lig_med = oeclus_rec.get_value(fd)
-                    clus_lig_med.SetTitle("ClusLigMed")
-                    fn = os.path.join(title, "cluster_ligand_median.oeb")
-                    with oechem.oemolostream(fn) as ofs:
-                        oechem.OEWriteConstMolecule(ofs, clus_lig_med)
-
-                elif name in "ClusProtAvgMol":
-                    clus_prot_avg = oeclus_rec.get_value(fd)
-                    clus_prot_avg.SetTitle("ClusProtAvg")
-                    fn = os.path.join(title, "cluster_protein_average.oeb")
-                    with oechem.oemolostream(fn) as ofs:
-                        oechem.OEWriteConstMolecule(ofs, clus_prot_avg)
-
-                elif name in "ClusProtMedMol":
-                    clus_prot_med = oeclus_rec.get_value(fd)
-                    clus_prot_med.SetTitle("ClusProtMed")
-                    fn = os.path.join(title, "cluster_protein_median.oeb")
-                    with oechem.oemolostream(fn) as ofs:
-                        oechem.OEWriteConstMolecule(ofs, clus_prot_med)
+                ofs = oechem.oeofstream()
+                if not ofs.open(fn):
+                    opt['Logger'].info('Unable to open {fn} for reading')
+                oechem.OEWriteDesignUnit(ofs, du)
+                ofs.close()
 
             if not record.has_field(Fields.Analysis.oetraj_rec):
                 raise ValueError("Multi Conf Trajectory record field is missing")

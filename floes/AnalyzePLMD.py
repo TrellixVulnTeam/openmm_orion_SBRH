@@ -59,22 +59,22 @@ coll_close.set_parameters(open=False)
 
 check_rec = ParallelRecordSizeCheck("Record Check Success", title="Record Check Success")
 
-ofs = DatasetWriterCube('ofs', title='MD Out Ligand Centric Ouput')
+ofs = DatasetWriterCube('ofs', title='MD Analysis Output')
 ofs.promote_parameter("data_out", promoted_name="out",
-                      title="MD Out Ligand Centric Ouput", description="MD Out Ligand Centric Output")
+                      title="MD Analysis Output", description="MD Analysis output dataset name")
 
-ofs_du = DatasetWriterCube('ofs_du', title='MD Out Cluster Centric Output')
-ofs_du.promote_parameter("data_out", promoted_name="du",
-                         title="MD Out Cluster Centric Output", description="MD Out Cluster Centric Output")
+#ofs_du = DatasetWriterCube('ofs_du', title='MD Out Cluster Centric Output')
+#ofs_du.promote_parameter("data_out", promoted_name="du",
+#                         title="MD Out Cluster Centric Output", description="MD Out Cluster Centric Output")
 exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
 
 fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
                        description="MD Dataset Failures out", order=2)
 
-job.add_cubes(iMDInput, coll_open, coll_close, check_rec,  ofs, exceptions, fail, ofs_du)
+job.add_cubes(iMDInput, coll_open, coll_close, check_rec,  ofs, exceptions, fail)
 
-traj_anlys_outcube = setup_traj_analysis(job, coll_open, check_rec, ofs_du)
+traj_anlys_outcube = setup_traj_analysis(job, coll_open, check_rec)
 
 # Success Connections
 iMDInput.success.connect(coll_open.intake)

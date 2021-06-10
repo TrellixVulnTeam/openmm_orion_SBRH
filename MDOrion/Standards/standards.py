@@ -241,19 +241,18 @@ class Fields:
         n_major_clusters = OEField("n major clusters", Types.Int)
 
         # Trajectory cluster averages and medians of protein and ligand
-        ClusLigAvg_fld = OEField('ClusLigAvgMol', Types.Chem.Mol)
-        ClusProtAvg_fld = OEField('ClusProtAvgMol', Types.Chem.Mol)
-        ClusLigMed_fld = OEField('ClusLigMedMol', Types.Chem.Mol)
-        ClusProtMed_fld = OEField('ClusProtMedMol', Types.Chem.Mol)
+        #ClusLigAvg_fld = OEField('ClusLigAvgMol', Types.Chem.Mol)
+        #ClusProtAvg_fld = OEField('ClusProtAvgMol', Types.Chem.Mol)
+        #ClusLigMed_fld = OEField('ClusLigMedMol', Types.Chem.Mol)
+        #ClusProtMed_fld = OEField('ClusProtMedMol', Types.Chem.Mol)
 
-        LigClusTraj_fld = OEField('LigClusTraj', Types.Chem.Mol)
-        ProtClusTraj_fld = OEField('ProtClusTraj', Types.Chem.Mol)
-        ClusMedDU_fld = OEField('ClusMedDU', Types.Chem.DesignUnit)
-        ClusAvgDU_fld = OEField('ClusAvgDU', Types.Chem.DesignUnit)
-        ClusterAvgDURec_fld = OEField('ClusterAvgDURec', Types.Record)
-        ClusterDURecs_fld = OEField('ClusterDURecs', Types.RecordVec)
+        LigTraj_fld = OEField('LigTraj', Types.Chem.Mol)
+        ProtTraj_fld = OEField('ProtTraj', Types.Chem.Mol)
+        MedianDU_fld = OEField('MedianDU', Types.Chem.DesignUnit)
+        AverageDU_fld = OEField('AverageDU', Types.Chem.DesignUnit)
+        ExtraDURec_fld = OEField('ExtraDURec', Types.Record)
+        ClusterDURecs_fld = OEField('ClusterRecs', Types.RecordVec)
         ClusID_fld = OEField('ClusID', Types.Int)
-        LigID_fld = OEField('LigID', Types.String)
         max_waters = OEField("MaxWaters_OPLMD", Types.Int, meta=_metaHidden)
 
         # # Free Energy
