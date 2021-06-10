@@ -583,6 +583,7 @@ class MDComponentCube(RecordPortsMixin, ComputeCube):
         default=False,
         help_text="If Checked/True multiple receptors will be allowed")
 
+
     ignore_du = parameters.BooleanParameter(
         'ignore_du',
         default=False,
