@@ -586,7 +586,8 @@ class MDComponentCube(RecordPortsMixin, ComputeCube):
     ignore_du = parameters.BooleanParameter(
         'ignore_du',
         default=False,
-        help_text="If Checked/True the Du present on the record is ignored")
+        help_text="If True the Du present on the record is ignored and the md components are "
+                  "built from the record primary molecule")
 
     def begin(self):
         self.opt = vars(self.args)
