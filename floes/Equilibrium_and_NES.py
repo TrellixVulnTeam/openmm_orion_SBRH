@@ -62,6 +62,7 @@ ligid = IDSettingCube("Ligand Ids")
 md_lig_components = MDComponentCube("MD Ligand Components", title="MD Ligand Components")
 md_lig_components.set_parameters(flask_title="")
 md_lig_components.set_parameters(multiple_flasks=True)
+md_lig_components.set_parameters(ignore_du=True)
 
 # Protein Reading cube. The protein prefix parameter is used to select a name for the
 # output system files

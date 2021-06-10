@@ -57,6 +57,8 @@ import math
 
 from parmed.gromacs.gromacstop import _Defaults
 
+import time
+
 
 class GromacsSimulations(MDSimulations):
 
@@ -714,13 +716,15 @@ class GromacsSimulations(MDSimulations):
         self.mdstate = mdstate
         self.opt = opt
 
+        self.speed = None
+
         return
 
     def run(self):
 
         # Run Gromacs
         if self.opt['verbose']:
-
+            start_time = time.time()
             subprocess.check_call(['gmx',
                                    'mdrun',
                                    '-v',
@@ -728,7 +732,9 @@ class GromacsSimulations(MDSimulations):
                                    '-deffnm', self.opt['grm_def_fn'],
                                    '-o', self.opt['grm_trj_fn']
                                    ])
+            end_time = time.time()
         else:
+            start_time = time.time()
             p = Popen(['gmx',
                        'mdrun',
                        '-v',
@@ -738,8 +744,19 @@ class GromacsSimulations(MDSimulations):
                        ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT)
 
             p.communicate()
+            end_time = time.time()
 
         if self.opt['SimType'] in ['nvt', 'npt']:
+
+            # Time in seconds
+            elapsed_time = (end_time - start_time) * unit.seconds
+
+            total_sim_time = self.opt['time'] * unit.nanoseconds
+
+            speed = (total_sim_time / elapsed_time) * 86400 * unit.seconds
+
+            # Value in ns/day
+            self.speed = speed.value_in_unit(unit.nanoseconds)
 
             if self.opt['reporter_interval']:
 
