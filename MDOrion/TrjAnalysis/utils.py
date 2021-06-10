@@ -72,9 +72,6 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
         multi_conf_water: A multi conformer OEMol for the waters, one conformer per frame.
     """
 
-    # Extract protein, ligand, water and excipients from the flask
-    # protein, ligand, water, excipients = oeommutils.split(flask, ligand_res_name="LIG")
-
     set_up_flask, map_dic = md_components.create_flask
     protein = md_components.get_protein
     ligand = md_components.get_ligand
@@ -134,9 +131,9 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
     protlig = trj[0].atom_slice(np.concatenate((prot_idx, lig_idx)))
     protligAtoms = [atom for atom in protlig.topology.atoms]
 
-    #with open(os.devnull, 'w') as devnull:
-    #    with contextlib.redirect_stderr(devnull):
-    #        trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
+    # with open(os.devnull, 'w') as devnull:
+    #     with contextlib.redirect_stderr(devnull):
+    #         trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
 
     trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
 
@@ -391,9 +388,6 @@ def PoseInteractionsSVG(md_components, width=400, height=300):
     # if not oechem.OEHasResidues(proteinOrig):
     #     oechem.OEPerceiveResidues(proteinOrig, oechem.OEPreserveResInfo_All)
     #     print('Perceiving residues')
-
-    # split the total system into components
-    #protein, ligandPsuedo, water, other = oeommutils.split(proteinOrig)
 
     protein = md_components.get_protein
     ligand = md_components.get_ligand

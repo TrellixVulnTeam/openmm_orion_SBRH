@@ -328,6 +328,8 @@ class OpenMMSimulations(MDSimulations):
         self.str_logger = str_logger
         self.omm_simulation = simulation
 
+        self.speed = None
+
         return
 
     def run(self):
@@ -396,7 +398,19 @@ class OpenMMSimulations(MDSimulations):
                 self.str_logger += '\n' + info
 
             # Start Simulation
+            start_time = time.time()
             self.omm_simulation.step(self.opt['steps'])
+            end_time = time.time()
+
+            # Time in seconds
+            elapsed_time = (end_time - start_time) * unit.seconds
+
+            total_sim_time = self.opt['time'] * unit.nanoseconds
+
+            speed = (total_sim_time / elapsed_time)*86400 * unit.seconds
+
+            # Value in ns/day
+            self.speed = speed.value_in_unit(unit.nanoseconds)
 
             if box is not None:
                 state = self.omm_simulation.context.getState(getPositions=True,

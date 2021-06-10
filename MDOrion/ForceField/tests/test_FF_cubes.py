@@ -54,7 +54,7 @@ class ForceFieldPrepTester(unittest.TestCase):
         record = read_record(ifs)
 
         # Selecting ligand and excipient parametrization
-        self.cube.args.ligand_forcefield = 'Gaff2'
+        self.cube.args.ligand_forcefield = 'Gaff_2.11'
 
         # Process the molecules
         self.cube.process(record, self.cube.intake.name)
@@ -186,7 +186,7 @@ class ForceFieldPrepTester(unittest.TestCase):
         record = read_record(ifs)
 
         # Selecting ligand and excipient parametrization
-        self.cube.args.ligand_forcefield = 'Gaff2'
+        self.cube.args.ligand_forcefield = 'Gaff_2.11'
         self.cube.args.protein_forcefield = 'Amber99SBildn'
 
         # Process the molecules
@@ -272,7 +272,7 @@ class ForceFieldPrepTester(unittest.TestCase):
         record = read_record(ifs)
 
         # Selecting ligand and excipient parametrization
-        self.cube.args.ligand_forcefield = 'Gaff2'
+        self.cube.args.ligand_forcefield = 'Gaff_2.11'
         self.cube.args.protein_forcefield = 'Amber14SB'
 
         # Process the molecules
@@ -360,7 +360,7 @@ class ForceFieldPrepTester(unittest.TestCase):
         record = read_record(ifs)
 
         # Selecting ligand and excipient parametrization
-        self.cube.args.ligand_forcefield = 'Gaff2'
+        self.cube.args.ligand_forcefield = 'Gaff_2.11'
         self.cube.args.protein_forcefield = 'AmberFB15'
 
         # Process the molecules

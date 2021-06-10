@@ -583,6 +583,12 @@ class MDComponentCube(RecordPortsMixin, ComputeCube):
         default=False,
         help_text="If Checked/True multiple receptors will be allowed")
 
+    ignore_du = parameters.BooleanParameter(
+        'ignore_du',
+        default=False,
+        help_text="If True the Du present on the record is ignored and the md components are "
+                  "built from the record primary molecule")
+
     def begin(self):
         self.opt = vars(self.args)
         self.opt['Logger'] = self.log
@@ -597,7 +603,7 @@ class MDComponentCube(RecordPortsMixin, ComputeCube):
 
             name = self.opt['flask_title']
 
-            if record.has_value(Fields.design_unit_from_spruce):
+            if record.has_value(Fields.design_unit_from_spruce) and not self.opt['ignore_du']:
 
                 du = record.get_value(Fields.design_unit_from_spruce)
 

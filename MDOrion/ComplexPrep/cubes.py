@@ -32,7 +32,7 @@ from snowball.utils.log_params import LogFieldParam
 
 from openeye import oechem
 
-from MDOrion.ComplexPrep.utils import clash_detection
+from oemdtoolbox.Utils.clashes import clash_detection
 
 from oemdtoolbox.ForceField.md_components import MDComponents
 

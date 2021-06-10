@@ -6,14 +6,13 @@ pytest==3.10.1
 six==1.12.0
 wcwidth==0.1.7
 lxml==4.6.0
-# sphinxcontrib-bibtex
 
 # OE Stack
 # Leave this here to avoid pip install issue
-Openeye-orionplatform[artemis]==4.0.0b9
+Openeye-orionplatform[artemis]==4.0.0
 
 OpenEye-ensemble2img==0.1.1
 OpenEye-floereport==0.1.11
 OpenEye_oetrajanalysis==0.8.0b3
-openeye-oemdtoolbox==2.0.0b64
-openeye-snowball==0.21.0b23
+openeye-oemdtoolbox==2.0.0b72
+openeye-snowball==0.21.0b24
