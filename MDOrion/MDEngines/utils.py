@@ -34,6 +34,7 @@ from simtk import unit
 
 import itertools
 
+
 md_keys_converter = {'OpenMM':
 
                          {'constraints':
@@ -232,3 +233,20 @@ def md_simulation(mdstate, ff_parameters, opt):
 
     else:
         raise ValueError("The selected MD engine is not currently supported: {}".format(opt['md_engine']))
+
+
+def update_cube_parameters_in_place(record, parameter_dic):
+
+    from MDOrion.Standards.standards import Fields
+
+    if record.has_value(Fields.cube_parameters_update):
+
+        cube_parameters_dic = record.get_value(Fields.cube_parameters_update)
+
+        parameters_intersection_set = cube_parameters_dic.keys() & parameter_dic.keys()
+
+        for p in parameters_intersection_set:
+            parameter_dic['Logger'].info("Updating cube parameter: {} from {} to {}\n".format(p,
+                                                                                              parameter_dic[p],
+                                                                                              cube_parameters_dic[p]))
+        parameter_dic.update({k: cube_parameters_dic[k] for k in parameters_intersection_set})

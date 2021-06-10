@@ -242,16 +242,16 @@ class MDRecordTests(unittest.TestCase):
 
     @pytest.mark.travis
     @pytest.mark.local
-    def test_get_stage_info(self):
+    def test_get_stage_logs(self):
         last_stage = self.mdrecord.get_last_stage
         info = last_stage.get_value(Fields.log_data)
 
-        self.assertEqual(info, self.mdrecord.get_stage_info())
+        self.assertEqual(info, self.mdrecord.get_stage_logs())
 
         min_stage = self.mdrecord.get_stage_by_name(stg_name='Flask Minimization')
         info = min_stage.get_value(Fields.log_data)
 
-        self.assertEqual(info, self.mdrecord.get_stage_info(stg_name='Flask Minimization'))
+        self.assertEqual(info, self.mdrecord.get_stage_logs(stg_name='Flask Minimization'))
 
     @pytest.mark.travis
     @pytest.mark.local

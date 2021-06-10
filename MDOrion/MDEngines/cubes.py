@@ -29,8 +29,8 @@ from MDOrion.Standards import (MDStageTypes,
 
 from MDOrion.Standards.mdrecord import MDDataRecord
 
-from MDOrion.MDEngines.utils import md_simulation
-
+from MDOrion.MDEngines.utils import (md_simulation,
+                                     update_cube_parameters_in_place)
 import copy
 
 import textwrap
@@ -41,7 +41,6 @@ import os
 class MDMinimizeCube(RecordPortsMixin, ComputeCube):
     title = 'Minimization Cube'
 
-    
     classification = [["MD Simulations"]]
     tags = ['OpenMM', 'Gromacs', 'Minimization']
 
@@ -180,6 +179,9 @@ class MDMinimizeCube(RecordPortsMixin, ComputeCube):
             opt = dict(self.opt)
             opt['CubeTitle'] = self.title
 
+            # Update Cube Parameters
+            update_cube_parameters_in_place(record, opt)
+
             # Logger string
             str_logger = '-'*32 + ' MIN CUBE PARAMETERS ' + '-'*32
             str_logger += "\n{:<25} = {:<10}".format("Cube Title", opt['CubeTitle'])
@@ -234,13 +236,23 @@ class MDMinimizeCube(RecordPortsMixin, ComputeCube):
 
             data_fn = os.path.basename(mdrecord.cwd) + '_' + opt['system_title'] + '_' + str(opt['system_id']) + '-' + opt['suffix'] + '.tar.gz'
 
+            # Save the cube parameters tha are serializable
+            info_dic = dict()
+            for k, v in dict(vars(self.args)).items():
+                if isinstance(v, str) or \
+                        isinstance(v, int) or \
+                        isinstance(v, float) or \
+                        isinstance(v, bool):
+                    info_dic[k] = v
+
             if not mdrecord.add_new_stage(self.title,
                                           MDStageTypes.MINIMIZATION,
                                           flask,
                                           new_mdstate,
                                           data_fn,
                                           append=opt['save_md_stage'],
-                                          log=opt['str_logger']):
+                                          log=opt['str_logger'],
+                                          info=info_dic):
 
                 raise ValueError("Problems adding the new Minimization Stage")
 
@@ -423,6 +435,9 @@ class MDNvtCube(RecordPortsMixin, ComputeCube):
             opt = dict(self.opt)
             opt['CubeTitle'] = self.title
 
+            # Update Cube Parameters
+            update_cube_parameters_in_place(record, opt)
+
             # Logger string
             str_logger = '-'*32 + ' NVT CUBE PARAMETERS ' + '-'*32
             str_logger += "\n{:<25} = {:<10}".format("Cube Title", opt['CubeTitle'])
@@ -456,17 +471,6 @@ class MDNvtCube(RecordPortsMixin, ComputeCube):
 
             flask = mdrecord.get_stage_topology()
             mdstate = mdrecord.get_stage_state()
-
-            # Update cube simulation parameters
-            for field in record.get_fields(include_meta=True):
-                field_name = field.get_name()
-                if field_name in ['temperature']:
-                    rec_value = record.get_value(field)
-                    opt[field_name] = rec_value
-                    opt['Logger'].info("{} Updating parameters for molecule: {} {} = {}".format(self.title,
-                                                                                                system_title,
-                                                                                                field_name,
-                                                                                                rec_value))
 
             if opt['restraint_to_reference']:
                 opt['reference_state'] = mdrecord.get_stage_state(stg_name=MDStageNames.ForceField)
@@ -507,6 +511,17 @@ class MDNvtCube(RecordPortsMixin, ComputeCube):
 
             data_fn = opt['out_fn']+'.tar.gz'
 
+            # Save the cube parameters tha are serializable
+            info_dic = dict()
+            for k, v in dict(vars(self.args)).items():
+                if isinstance(v, str) or \
+                        isinstance(v, int) or \
+                        isinstance(v, float) or \
+                        isinstance(v, bool):
+                    info_dic[k] = v
+
+            info_dic['speed_ns_per_day'] = opt['speed_ns_per_day']
+
             if not mdrecord.add_new_stage(self.title,
                                           MDStageTypes.NVT,
                                           flask,
@@ -514,6 +529,7 @@ class MDNvtCube(RecordPortsMixin, ComputeCube):
                                           data_fn,
                                           append=opt['save_md_stage'],
                                           log=opt['str_logger'],
+                                          info=info_dic,
                                           trajectory_fn=trajectory_fn,
                                           trajectory_engine=trajectory_engine,
                                           trajectory_orion_ui=opt['system_title'] + '_' + str(opt['system_id']) + '-' + opt['suffix']+'.tar.gz'
@@ -701,6 +717,10 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
             # the parallel cube processes
             opt = dict(self.opt)
             opt['CubeTitle'] = self.title
+
+            # Update Cube Parameters
+            update_cube_parameters_in_place(record, opt)
+
             # Logger string
             str_logger = '-'*32 + ' NPT CUBE PARAMETERS ' + '-'*32
             str_logger += "\n{:<25} = {:<10}".format("Cube Title", opt['CubeTitle'])
@@ -734,17 +754,6 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
 
             flask = mdrecord.get_stage_topology()
             mdstate = mdrecord.get_stage_state()
-
-            # Update cube simulation parameters
-            for field in record.get_fields(include_meta=True):
-                field_name = field.get_name()
-                if field_name in ['temperature', 'pressure']:
-                    rec_value = record.get_value(field)
-                    opt[field_name] = rec_value
-                    opt['Logger'].info("{} Updating parameters for molecule: {} {} = {}".format(self.title,
-                                                                                                system_title,
-                                                                                                field_name,
-                                                                                                rec_value))
 
             if opt['restraint_to_reference']:
                 opt['reference_state'] = mdrecord.get_stage_state(stg_name=MDStageNames.ForceField)
@@ -786,6 +795,17 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
 
             data_fn = opt['out_fn'] + '.tar.gz'
 
+            # Save the cube parameters tha are serializable
+            info_dic = dict()
+            for k, v in dict(vars(self.args)).items():
+                if isinstance(v, str) or \
+                        isinstance(v, int) or \
+                        isinstance(v, float) or \
+                        isinstance(v, bool):
+                    info_dic[k] = v
+
+            info_dic['speed_ns_per_day'] = opt['speed_ns_per_day']
+
             if not mdrecord.add_new_stage(self.title,
                                           MDStageTypes.NPT,
                                           flask,
@@ -793,6 +813,7 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
                                           data_fn,
                                           append=opt['save_md_stage'],
                                           log=opt['str_logger'],
+                                          info=info_dic,
                                           trajectory_fn=trajectory_fn,
                                           trajectory_engine=trajectory_engine,
                                           trajectory_orion_ui=opt['system_title'] + '_' + str(opt['system_id']) + '-' + opt['suffix']+'.tar.gz'

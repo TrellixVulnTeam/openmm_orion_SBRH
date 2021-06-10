@@ -97,7 +97,6 @@ class ForceFieldCube(RecordPortsMixin, ComputeCube):
         default='prep',
         help_text='Filename suffix for output simulation files')
 
-
     def begin(self):
         self.opt = vars(self.args)
         self.opt['Logger'] = self.log
@@ -108,7 +107,7 @@ class ForceFieldCube(RecordPortsMixin, ComputeCube):
         flask_title = ''
 
         try:
-            opt = self.opt
+            opt = dict(self.opt)
             opt['CubeTitle'] = self.title
 
             if not record.has_value(Fields.md_components):
@@ -206,11 +205,21 @@ class ForceFieldCube(RecordPortsMixin, ComputeCube):
 
             data_fn = os.path.basename(mdrecord.cwd) + '_' + flask_title+'_' + str(sys_id) + '-' + opt['suffix']+'.tar.gz'
 
+            # Save the cube parameters tha are serializable
+            info_dic = dict()
+            for k, v in dict(vars(self.args)).items():
+                if isinstance(v, str) or \
+                        isinstance(v, int) or \
+                        isinstance(v, float) or \
+                        isinstance(v, bool):
+                    info_dic[k] = v
+
             if not mdrecord.add_new_stage(MDStageNames.ForceField,
                                           MDStageTypes.SETUP,
                                           flask,
                                           MDState(flask_pmd_structure),
-                                          data_fn):
+                                          data_fn,
+                                          info=info_dic):
                 raise ValueError("Problems adding the new Parametrization Stage")
 
             self.success.emit(mdrecord.get_record)

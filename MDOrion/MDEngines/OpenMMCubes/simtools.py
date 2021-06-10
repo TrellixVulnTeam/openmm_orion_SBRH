@@ -412,6 +412,10 @@ class OpenMMSimulations(MDSimulations):
             # Value in ns/day
             self.speed = speed.value_in_unit(unit.nanoseconds)
 
+            self.opt['speed_ns_per_day'] = self.speed
+
+            self.opt['str_logger'] += '\n' + "Simulation speed {} ns/day".format(self.speed)
+
             if box is not None:
                 state = self.omm_simulation.context.getState(getPositions=True,
                                                              getVelocities=True,

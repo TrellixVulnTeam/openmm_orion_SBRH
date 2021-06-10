@@ -758,6 +758,10 @@ class GromacsSimulations(MDSimulations):
             # Value in ns/day
             self.speed = speed.value_in_unit(unit.nanoseconds)
 
+            self.opt['speed_ns_per_day'] = self.speed
+
+            self.opt['str_logger'] += '\n' + "Simulation speed {} ns/day".format(self.speed)
+
             if self.opt['reporter_interval']:
 
                 with(io.open(self.opt['grm_log_fn'], 'r', encoding='utf8', errors='ignore')) as fr:
