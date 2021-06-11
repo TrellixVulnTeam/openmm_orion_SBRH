@@ -63,9 +63,6 @@ ofs = DatasetWriterCube('ofs', title='MD Analysis Output')
 ofs.promote_parameter("data_out", promoted_name="out",
                       title="MD Analysis Output", description="MD Analysis output dataset name")
 
-#ofs_du = DatasetWriterCube('ofs_du', title='MD Out Cluster Centric Output')
-#ofs_du.promote_parameter("data_out", promoted_name="du",
-#                         title="MD Out Cluster Centric Output", description="MD Out Cluster Centric Output")
 exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
 
 fail = DatasetWriterCube('fail', title='Failures')
