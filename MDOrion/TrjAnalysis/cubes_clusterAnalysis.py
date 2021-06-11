@@ -575,14 +575,13 @@ class MakeClusterTrajOEMols(RecordPortsMixin, ComputeCube):
                     oechem.OEUpdateDesignUnit(clusMedDU, ligMed, oechem.OEDesignUnitComponents_Ligand)
                     clusMedDU.SetTitle('{}_clus{}_Med'.format(lig_name,str(clusID)))
                     cluster_styler.apply_style(clusMedDU)
-                    #record.set_value(Fields.Analysis.MedianDU_fld, clusMedDU)
+                    cluster_record.set_value(Fields.primary_molecule, ligMed)
                     cluster_record.set_value(Fields.Analysis.MedianDU_fld, clusMedDU)
 
                     clusAvgDU.GetImpl().SetProtein(protAvg)
                     oechem.OEUpdateDesignUnit(clusAvgDU, ligAvg, oechem.OEDesignUnitComponents_Ligand)
                     clusAvgDU.SetTitle('{}_clus{}_Avg'.format(lig_name,str(clusID)))
                     cluster_styler.apply_style(clusAvgDU)
-                    #record.set_value(Fields.Analysis.AverageDU_fld, clusAvgDU)
                     sub_rec = OERecord()
                     sub_rec.set_value(Fields.Analysis.AverageDU_fld, clusAvgDU)
                     cluster_record.set_value(Fields.Analysis.ExtraDURec_fld, sub_rec)
@@ -634,7 +633,7 @@ class MakeClusterTrajOEMols(RecordPortsMixin, ComputeCube):
                 clusMedDU.SetTitle('{}_clus{}_Med'.format(lig_name,str(clusID)))
 
                 cluster_styler.apply_style(clusMedDU)
-                record.set_value(Fields.Analysis.MedianDU_fld, clusMedDU)
+                cluster_record.set_value(Fields.primary_molecule, ligMedian)
                 cluster_record.set_value(Fields.Analysis.MedianDU_fld, clusMedDU)
 
                 clusAvgDU.GetImpl().SetProtein(protAverage)
@@ -642,7 +641,6 @@ class MakeClusterTrajOEMols(RecordPortsMixin, ComputeCube):
                 clusAvgDU.SetTitle('{}_clus{}_Avg'.format(lig_name,str(clusID)))
 
                 cluster_styler.apply_style(clusAvgDU)
-                record.set_value(Fields.Analysis.AverageDU_fld, clusAvgDU)
                 sub_rec = OERecord()
                 sub_rec.set_value(Fields.Analysis.AverageDU_fld, clusAvgDU)
                 cluster_record.set_value(Fields.Analysis.ExtraDURec_fld, sub_rec)
@@ -654,7 +652,7 @@ class MakeClusterTrajOEMols(RecordPortsMixin, ComputeCube):
 
                 byClusTrajSVG.append(trajSVG)
 
-            # Set prot and lig clus average mols on top-level record for 3D vis
+            # Set cluster record on top-level record
             #record.set_value(Fields.Analysis.ClusLigAvg_fld, clusLigAvgMol)
             #record.set_value(Fields.Analysis.ClusProtAvg_fld, clusProtAvgMol)
             #record.set_value(Fields.Analysis.ClusLigMed_fld, clusLigMedMol)
