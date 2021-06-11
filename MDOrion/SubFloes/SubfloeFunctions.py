@@ -484,7 +484,6 @@ def setup_gather_cluster(input_floe, input_cube, fail_cube):
     return report
 
 
-
 def setup_traj_analysis(input_floe, input_cube, fail_cube):
     trajCube = ParallelTrajToOEMolCube("TrajToOEMolCube", title="Trajectory To OEMols")
     IntECube = ParallelTrajInteractionEnergyCube("TrajInteractionEnergyCube", title="MM Energies")
