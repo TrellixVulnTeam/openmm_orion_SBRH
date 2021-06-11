@@ -57,7 +57,7 @@ from MDOrion.TrjAnalysis.cubes_clusterAnalysis import (ParallelClusterOETrajCube
                                                        ParallelMDTrajAnalysisClusterReport,
                                                        ParallelClusterPopAnalysis,
                                                        ParallelTrajAnalysisReportDataset,
-                                                       MDFloeReportCube)
+                                                       MDFloeReportCube,)
 
 from MDOrion.TrjAnalysis.cubes_hintAnalysis import (ParallelBintScoreInitialPoseAndTrajectory)
 
@@ -445,14 +445,14 @@ def setup_gather_cluster(input_floe, input_cube, fail_cube):
     clusCube = ParallelClusterOETrajCube("ClusterOETrajCube", title="Clustering")
     clusPop = ParallelClusterPopAnalysis('ClusterPopAnalysis', title="Clustering Analysis")
     clusOEMols = ParallelMakeClusterTrajOEMols('MakeClusterTrajOEMols', title="Per-Cluster Analysis")
-    prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Analysis Report")
-    report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Relevant Output Extraction")
+    prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Prepare Traj Analysis for Report")
+    report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Generate Ligand Floe Report")
 
     analysis_group = ParallelCubeGroup(cubes=[catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop,
                                               clusOEMols, prepDataset, report_gen])
     input_floe.add_group(analysis_group)
 
-    report = MDFloeReportCube("report", title="Floe Report")
+    report = MDFloeReportCube("report", title="Generate Top-level Floe Report")
 
     input_floe.add_cubes(confGather,
                   catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop, clusOEMols,
@@ -484,6 +484,7 @@ def setup_gather_cluster(input_floe, input_cube, fail_cube):
     return report
 
 
+
 def setup_traj_analysis(input_floe, input_cube, fail_cube):
     trajCube = ParallelTrajToOEMolCube("TrajToOEMolCube", title="Trajectory To OEMols")
     IntECube = ParallelTrajInteractionEnergyCube("TrajInteractionEnergyCube", title="MM Energies")
@@ -499,19 +500,18 @@ def setup_traj_analysis(input_floe, input_cube, fail_cube):
     clusCube = ParallelClusterOETrajCube("ClusterOETrajCube", title="Clustering")
     clusPop = ParallelClusterPopAnalysis('ClusterPopAnalysis', title="Clustering Analysis")
     clusOEMols = ParallelMakeClusterTrajOEMols('MakeClusterTrajOEMols', title="Per-Cluster Analysis")
-    prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Analysis Report")
-    report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Relevant Output Extraction")
+    prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Prepare Traj Analysis for Report")
+    report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Generate Ligand Floe Report")
 
     analysis_group = ParallelCubeGroup(cubes=[catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop,
                                               clusOEMols, prepDataset, report_gen])
     input_floe.add_group(analysis_group)
 
-    report = MDFloeReportCube("report", title="Floe Report")
+    report = MDFloeReportCube("report", title="Generate Top-level Floe Report")
 
     input_floe.add_cubes(trajCube, IntECube, PBSACube, confGather,
-                  catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop, clusOEMols,
-                  prepDataset, report_gen, report)
-    
+                         catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop, clusOEMols,
+                         prepDataset, report_gen, report)
     # Success Connections
     input_cube.success.connect(trajCube.intake)
     trajCube.success.connect(IntECube.intake)
@@ -526,7 +526,7 @@ def setup_traj_analysis(input_floe, input_cube, fail_cube):
     clusOEMols.success.connect(prepDataset.intake)
     prepDataset.success.connect(report_gen.intake)
     report_gen.success.connect(report.intake)
-    
+
     # Fail Connections
     trajCube.failure.connect(fail_cube.fail_in)
     IntECube.failure.connect(fail_cube.fail_in)
@@ -543,13 +543,3 @@ def setup_traj_analysis(input_floe, input_cube, fail_cube):
 
     return report
 
-
-def setup_bint(input_floe, input_cube, fail_cube):
-
-    trajBints = ParallelBintScoreInitialPoseAndTrajectory("TrajBintsCube", title="Trajectory Binding Interactions")
-
-    input_floe.add_cubes(trajBints)
-
-    input_cube.success.connect(trajBints.intake)
-
-    return trajBints

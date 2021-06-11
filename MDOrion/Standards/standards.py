@@ -221,6 +221,14 @@ class Fields:
         zapMMPBSA_fld = OEField("OEZap_MMPBSA6_Bind", Types.FloatVec,
                                   meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal))
 
+        # mmpbsa ensemble cluster average
+        mmpbsa_cluster_mean = OEField('MMPBSAClusterMean', Types.Float,
+                                   meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol))
+
+        metaMMPBSA_cluster_serr = OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol)
+        metaMMPBSA_cluster_serr.add_relation(Meta.Relations.ErrorsFor, mmpbsa_cluster_mean)
+        mmpbsa_cluster_serr = OEField('MMPBSAClusterSerr', Types.Float, meta=metaMMPBSA_cluster_serr)
+
         # mmpbsa ensemble average over the whole trajectory
         mmpbsa_traj_mean = OEField('MMPBSATrajMean', Types.Float,
                                    meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol))
@@ -233,11 +241,18 @@ class Fields:
         n_major_clusters = OEField("n major clusters", Types.Int)
 
         # Trajectory cluster averages and medians of protein and ligand
-        ClusLigAvg_fld = OEField('ClusLigAvgMol', Types.Chem.Mol)
-        ClusProtAvg_fld = OEField('ClusProtAvgMol', Types.Chem.Mol)
-        ClusLigMed_fld = OEField('ClusLigMedMol', Types.Chem.Mol)
-        ClusProtMed_fld = OEField('ClusProtMedMol', Types.Chem.Mol)
+        #ClusLigAvg_fld = OEField('ClusLigAvgMol', Types.Chem.Mol)
+        #ClusProtAvg_fld = OEField('ClusProtAvgMol', Types.Chem.Mol)
+        #ClusLigMed_fld = OEField('ClusLigMedMol', Types.Chem.Mol)
+        #ClusProtMed_fld = OEField('ClusProtMedMol', Types.Chem.Mol)
 
+        LigTraj_fld = OEField('LigTraj', Types.Chem.Mol)
+        ProtTraj_fld = OEField('ProtTraj', Types.Chem.Mol)
+        MedianDU_fld = OEField('MedianDU', Types.Chem.DesignUnit)
+        AverageDU_fld = OEField('AverageDU', Types.Chem.DesignUnit)
+        ExtraDURec_fld = OEField('ExtraDURec', Types.Record)
+        ClusterDURecs_fld = OEField('ClusterRecs', Types.RecordVec)
+        ClusID_fld = OEField('ClusID', Types.Int)
         max_waters = OEField("MaxWaters_OPLMD", Types.Int, meta=_metaHidden)
 
         # # Free Energy
