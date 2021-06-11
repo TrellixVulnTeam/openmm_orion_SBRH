@@ -18,7 +18,7 @@
         "hdbscan==0.8.27",
         "orion_gromacs_gpu",
         "matplotlib==3.3.4",
-        "mdtraj==1.9.5",
+        "mdtraj==1.9.3",
         "networkx==2.5",
         "numpy==1.18.5",
         "oeommtools==0.1.16",
