@@ -79,9 +79,8 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
 
     gathering_sub = RBFECEdgeGathering("Gathering", title="Gathering Equilibrium Runs")
     gathering_sub.promote_parameter('map_file', promoted_name=options['edge_map_file'],
-                                    title="Ligand Affinity experimental file",
-                                    description="The ligand Affinity experimental file with affinities"
-                                                " in units of kcal/mol or kJ/mol",
+                                    title="Ligand Edge Map file",
+                                    description="The ligand edge mapping file",
                                     order=2)
 
     chimera_sub = ParallelNESGMXChimera("GMXChimera", title="GMX Chimera")
@@ -117,7 +116,10 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     nes_analysis_sub = NESAnalysis("NES_Analysis")
 
     ddg_to_dg_sub = PredictDGFromDDG("RBFE to ABFE", title="RBFE to Affinity Estimate")
-    ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp')
+    ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp',
+                                    title="Ligand Affinity Experimental file",
+                                    description="The ligand affinity experimental file "
+                                                "with affinities in units of kcal/mol or kJ/mol")
 
     plot_aff_sub = PlotNESResults("Plot Affinity Report", title="Plot Affinity Report")
 
