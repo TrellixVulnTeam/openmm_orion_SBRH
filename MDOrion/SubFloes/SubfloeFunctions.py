@@ -78,16 +78,24 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     switch_sub = BoundUnboundSwitchCube("Bound/Unbound Switch NES", title='Bound/Unbound Switch NES')
 
     gathering_sub = RBFECEdgeGathering("Gathering", title="Gathering Equilibrium Runs")
-    gathering_sub.promote_parameter('map_file', promoted_name=options['edge_map_file'], order=2)
+    gathering_sub.promote_parameter('map_file', promoted_name=options['edge_map_file'],
+                                    title="Ligand Affinity experimental file",
+                                    description="The ligand Affinity experimental file with affinities"
+                                                " in units of kcal/mol or kJ/mol",
+                                    order=2)
 
     chimera_sub = ParallelNESGMXChimera("GMXChimera", title="GMX Chimera")
     chimera_sub.promote_parameter("trajectory_frames", promoted_name="trajectory_frames",
                                   default=options['n_traj_frames'],
+                                  title="NES number of equilibrium trajectory frames",
                                   description="The total number of trajectory frames to be used along the NE switching", order=2)
 
     unbound_nes_sub = ParallelNESGMX("GMXUnboundNES", title="GMX Unbound NES")
     unbound_nes_sub.promote_parameter("time", promoted_name="nes_time",
-                                      default=options['nes_switch_time_in_ns'], order=3)
+                                      title="NE switching time in ns",
+                                      default=options['nes_switch_time_in_ns'],
+                                      description="The Non-Equilibrium switching time",
+                                      order=3)
 
     unbound_nes_sub.modify_parameter(unbound_nes_sub.instance_type, promoted=False, default='c5')
     unbound_nes_sub.modify_parameter(unbound_nes_sub.cpu_count, promoted=False, default=2)
