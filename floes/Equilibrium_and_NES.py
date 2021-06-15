@@ -73,6 +73,7 @@ iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input
 
 md_prot_components = MDComponentCube("MD Protein Components", title="MD Protein Components")
 md_prot_components.promote_parameter("flask_title", promoted_name="flask_title",
+                                     title="Protein title name",
                                      description='Prefix name used to identity the Protein', default='')
 md_prot_components.set_parameters(multiple_flasks=False)
 
@@ -91,8 +92,11 @@ solvate.modify_parameter(solvate.close_solvent, promoted=False, default=False)
 
 # Force Field Application
 ff = ParallelForceFieldCube("ForceField", title="Apply Force Field")
-ff.promote_parameter('protein_forcefield', promoted_name='protein_ff', default='Amber14SB')
-ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.1a1')
+ff.promote_parameter('protein_forcefield', promoted_name='protein_ff',
+                     title="Protein Force Field", default='Amber14SB')
+ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff',
+                     title="Ligand Force Field",
+                     default='OpenFF_1.3.1a1')
 
 # Switching Bound and Unbound runs
 switch = BoundUnboundSwitchCube("Bound/Unbound Switch", title='Bound/Unbound Switch')
@@ -100,12 +104,13 @@ switch = BoundUnboundSwitchCube("Bound/Unbound Switch", title='Bound/Unbound Swi
 # Run the equilibrium Simulations ot the Unbound-States
 prod_uns = ParallelMDNptCube("Production Unbound States", title="Production Unbound States")
 prod_uns.promote_parameter('time', promoted_name='prod_us_ns', default=6.0,
-                           description='Length of Unbound MD run in nanoseconds')
+                           title="Equilibrium Production Time in ns",
+                           description='The Equilibrium production running time')
 # prod_uns.promote_parameter('trajectory_frames', promoted_name='prod_trajectory_us_frames', default=80,
 #                            description='Total number of trajectory frames used in the NES calculation')
 prod_uns.modify_parameter(prod_uns.trajectory_frames, promoted=False, default=1500)
 prod_uns.promote_parameter('hmr', promoted_name="hmr_us",
-                           title='Use Hydrogen Mass Repartitioning in the Unbound simulation',
+                           title='Use Hydrogen Mass Repartitioning',
                            default=True,
                            description='Give hydrogens more mass to speed up the MD')
 prod_uns.set_parameters(md_engine='OpenMM')
@@ -151,9 +156,7 @@ prod_bns = ParallelMDNptCube("Production Bound States", title="Production Bound 
 prod_bns.promote_parameter('time', promoted_name='prod_us_ns', default=6.0)
 # prod_bns.promote_parameter('trajectory_frames', promoted_name='prod_trajectory_us_frames', default=80)
 prod_bns.modify_parameter(prod_bns.trajectory_frames, promoted=False, default=1500)
-prod_bns.promote_parameter('hmr', promoted_name="hmr_bs", title='Use Hydrogen Mass Repartitioning '
-                                                                'in the Bound simulation', default=True,
-                           description='Give hydrogens more mass to speed up the MD')
+prod_bns.promote_parameter('hmr', promoted_name="hmr_us", default=True)
 prod_bns.set_parameters(md_engine='OpenMM')
 prod_bns.set_parameters(reporter_interval=0.002)
 prod_bns.set_parameters(suffix='prod_bn')

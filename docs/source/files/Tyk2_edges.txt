@@ -1,0 +1,4 @@
+; Target tyk2 - num edges: 3
+jmc_23 >> ejm_55
+ejm_44 >> ejm_55
+ejm_49 >> ejm_31

@@ -57,7 +57,7 @@ from MDOrion.TrjAnalysis.cubes_clusterAnalysis import (ParallelClusterOETrajCube
                                                        ParallelMDTrajAnalysisClusterReport,
                                                        ParallelClusterPopAnalysis,
                                                        ParallelTrajAnalysisReportDataset,
-                                                       MDFloeReportCube)
+                                                       MDFloeReportCube,)
 
 from MDOrion.TrjAnalysis.cubes_hintAnalysis import (ParallelBintScoreInitialPoseAndTrajectory)
 
@@ -78,16 +78,24 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     switch_sub = BoundUnboundSwitchCube("Bound/Unbound Switch NES", title='Bound/Unbound Switch NES')
 
     gathering_sub = RBFECEdgeGathering("Gathering", title="Gathering Equilibrium Runs")
-    gathering_sub.promote_parameter('map_file', promoted_name=options['edge_map_file'], order=2)
+    gathering_sub.promote_parameter('map_file', promoted_name=options['edge_map_file'],
+                                    title="Ligand Affinity experimental file",
+                                    description="The ligand Affinity experimental file with affinities"
+                                                " in units of kcal/mol or kJ/mol",
+                                    order=2)
 
     chimera_sub = ParallelNESGMXChimera("GMXChimera", title="GMX Chimera")
     chimera_sub.promote_parameter("trajectory_frames", promoted_name="trajectory_frames",
                                   default=options['n_traj_frames'],
+                                  title="NES number of equilibrium trajectory frames",
                                   description="The total number of trajectory frames to be used along the NE switching", order=2)
 
     unbound_nes_sub = ParallelNESGMX("GMXUnboundNES", title="GMX Unbound NES")
     unbound_nes_sub.promote_parameter("time", promoted_name="nes_time",
-                                      default=options['nes_switch_time_in_ns'], order=3)
+                                      title="NE switching time in ns",
+                                      default=options['nes_switch_time_in_ns'],
+                                      description="The Non-Equilibrium switching time",
+                                      order=3)
 
     unbound_nes_sub.modify_parameter(unbound_nes_sub.instance_type, promoted=False, default='c5')
     unbound_nes_sub.modify_parameter(unbound_nes_sub.cpu_count, promoted=False, default=2)
@@ -445,14 +453,14 @@ def setup_gather_cluster(input_floe, input_cube, fail_cube):
     clusCube = ParallelClusterOETrajCube("ClusterOETrajCube", title="Clustering")
     clusPop = ParallelClusterPopAnalysis('ClusterPopAnalysis', title="Clustering Analysis")
     clusOEMols = ParallelMakeClusterTrajOEMols('MakeClusterTrajOEMols', title="Per-Cluster Analysis")
-    prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Analysis Report")
-    report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Relevant Output Extraction")
+    prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Prepare Traj Analysis for Report")
+    report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Generate Ligand Floe Report")
 
     analysis_group = ParallelCubeGroup(cubes=[catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop,
                                               clusOEMols, prepDataset, report_gen])
     input_floe.add_group(analysis_group)
 
-    report = MDFloeReportCube("report", title="Floe Report")
+    report = MDFloeReportCube("report", title="Generate Top-level Floe Report")
 
     input_floe.add_cubes(confGather,
                   catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop, clusOEMols,
@@ -499,19 +507,18 @@ def setup_traj_analysis(input_floe, input_cube, fail_cube):
     clusCube = ParallelClusterOETrajCube("ClusterOETrajCube", title="Clustering")
     clusPop = ParallelClusterPopAnalysis('ClusterPopAnalysis', title="Clustering Analysis")
     clusOEMols = ParallelMakeClusterTrajOEMols('MakeClusterTrajOEMols', title="Per-Cluster Analysis")
-    prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Analysis Report")
-    report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Relevant Output Extraction")
+    prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Prepare Traj Analysis for Report")
+    report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Generate Ligand Floe Report")
 
     analysis_group = ParallelCubeGroup(cubes=[catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop,
                                               clusOEMols, prepDataset, report_gen])
     input_floe.add_group(analysis_group)
 
-    report = MDFloeReportCube("report", title="Floe Report")
+    report = MDFloeReportCube("report", title="Generate Top-level Floe Report")
 
     input_floe.add_cubes(trajCube, IntECube, PBSACube, confGather,
-                  catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop, clusOEMols,
-                  prepDataset, report_gen, report)
-    
+                         catLigTraj, catLigMMPBSA, trajBints, clusCube, clusPop, clusOEMols,
+                         prepDataset, report_gen, report)
     # Success Connections
     input_cube.success.connect(trajCube.intake)
     trajCube.success.connect(IntECube.intake)
@@ -526,7 +533,7 @@ def setup_traj_analysis(input_floe, input_cube, fail_cube):
     clusOEMols.success.connect(prepDataset.intake)
     prepDataset.success.connect(report_gen.intake)
     report_gen.success.connect(report.intake)
-    
+
     # Fail Connections
     trajCube.failure.connect(fail_cube.fail_in)
     IntECube.failure.connect(fail_cube.fail_in)
@@ -543,13 +550,3 @@ def setup_traj_analysis(input_floe, input_cube, fail_cube):
 
     return report
 
-
-def setup_bint(input_floe, input_cube, fail_cube):
-
-    trajBints = ParallelBintScoreInitialPoseAndTrajectory("TrajBintsCube", title="Trajectory Binding Interactions")
-
-    input_floe.add_cubes(trajBints)
-
-    input_cube.success.connect(trajBints.intake)
-
-    return trajBints
