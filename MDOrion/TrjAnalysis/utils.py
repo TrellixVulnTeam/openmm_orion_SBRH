@@ -128,11 +128,11 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
     protlig = trj[0].atom_slice(np.concatenate((prot_idx, lig_idx)))
     protligAtoms = [atom for atom in protlig.topology.atoms]
 
-    # with open(os.devnull, 'w') as devnull:
-    #     with contextlib.redirect_stderr(devnull):
-    #         trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
+    with open(os.devnull, 'w') as devnull:
+        with contextlib.redirect_stderr(devnull):
+            trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
 
-    trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
+    # trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
 
     count = 0
     water_max_frames = []
