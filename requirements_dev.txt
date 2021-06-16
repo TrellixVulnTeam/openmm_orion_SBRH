@@ -15,4 +15,4 @@ OpenEye-ensemble2img==0.1.1
 OpenEye-floereport==0.1.11
 OpenEye_oetrajanalysis==0.8.0b3
 openeye-oemdtoolbox==2.0.0b72
-openeye-snowball==0.21.0b25
+openeye-snowball==0.21.0
