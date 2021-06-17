@@ -728,12 +728,12 @@ Accessing and Understanding the Results
 
 The results from the floe are accessed via two main floe reports at the end of the running NES job
 and selectable in the `Jobs` tab in the Orion `Floe` page. For this tutorial we will focus on the
-results produced by running the Tyk2 receptor and three relative binding affinity calculations.
+results produced by running the Tyk2 receptor and ten relative binding affinity calculations.
 
 .. _figure_NES_floe_Job:
 
 .. figure:: ./images/NES_floe_Job.png
-   :width: 700px
+   :width: 1000px
    :align: center
    :alt: The NES floe finished Job
 
@@ -744,7 +744,7 @@ but the most relevant are the edges related to the submitted RBFE calculations i
 Each tiles show the edge and the predicted RBFE by using the Bennet Acceptance Ratio method for Non-Equilibrium.
 In addition other relevant information are shown like the total floe running time and its cost. Clicking on each
 tile will show important information related to the RBFE calculation. For example, in the below figure, the detailed calculation
-information are shown for the edge involving the ligand *ejm_49* to *ejm_31*
+information are shown for the edge involving the ligand *ejm_46* to *ejm_54*
 
 .. _figure_NES_good_edge:
 
@@ -765,7 +765,7 @@ consideration are valid for the Unbound graph. By using the work values recorded
 estimate the free energy changes :math:`\Delta G_{Bound}` and :math:`\Delta G_{Unbound}` shown in figure_RBFE_
 and indirectly estimates :math:`\Delta\Delta G = \Delta G_{Bound} - \Delta G_{UnBound}`. These computed values are reported in the shown table.
 
-The Figure below reports the edge involving the ligand *ejm_44* to *ejm_55*
+The Figure below reports the edge involving the ligand *ejm_43* to *ejm_54*
 
 .. _figure_NES_bad_edge:
 
