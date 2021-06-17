@@ -807,7 +807,6 @@ predicted relative binding affinities in a graph and tables with the statistical
 
    **Experimental vs predicted relative binding affinities**
 
-
 .. rubric:: References
 .. [#] Jarzynski, C. (1997), "Nonequilibrium equality for free energy differences", Phys. Rev. Lett., 78 (14): 2690
 .. [#] Jarzynski, C. (1997), "Equilibrium free-energy differences from nonequilibrium measurements: A master-equation approach", Phys. Rev. E, 56 (5): 5018

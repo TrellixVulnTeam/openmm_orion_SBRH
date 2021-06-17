@@ -9,19 +9,23 @@ General Notice
 ---------------------------------------------------------------------------------
 * Non-Equilibrium Switching floe for Relative Binding affinity calculations
 * New Bint score for pose stability
+* *Posit* support
 * OpenFF 1.3.1a1 support
 * Bug Fixing
 
 New Floes
 --------------------------------------------------------------------------------
 * Non-Equilibrium Switching. Relative Binding Free energy calculations and estimate of Binding Affinity
-* MD of Ligand Bound and Unbound to Protein. Performs equilibrium calculations for Non-Equilibrium Switching
-* Equilibrium and Non-Equilibrium Switching. Equilibrium MD runs followed by Non-Equilibrium Switching
+* Ligand Bound and Unbound Equilibration for NES. Performs equilibrium calculations for Non-Equilibrium Switching
+* Equilibrium and Non Equilibrium Switching. Equilibrium MD runs followed by Non-Equilibrium Switching
+* Non-Equilibrium Switching Recovery. This floe attempts to produce results from not completed NES runs
+* Compare Experimental Affinity with NES Results.
 
 Floe Updates
 --------------------------------------------------------------------------------
-* Short Trajectory MD with Analysis. The Bint score analysis has been added
-* Analyze Protein-Ligand MD. The Bint score analysis has been added
+* Short Trajectory MD with Analysis. The Bint score analysis has been added and *Posit* support
+* Analyze Protein-Ligand MD. The Bint score analysis has been added and *Posit* support
+* Cofactors has been added to the MMPBSA score calculations
 
 New Cubes
 --------------------------------------------------------------------------------
@@ -45,7 +49,7 @@ New Cubes
 Cube Updates
 --------------------------------------------------------------------------------
 * Complex Preparation Cube. This cube has been updated to give better support for clashes
-  detected between the ligands and the other flask components.
+  detected between the ligands and the other flask components for *Posit* support
 
 * TODO @Christopher ADD BINT SCORE CUBE UPDATES HERE
 
