@@ -779,7 +779,34 @@ The Figure below reports the edge involving the ligand *ejm_43* to *ejm_54*
 In this case both the Bound and Unbound graphs and work distributions do not overlap well and the
 results should not be trustable.
 
-From the NES job page another report the **Affinity Report** is selectable from the tabs.
+From the NES job page another report the **Affinity Report** is selectable from the tabs. The affinity report
+shows two main sections. A first section where a comparison between experimental and predicted
+affinities are compared. Here a graph between :math:`\Delta G_{Experimental}` vs  :math:`\Delta G_{Predicted}` is shown.
+This graph is available if the experimental affinity file has been provided and the ligand edge map is connected enough
+to be able to make affinity predictions.
+
+.. _figure_NES_DG:
+
+.. figure:: ./images/NES_floe_DG.png
+   :width: 600px
+   :align: center
+   :alt: Experimental vs predicted affinities
+
+   **Experimental vs predicted affinities**
+
+In addition, the graph data are tabled and different statistical metrics are shown like correlation metrics and
+linear models. The second section of the Affinity Report shows a comparison between the experimental and
+predicted relative binding affinities in a graph and tables with the statistical metrics
+
+.. _figure_NES_DDG:
+
+.. figure:: ./images/NES_floe_DDG.png
+   :width: 600px
+   :align: center
+   :alt: Experimental vs predicted relative binding affinities
+
+   **Experimental vs predicted relative binding affinities**
+
 
 .. rubric:: References
 .. [#] Jarzynski, C. (1997), "Nonequilibrium equality for free energy differences", Phys. Rev. Lett., 78 (14): 2690
