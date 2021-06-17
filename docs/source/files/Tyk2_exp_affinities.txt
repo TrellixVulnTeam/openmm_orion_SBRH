@@ -1,0 +1,16 @@
+ejm_31 -9.63 kcal/mol
+ejm_42 -9.88 kcal/mol
+ejm_43 -8.34 kcal/mol
+ejm_44 -7.49 kcal/mol
+ejm_45 -9.65 kcal/mol
+ejm_46 -11.42 kcal/mol
+ejm_47 -9.79 kcal/mol
+ejm_48 -9.09 kcal/mol
+ejm_49 -7.82 kcal/mol
+ejm_50 -9.06 kcal/mol
+ejm_54 -10.63 kcal/mol
+ejm_55 -9.29 kcal/mol
+jmc_23 -11.81 kcal/mol
+jmc_27 -11.38 kcal/mol
+jmc_28 -11.08 kcal/mol
+jmc_30 -11.04 kcal/mol

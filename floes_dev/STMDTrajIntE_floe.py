@@ -22,8 +22,8 @@ from floe.api import (WorkFloe,
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
-from MDOrion.System.cubes import (ParallelRecordSizeCheck,
-                                  CollectionSetting)
+from MDOrion.Flask.cubes import (ParallelRecordSizeCheck,
+                                 CollectionSetting)
 
 from MDOrion.TrjAnalysis.cubes_trajProcessing import (ParallelTrajToOEMolCube,
                                                       ParallelTrajInteractionEnergyCube,

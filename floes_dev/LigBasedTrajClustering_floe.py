@@ -30,7 +30,7 @@ ofs (.oedb file): file of the MD results with Traj OEMol Clustering on a conform
 
 ifs = DatasetReaderCube("ifs")
 
-ifs.promote_parameter("data_in", promoted_name="in", title="System Input OERecord", description="OERecord file name")
+ifs.promote_parameter("data_in", promoted_name="in", title="Flask Input OERecord", description="OERecord file name")
 
 confGather = ConformerGatheringData("Gathering Conformer Records")
 clusCube = ParallelClusterOETrajCube("ClusterOETrajCube")
@@ -38,7 +38,7 @@ clusOEMols = ParallelMakeClusterTrajOEMols('MakeClusterTrajOEMols')
 trajMMPBSA = ParallelConcatenateTrajMMPBSACube('ConcatenateTrajMMPBSACube')
 
 ofs = DatasetWriterCube('ofs', title='OFS-Success')
-ofs.promote_parameter("data_out", promoted_name="out", title="System Output OERecord", description="OERecord file name")
+ofs.promote_parameter("data_out", promoted_name="out", title="Flask Output OERecord", description="OERecord file name")
 
 job.add_cubes(ifs, confGather,
               clusCube, trajMMPBSA, clusOEMols,

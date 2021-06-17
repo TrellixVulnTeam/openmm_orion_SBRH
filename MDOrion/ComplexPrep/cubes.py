@@ -28,13 +28,20 @@ from floe.api import ComputeCube
 from orionplatform.mixins import RecordPortsMixin
 from orionplatform.ports import RecordInputPort
 
+from snowball.utils.log_params import LogFieldParam
+
 from openeye import oechem
+
+from oemdtoolbox.Utils.clashes import clash_detection
+
+from oemdtoolbox.ForceField.md_components import MDComponents
 
 
 class ComplexPrepCube(RecordPortsMixin, ComputeCube):
     title = "Complex Preparation"
-    # version = "0.1.4"
-    classification = [["System Preparation"]]
+
+    classification = [["Flask Preparation"]]
+
     tags = ['Complex', 'Ligand', 'Protein']
     description = """
     This Cube assembles the complex made of a protein and its docked ligands. 
@@ -51,6 +58,9 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
 
     uuid = "be2ac138-22ae-4412-9c38-886472c496b9"
 
+    # for Exception Handler
+    log_field = LogFieldParam()
+
     # Override defaults for some parameters
     parameter_overrides = {
         "memory_mb": {"default": 14000},
@@ -62,26 +72,56 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
     protein_port = RecordInputPort("protein_port", initializer=True)
 
     def begin(self):
+
+        self.opt = vars(self.args)
+        self.opt['Logger'] = self.log
+
+        self.md_components = None
+
         for record in self.protein_port:
 
-            self.opt = vars(self.args)
-            self.opt['Logger'] = self.log
-
-            if not record.has_value(Fields.md_components):
-                raise ValueError("MD Components Field is missing")
-
-            self.md_components = record.get_value(Fields.md_components)
+            if record.has_value(Fields.md_components):
+                self.md_components = record.get_value(Fields.md_components)
 
         return
 
     def process(self, record, port):
+
+        # Initialize ligand_title for exception handling
+        ligand_title = ''
+
         try:
+
             if port == 'intake':
 
                 if not record.has_value(Fields.primary_molecule):
                     raise ValueError("Missing the ligand primary molecule field")
 
                 ligand = record.get_value(Fields.primary_molecule)
+
+                if self.md_components is None:
+                    self.log.warn("Protein has not been found on the protein port. Looking on the ligand port")
+
+                    if record.has_value(Fields.design_unit_from_spruce):
+
+                        du = record.get_value(Fields.design_unit_from_spruce)
+
+                        md_components = MDComponents(du, components_title=du.GetTitle()[0:12])
+
+                        # print(md_components)
+
+                        if md_components.has_protein:
+                            self.log.info("...Protein found: {}".format(md_components.get_protein.GetTitle()))
+                        else:
+                            raise ValueError("It was not possible to detect the Protein Component "
+                                             "from the protein nor from the ligand ports")
+                    else:
+                        raise ValueError("Protein has not been found on either the protein port "
+                                         "nor the ligand port. no protein to complex with ligand {}".format(
+                            ligand.GetTitle()))
+
+                else:
+                    md_components = self.md_components
 
                 if ligand.NumConfs() > 1:
                     raise ValueError("The ligand {} has multiple conformers: {}".format(ligand.GetTitle(),
@@ -93,20 +133,42 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                 else:
                     ligand_title = record.get_value(Fields.title)
 
-                protein = self.md_components.get_protein
+                protein = md_components.get_protein
 
-                self.md_components.set_ligand(ligand)
+                md_components.set_ligand(ligand)
 
                 # Check if the ligand is inside the binding site. Cutoff distance 3A
                 if not oeommutils.check_shell(ligand, protein, 3):
                     raise ValueError("The Ligand is probably outside the Protein binding site")
 
                 # Remove Steric Clashes between the ligand and the other System components
-                for comp_name, comp in self.md_components.get_components.items():
+                for comp_name, comp in md_components.get_components.items():
 
-                    # Skip clashes between the ligand itself and the protein
-                    if comp_name in ['ligand', 'protein']:
+                    # Skip clashes between the ligand itself
+                    if comp_name in ['ligand']:
                         continue
+
+                    # Check clashes between the ligand and protein
+                    if comp_name == 'protein':
+                        protein_severe_clashes, protein_moderate_clashes, protein_no_clashes = clash_detection(ligand, comp)
+
+                        if len(protein_severe_clashes[0]) >= 2:
+                            raise ValueError("Severe clashes detected between the protein and the ligand: {}\n{}".format(ligand_title, protein_severe_clashes[1]))
+
+                        if len(protein_severe_clashes[0]) == 1:
+                            self.log.warn("One severe clash detected between the protein and the ligand: {}\n{}".format(
+                                ligand_title, protein_severe_clashes[1]))
+
+                        if protein_moderate_clashes[0]:
+                            self.log.warn("Moderate clashes detected between the protein and the ligand: {}\n{}".format(ligand_title, protein_moderate_clashes[1]))
+
+                    # Check clashes between the ligand and cofactors
+                    elif comp_name == 'cofactors' or comp_name == 'other_cofactors':
+                        cofactor_severe_clashes, cofactor_moderate_clashes, cofactor_no_clashes = clash_detection(ligand, comp)
+
+                        if len(cofactor_severe_clashes[0]) >= 1:
+                            raise ValueError("Severe clashes detected between the cofactors and the ligand: {}\n{}".format(
+                                ligand_title, cofactor_severe_clashes[1]))
 
                     # Remove Metal clashes if the distance between the metal and the ligand
                     # is less than 1A
@@ -114,26 +176,29 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                         metal_del = oeommutils.delete_shell(ligand, comp, 1.0, in_out='in')
 
                         if metal_del.NumAtoms() != comp.NumAtoms():
-                            self.opt['Logger'].info(
-                                "Detected steric-clashes between the ligand {} and metals".format(ligand_title))
+                            self.opt['Logger'].warn(
+                                "Detected steric-clashes between the ligand: {} and metals. "
+                                "The clashing metals are going to be removed".format(ligand_title))
 
-                            self.md_components.set_metals(metal_del)
-                            # Remove  clashes if the distance between the selected component and the ligand
-                            # is less than 1.5A
+                            md_components.set_metals(metal_del)
+
+                    # Remove clashes if the distance between the selected component and the ligand
+                    # is less than 1.5A
                     else:
                         comp_del = oeommutils.delete_shell(ligand, comp, 1.5, in_out='in')
 
                         if comp_del.NumAtoms() != comp.NumAtoms():
-                            self.opt['Logger'].info(
-                                "Detected steric-clashes between the ligand {} and component {}".format(
+                            self.opt['Logger'].warn(
+                                "Detected steric-clashes between the ligand: {} and component {}. "
+                                "The clashing {} molecules are going to be removed".format(
                                     ligand_title,
-                                    comp_name))
+                                    comp_name, comp_name))
 
-                            self.md_components.set_component_by_name(comp_name, comp_del)
+                            md_components.set_component_by_name(comp_name, comp_del)
 
-                complex_title = 'p' + self.md_components.get_title + '_l' + ligand_title
+                complex_title = 'p' + md_components.get_title + '_l' + ligand_title
 
-                mdcomp = self.md_components.copy
+                mdcomp = md_components.copy
                 mdcomp.set_title(complex_title)
 
                 # Check Ligand
@@ -163,9 +228,12 @@ class ComplexPrepCube(RecordPortsMixin, ComputeCube):
                 self.success.emit(new_record)
 
         except Exception as e:
-            print("Failed to complete", str(e), flush=True)
-            self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+            msg = '{}: {} Cube exception: {}'.format(ligand_title, self.title, str(e))
+            self.opt['Logger'].info(msg)
             self.log.error(traceback.format_exc())
+            # Write field for Exception Handler
+            record.set_value(self.args.log_field, msg)
+            # Return failed mol
             self.failure.emit(record)
 
         return

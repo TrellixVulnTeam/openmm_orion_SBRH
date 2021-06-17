@@ -16,11 +16,15 @@
 # or its use.
 
 
-from MDOrion.System.utils import get_human_readable
+from MDOrion.Flask.utils import get_human_readable
 
 from orionplatform.mixins import RecordPortsMixin
 
-from orionplatform.ports import RecordInputPort
+from orionplatform.ports import (RecordInputPort,
+                                 RecordBytesInputPort,
+                                 RecordBytesOutputPort)
+
+from snowball.utils.log_params import LogFieldParam
 
 from floe.api import (ParallelMixin,
                       parameters,
@@ -47,6 +51,8 @@ from openeye import oechem
 
 
 from oemdtoolbox.ForceField.md_components import MDComponents
+
+from MDOrion.Standards.standards import CollectionsNames
 
 
 class IDSettingCube(RecordPortsMixin, ComputeCube):
@@ -133,9 +139,10 @@ class IDSettingCube(RecordPortsMixin, ComputeCube):
 
 class CollectionSetting(RecordPortsMixin, ComputeCube):
     title = "Collection Setting"
-    # version = "0.1.4"
-    classification = [["System Preparation"]]
-    tags = ['System', 'Complex', 'Protein', 'Ligand']
+
+    classification = [["Flask Preparation"]]
+    tags = ['Flask', 'Complex', 'Protein', 'Ligand']
+
     description = """
     This Cube sets a record collection state in open or closed for safety by
     using the cube bool parameter open. A True value will open the record
@@ -158,10 +165,17 @@ class CollectionSetting(RecordPortsMixin, ComputeCube):
         default=True,
         help_text='Open or Close a Collection')
 
+    write_new_collection = parameters.StringParameter(
+        'write_new_collection',
+        default=CollectionsNames.none,
+        choices=[CollectionsNames.none, CollectionsNames.md, CollectionsNames.nes],
+        help_text='Write a new collection')
+
     def begin(self):
         self.opt = vars(self.args)
         self.opt['Logger'] = self.log
-        self.collection = None
+        self.collections = dict()
+        self.initialize = True
 
     def process(self, record, port):
         try:
@@ -170,35 +184,72 @@ class CollectionSetting(RecordPortsMixin, ComputeCube):
 
                 session = APISession
 
-                if record.has_value(Fields.collection):
+                if record.has_value(Fields.collections):
 
-                    if self.collection is None:
+                    if not len(self.collections):
 
-                        collection_id = record.get_value(Fields.collection)
+                        collections_dic = record.get_value(Fields.collections)
 
-                        collection = session.get_resource(ShardCollection, collection_id)
+                        for coll_name, coll_id in collections_dic.items():
 
-                        self.collection = collection
+                            collection = session.get_resource(ShardCollection, coll_id)
+
+                            self.collections[coll_name] = collection
 
                         if self.opt['open']:
 
-                            if self.collection.state == "open":
-                                pass
-                            else:
-                                self.collection.open()
+                            for collection in self.collections.values():
+
+                                if collection.state == "open":
+                                    pass
+                                else:
+                                    collection.open()
+
+                                    self.opt['Logger'].info("Collection Opened: {}".format(collection.id))
+
+                    if self.opt['write_new_collection']:
+
+                        if self.initialize:
+
+                            if self.opt['write_new_collection'] in self.collections:
+                                raise ValueError("Collection name already present in the collections: {}".format(
+                                    list(self.collections.keys)))
+
+                            job_id = environ.get('ORION_JOB_ID')
+
+                            collection = ShardCollection.create(session, job_id)
+
+                            if job_id:
+                                session.tag_resource(collection, "Job {}".format(job_id))
+
+                            self.collections[self.opt['write_new_collection']] = collection
+
+                            self.initialize = False
+
+                            self.opt['Logger'].info("New Collection Created: {}".format(collection.id))
+
+                        record.set_value(Fields.collections, {k: v.id for k, v in self.collections.items()})
+
                 else:
-                    if self.collection is None:
+                    if not self.opt['write_new_collection']:
+                        raise ValueError("There are no collections to open or write")
+
+                    if self.initialize:
 
                         job_id = environ.get('ORION_JOB_ID')
 
-                        self.collection = ShardCollection.create(session, job_id)
-
-                        job_id = environ.get('ORION_JOB_ID')
+                        collection = ShardCollection.create(session, job_id)
 
                         if job_id:
-                            session.tag_resource(self.collection, "Job {}".format(job_id))
+                            session.tag_resource(collection, "Job {}".format(job_id))
 
-                    record.set_value(Fields.collection, self.collection.id)
+                        self.collections[self.opt['write_new_collection']] = collection
+
+                        self.initialize = False
+
+                        self.opt['Logger'].info("New Collection Created: ".format(collection.id))
+
+                    record.set_value(Fields.collections, {k: v.id for k, v in self.collections.items()})
 
             self.success.emit(record)
 
@@ -214,17 +265,20 @@ class CollectionSetting(RecordPortsMixin, ComputeCube):
     def end(self):
         if in_orion():
             if not self.opt['open']:
-                if self.collection is not None:
-                    if self.collection.state == "close":
-                        pass
-                    else:
-                        self.collection.close()
+                if len(self.collections):
+                    for collection in self.collections.values():
+                        if collection.state == "ready":
+                            pass
+                        else:
+                            collection.close()
+                            self.opt['Logger'].info("Collection Closed: {}".format(collection.id))
 
 
 class SolvationCube(RecordPortsMixin, ComputeCube):
     title = "Solvation Packmol"
-    # version = "0.1.4"
-    classification = [["System Preparation"]]
+
+    classification = [["Flask Preparation"]]
+
     tags = ['Complex', 'Protein', 'Ligand', 'Solvation']
     description = """
     The solvation cube solvates a given solute input system by a
@@ -438,9 +492,10 @@ class SolvationCube(RecordPortsMixin, ComputeCube):
 
 class RecordSizeCheck(RecordPortsMixin, ComputeCube):
     title = "Record Size Checking"
-    # version = "0.1.4"
-    classification = [["System Preparation"]]
-    tags = ['System', 'Complex', 'Protein', 'Ligand']
+
+    classification = [["Flask Preparation"]]
+    tags = ['Flask', 'Complex', 'Protein', 'Ligand']
+
     description = """
     This Cube checks if the size of the incoming record is less than 100MB
     to avoid Orion database size issues. Locally does not have any effect.
@@ -450,7 +505,7 @@ class RecordSizeCheck(RecordPortsMixin, ComputeCube):
 
     # Override defaults for some parameters
     parameter_overrides = {
-        "memory_mb": {"default": 14000},
+        "memory_mb": {"default": 32000},
         "spot_policy": {"default": "Prohibited"},
         "prefetch_count": {"default": 1},  # 1 molecule at a time
         "item_count": {"default": 1}  # 1 molecule at a time
@@ -491,10 +546,9 @@ class RecordSizeCheck(RecordPortsMixin, ComputeCube):
 
 
 class MDComponentCube(RecordPortsMixin, ComputeCube):
-    title = "MD Setting"
-    # version = "0.1.4"
-    classification = [["System Preparation"]]
-    tags = ['Protein']
+    title = "Receptor Components"
+    classification = [["Flask Preparation"]]
+    tags = ['Receptor']
     description = """
     This Cube is used to componentize the cube input system.
     The cube detects if a Design Unit (DU) is present on the record 
@@ -507,6 +561,9 @@ class MDComponentCube(RecordPortsMixin, ComputeCube):
     """
 
     uuid = "b85d652f-188a-4cc0-aefd-35c98e737f8d"
+
+    # for Exception Handler
+    log_field = LogFieldParam()
 
     # Override defaults for some parameters
     parameter_overrides = {
@@ -524,7 +581,13 @@ class MDComponentCube(RecordPortsMixin, ComputeCube):
     multiple_flasks = parameters.BooleanParameter(
         'multiple_flasks',
         default=False,
-        help_text="If Checked/True multiple flasks will be allowed")
+        help_text="If Checked/True multiple receptors will be allowed")
+
+    ignore_du = parameters.BooleanParameter(
+        'ignore_du',
+        default=False,
+        help_text="If True the Du present on the record is ignored and the md components are "
+                  "built from the record primary molecule")
 
     def begin(self):
         self.opt = vars(self.args)
@@ -536,11 +599,11 @@ class MDComponentCube(RecordPortsMixin, ComputeCube):
         try:
 
             if self.count > 0 and not self.opt['multiple_flasks']:
-                raise ValueError("Multiple Flasks have been Detected")
+                raise ValueError("Multiple receptors have been Detected")
 
             name = self.opt['flask_title']
 
-            if record.has_value(Fields.design_unit_from_spruce):
+            if record.has_value(Fields.design_unit_from_spruce) and not self.opt['ignore_du']:
 
                 du = record.get_value(Fields.design_unit_from_spruce)
 
@@ -584,10 +647,12 @@ class MDComponentCube(RecordPortsMixin, ComputeCube):
             self.success.emit(record)
 
         except Exception as e:
-
-            print("Failed to complete", str(e), flush=True)
-            self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+            msg = '{} Cube exception: {}'.format(self.title, str(e))
+            self.opt['Logger'].info(msg)
+            # Write field for Exception Handler
+            record.set_value(self.args.log_field, msg)
             self.log.error(traceback.format_exc())
+            # Return failed mol
             self.failure.emit(record)
 
         return

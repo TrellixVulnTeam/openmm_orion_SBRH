@@ -19,7 +19,10 @@ import numpy as np
 
 from openeye import (oechem,
                      oedepict,
-                     oegrapheme)
+                     oegrapheme,
+                     oegrid,
+                     oespicoli,
+                     oedocking)
 import mdtraj as md
 
 from datarecord import OEField
@@ -69,9 +72,6 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
         multi_conf_water: A multi conformer OEMol for the waters, one conformer per frame.
     """
 
-    # Extract protein, ligand, water and excipients from the flask
-    # protein, ligand, water, excipients = oeommutils.split(flask, ligand_res_name="LIG")
-
     set_up_flask, map_dic = md_components.create_flask
     protein = md_components.get_protein
     ligand = md_components.get_ligand
@@ -96,7 +96,7 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
     else:
         raise ValueError("Trajectory file format {} not recognized in the trajectory {}".format(traj_ext, trj_fn))
 
-    # System topology
+    # Flask topology
     top_trj = trj.topology
 
     # Ligand indexes
@@ -141,10 +141,10 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
     water_max_frames = []
 
     # TODO DEBUG
-    # trjImaged = trjImaged[:10]
+    # trjImaged = trjImaged[:50]
 
     for frame in trjImaged:
-        # print(count, flush=True)
+        # print("{}/{}".format(count, len(trjImaged)-1, flush=True))
 
         # Water oxygen binding site indexes
         water_O_bs_idx = md.compute_neighbors(frame,
@@ -222,6 +222,29 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
 
     count = 0
 
+    prot_idx_ext = prot_idx
+
+    if 'other_ligands' in map_dic:
+        prot_idx_ext += map_dic['other_ligands']
+    if 'cofactors' in map_dic:
+        prot_idx_ext += map_dic['cofactors']
+    if 'other_cofactors' in map_dic:
+        prot_idx_ext += map_dic['other_cofactors']
+
+    if len(prot_idx_ext) != prot_idx:
+        protein_name = protein_reference.GetTitle()
+        bv = oechem.OEBitVector(flask.GetMaxAtomIdx())
+        bv.ClearBits()
+        for at in flask.GetAtoms():
+            if at.GetIdx() in prot_idx_ext:
+                bv.SetBitOn(at.GetIdx())
+
+        pred_vec = oechem.OEAtomIdxSelected(bv)
+
+        oechem.OESubsetMol(protein_reference, flask, pred_vec)
+
+        protein_reference.SetTitle(protein_name)
+
     # Create the multi conformer protein, ligand and water molecules
     for frame in trjImaged.xyz:
         # print("Trj Image loop", count, flush=True)
@@ -239,7 +262,9 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
         #  keep the water order
 
         # Mark the close water atoms and extract them
-        bv = oechem.OEBitVector(nmax * 3)
+        bv = oechem.OEBitVector(flask.GetMaxAtomIdx())
+        bv.ClearBits()
+
         water_idx = []
 
         for pair in water_list_sorted_max:
@@ -256,7 +281,7 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
         oechem.OESubsetMol(water_nmax_reference, flask, pred_vec)
 
         # TODO The following solution to extract the waters
-        #  keep the water order but is it seems extremely inefficient
+        #  keep the water order but it is extremely inefficient
 
         # water_list = []
         # for pair in water_list_sorted_max:
@@ -287,7 +312,7 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
         lig_xyz_list = [10 * frame[idx] for idx in lig_idx]
         lig_confxyz = oechem.OEFloatArray(np.array(lig_xyz_list).ravel())
 
-        prot_xyz_list = [10 * frame[idx] for idx in prot_idx]
+        prot_xyz_list = [10 * frame[idx] for idx in prot_idx_ext]
         prot_confxyz = oechem.OEFloatArray(np.array(prot_xyz_list).ravel())
 
         # Initialize the protein, ligand and water molecule topologies
@@ -364,9 +389,6 @@ def PoseInteractionsSVG(md_components, width=400, height=300):
     #     oechem.OEPerceiveResidues(proteinOrig, oechem.OEPreserveResInfo_All)
     #     print('Perceiving residues')
 
-    # split the total system into components
-    #protein, ligandPsuedo, water, other = oeommutils.split(proteinOrig)
-
     protein = md_components.get_protein
     ligand = md_components.get_ligand
 
@@ -395,6 +417,16 @@ def PoseInteractionsSVG(md_components, width=400, height=300):
     svgString = svgBytes.decode("utf-8")
 
     return svgString
+
+
+def GetBFactorColorGradient():
+    colorg = oechem.OELinearColorGradient()
+    colorg.AddStop(oechem.OEColorStop(0.0, oechem.OEDarkBlue))
+    colorg.AddStop(oechem.OEColorStop(10.0, oechem.OELightBlue))
+    colorg.AddStop(oechem.OEColorStop(25.0, oechem.OEYellowTint))
+    colorg.AddStop(oechem.OEColorStop(50.0, oechem.OERed))
+    colorg.AddStop(oechem.OEColorStop(100.0, oechem.OEDarkRose))
+    return colorg
 
 
 def ligand_to_svg_stmd(ligand, ligand_name):
@@ -440,14 +472,8 @@ def ligand_to_svg_stmd(ligand, ligand_name):
 
         oegrapheme.OEPrepareDepictionFrom3D(lig_copy)
 
-        colorg = oechem.OELinearColorGradient()
-        colorg.AddStop(oechem.OEColorStop(0.0, oechem.OEDarkBlue))
-        colorg.AddStop(oechem.OEColorStop(10.0, oechem.OELightBlue))
-        colorg.AddStop(oechem.OEColorStop(25.0, oechem.OEYellowTint))
-        colorg.AddStop(oechem.OEColorStop(50.0, oechem.OERed))
-        colorg.AddStop(oechem.OEColorStop(100.0, oechem.OEDarkRose))
-
-        color_bfactor = ColorLigandAtomByBFactor(colorg)
+        b_factor_color_grad = GetBFactorColorGradient()
+        color_bfactor = ColorLigandAtomByBFactor(b_factor_color_grad)
 
         width, height = 150, 150
         opts = oedepict.OE2DMolDisplayOptions(width, height, oedepict.OEScale_AutoScale)
@@ -538,3 +564,81 @@ def StyleTrajProteinLigandClusters( protein, ligand):
         SetProteinLigandVizStyle( pconf, lconf, colorRGB)
     return True
 
+
+class DUClusterStyler:
+
+    def __init__(self):
+        self.b_factor_color_grad = GetBFactorColorGradient()
+
+        self.acolorer = oechem.OEMolStyleColorer(oechem.OEAtomColorScheme_Element)
+
+
+        self.protein_style = oechem.OE3DMolStyle()
+        self.protein_style.SetAtomStyle(oechem.OEAtomStyle_Hidden)
+        self.protein_style.SetHydrogenVisibility(oechem.OEHydrogenVisibility_Polar)
+        self.protein_style.SetProteinStyle(oechem.OEProteinStyle_Ribbons)
+        self.protein_style.SetProteinColorer(oechem.OEMolStyleColorer(oechem.OEProteinColorScheme_AtomColor))
+
+        self.asite_style = oechem.OE3DMolStyle()
+        self.asite_style.SetAtomStyle(oechem.OEAtomStyle_Wireframe)
+        self.asite_style.SetHydrogenVisibility(oechem.OEHydrogenVisibility_Polar)
+        self.asite_style.SetProteinStyle(oechem.OEProteinStyle_Ribbons)
+        self.asite_style.SetProteinColorer(oechem.OEMolStyleColorer(oechem.OEProteinColorScheme_AtomColor))
+
+        self.ligand_style = oechem.OE3DMolStyle()
+        self.ligand_style.SetAtomStyle(oechem.OEAtomStyle_Stick)
+        self.ligand_style.SetHydrogenVisibility(oechem.OEHydrogenVisibility_Polar)
+
+    def apply_style(self, du):
+        impl = du.GetImpl()
+        asitePred = oechem.OEAtomMatchResidue(du.GetSiteResidues())
+
+        protein = impl.GetProtein()
+        oechem.OEClearStyle(protein)
+
+        for atom in protein.GetAtoms():
+            res = oechem.OEAtomGetResidue(atom)
+            bfactor = res.GetBFactor()
+            color = self.b_factor_color_grad.GetColorAt(bfactor)
+            self.acolorer.AddColor(atom.GetAtomicNum(), color)
+            if asitePred(atom):
+                self.asite_style.SetAtomColorer(self.acolorer)
+                oechem.OESetStyle(atom, self.asite_style)
+            else:
+                self.protein_style.SetAtomColorer(self.acolorer)
+                oechem.OESetStyle(atom, self.protein_style)
+
+        if du.HasLigand():
+            ligand = impl.GetLigand()
+            oechem.OEClearStyle(ligand)
+            for atom in ligand.GetAtoms():
+                res = oechem.OEAtomGetResidue(atom)
+                bfactor = res.GetBFactor()
+                color = self.b_factor_color_grad.GetColorAt(bfactor)
+                self.acolorer.AddColor(atom.GetAtomicNum(), color)
+                self.ligand_style.SetAtomColorer(self.acolorer)
+                oechem.OESetStyle(atom, self.ligand_style)
+
+def MeanAndBootstrapStdErrCI(vec, nreps=2000, nsample=None):
+    '''Calculate stats of the mean for the input vector of values:
+    The mean, and from bootstrapping estimate Standard Error and the Confidence Interval 5%-95%.
+    Defaults: nreps=2000 (number of bootstrapped samples used for Std Error estimate)
+            nsampl=None (size of resampled vector; if None use the same size as inital vector'''
+    if len(vec)<2:
+        return None
+    if nsample is None:
+        nsample=len(vec)
+
+    vecMeans = []
+    for rep in range(nreps):
+        # bootstrap from vec
+        boot = np.random.choice(vec,size=nsample)
+        vecMeans.append( boot.mean())
+
+    mean = np.mean(vec)
+    arrMeans = np.array(vecMeans)
+    arrMeans.sort()
+    CI_05 = arrMeans[int(.05*len(arrMeans))]
+    CI_95 = arrMeans[int(.95*len(arrMeans))]
+    #print('BootstrapStdErrOfMean len vecMeans: ', len(arrMeans), arrMeans.std())
+    return mean, arrMeans.std(), CI_05, CI_95

@@ -1,3 +1,20 @@
+# (C) 2021 OpenEye Scientific Software Inc. All rights reserved.
+#
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of OpenEye products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. OpenEye claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable OpenEye offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED.  OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall OpenEye be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+
 import base64
 
 import re
@@ -19,10 +36,10 @@ _clus_floe_report_header = """
     display:flex;
   }
   .cb-floe-report__sidebar {
-    width: 25%;
+    width: 30%;
   }
   .cb-floe-report__content {
-    width: 75%;
+    width: 70%;
   }
   .cb-floe-report__column > * {
     width: 100%;
@@ -61,7 +78,7 @@ _clus_floe_report_header = """
   }
 
   div.cb-floe-report__analysis-table-row > span:nth-child(1) {
-    flex-basis: 20%;
+    flex-basis: 15%;
     text-align: center;
   }
 
@@ -71,10 +88,20 @@ _clus_floe_report_header = """
   }
 
   div.cb-floe-report__analysis-table-row > span:nth-child(3) {
+    flex-basis: 35%;
+    text-align: center;
+  }
+
+  div.cb-floe-report__analysis-table-row > span:nth-child(4) {
+    flex-basis: 35%;
+    text-align: center;
+  }
+  /*
+  div.cb-floe-report__analysis-table-row > span:nth-child(3) {
     flex-basis: 50%;
     text-align: left;
     margin-left: auto;
-  }
+  }*/
 
   h2.cb-floe-report-element--header {
     margin-bottom: 0;
@@ -202,9 +229,6 @@ _clus_floe_report_midHtml2a = """      </div>
 
   <div class="cb-floe-report__row">
 """
-#  <div class="cb-floe-report__row">
-#    <div class="cb-floe-report__column cb-floe-report__sidebar">
-#"""
 
 _clus_floe_report_stripPlots = """    </div>
 
@@ -212,11 +236,6 @@ _clus_floe_report_stripPlots = """    </div>
       <h2 class="cb-floe-report-element--header"> Cluster membership of ligand by Trajectory frame </h2>
       {clusters}
     </div>"""
-#    </div>
-#  </div>"""
-# removed from _clus_floe_report_stripPlots but commented out here in case needed again
-#      <h3 class="cb-floe-report-element--header"> RMSD of ligand compared to initial pose, colored by cluster </h3>
-#      {rmsdInit}
 
 
 _clus_floe_report_Trailer = '\n</body>\n</html>\n'
@@ -230,56 +249,65 @@ def MakeClusterInfoText(dataDict, popResults, rgbVec):
     nMajorThresh = dataDict['MajorClusThreshold']
     rowColors = clusutl.ColorblindHexMarkerColors(nMajor) + ['#4c4c4c']
     #
-    text.append("""
-      <br/>
-      <div class="cb-floe-report-element--analysis">""")
-    text.append('Clustering by ligand RMSD after alignment by active site C_alphas:\n' )
-    text.append('        <br>- Cluster method {}\n'.format( dataDict['ClusterMethod']) )
-    #text.append('        <br>- Using alpha={:.2f}\n'.format( dataDict['HDBSCAN_alpha']))
-    text.append('        <br>- Clustered {} frames\n'.format(nFrames) )
+    #text.append("""
+    #  <div class="cb-floe-report-element--analysis">""")
     #
-    if dataDict['nClusters']<2:
-        text.append('        <br>- Produced {} cluster'.format( dataDict['nClusters']))
-    else:
-        text.append('        <br>- Produced {} clusters'.format( dataDict['nClusters']))
-    nOutliers = dataDict['ClusterVec'].count(-1)
-    text.append(' and {:4d} Outliers,'.format( nOutliers))
-    text.append(' with {} Major clusters (>{:.0%} of trajectory)\n'.
-                format( nMajor,nMajorThresh) )
-
-    text.append('<br><br>Major Clusters (> {:.0%} of trajectory):<br>'.format( nMajorThresh) )
+    text.append('<hr><center> <b>Major Clusters (> {:.0%} of trajectory)</b> </center>'.
+                format( nMajorThresh) )
     #
     text.append("""
         <div class="cb-floe-report__analysis-table">
           <div class="cb-floe-report__analysis-table-row">
             <span>Cluster</span>
             <span>Size</span>
-            <span>MMPBSA* &plusmn; StdErr</span>
+            <span>&lt;MMPBSA&gt;<sup>a,b</sup> </span>
+            <span>&lt;BintScore&gt;<sup>a</sup> </span>
           </div>\n""")
-           #<span>&lt;MMPBSA&gt;* &plusmn; StdErr</span>
 
     clusSize = popResults['ClusTot']
-    ByClusMean = popResults['OEZap_MMPBSA6_ByClusMean']
-    ByClusSerr = popResults['OEZap_MMPBSA6_ByClusSerr']
+    MMPBSAByClusMean = popResults['OEZap_MMPBSA6_ByClusMean']
+    MMPBSAByClusSerr = popResults['OEZap_MMPBSA6_ByClusSerr']
+    tBintByClusMean = popResults['TrajBintScore_ByClusMean']
+    tBintByClusSerr = popResults['TrajBintScore_ByClusSerr']
     for i, (count, color) in enumerate(zip(clusSize, rowColors)):
         percent = count/nFrames
-        mmpbsa = '{:6.2f} &plusmn; {:4.2f}'.format(ByClusMean[i], 1.96 * ByClusSerr[i])
+        mmpbsa = '{:5.1f} &plusmn; {:3.1f}'.format(MMPBSAByClusMean[i], 2.0 * MMPBSAByClusSerr[i])
+        bintscore = '{:5.1f} &plusmn; {:3.1f}'.format(tBintByClusMean[i], 2.0 * tBintByClusSerr[i])
         if i<nMajor:
             clusName = str(i)
         else:
-            clusName = 'Other**'
+            clusName = 'Other<sup>c</sup>'
         text.append("""
           <div class="cb-floe-report__analysis-table-row" style="
                 background-color: {hexColor};
                 color: white;">
             <span>{clusID}</span>
-            <span>{percent:.1%}</span>
+            <span>{percent:.0%}</span>
             <span>{mmpbsadata}</span>
+            <span>{bintscoredata}</span>
           </div>\n""".format(clusID=clusName, percent=percent, mmpbsadata=mmpbsa,
-                             hexColor=color))
+                             bintscoredata=bintscore, hexColor=color))
     # Footnotes to Table.
-    text.append('*Values in kcal/mol.\n')
-    text.append('**Other includes Minor clusters as well as Outliers from the clustering.\n')
+    text.append('<sup>a</sup>Ensemble average &plusmn; 2*StdErr.\n')
+    text.append('<sup>b</sup>kcal/mol.\n')
+    text.append('<sup>c</sup>"Other" includes Minor clusters as well as Outliers from the clustering.\n')
+
+    #
+    text.append('<br><br><b>Clustering Details:</b>\n' )
+    text.append('        <br>- {} frames aligned by active site C&alpha;s'.format(nFrames) )
+    text.append('        <br>- Ligand RMSD clustering with {}\n'.format( dataDict['ClusterMethod']) )
+    #
+    if dataDict['nClusters']<2:
+        text.append('        <br>- Produced {} cluster'.format( dataDict['nClusters']))
+    else:
+        text.append('        <br>- Produced {} clusters'.format( dataDict['nClusters']))
+    nOutliers = dataDict['ClusterVec'].count(-1)
+    text.append(' with {:4d} Outliers\n'.format( nOutliers))
+    if nMajor < 2:
+        text.append('        <br>-  {} Major cluster (>{:.0%} of trajectory)\n'.format( nMajor,nMajorThresh) )
+    else:
+        text.append('        <br>-  {} Major clusters (>{:.0%} of trajectory)\n'.format( nMajor,nMajorThresh) )
+
 
     text.append("""
         </div>
@@ -506,7 +534,7 @@ def HtmlMakeClusterPopTables(popResults):
     htmlBody = ''
     # Omitting the html_ClusInfo Table because the data is already given elsewhere
     #for html_dict in [html_ClusInfo, html_ClusFracByConf, html_ConfRMSDsByClus]:
-    for html_dict in [html_ClusFracByConf, html_ConfRMSDsByClus]:
+    for html_dict in [html_ConfRMSDsByClus, html_ClusFracByConf]:
         htmlBody += HtmlWriteTableBody(html_dict, headermodsName)
     #print(htmlStyle)
     #print(htmlBody)

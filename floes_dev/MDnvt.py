@@ -27,7 +27,7 @@ job = WorkFloe("NVT Simulation",
                title="NVT Simulation")
 
 job.description = """
-NVT simulation of an OpenMM-ready System
+NVT simulation of an OpenMM-ready Flask
 
 Ex: python floes/openmm_MDnvt.py --system complex.oeb --ofs-data_out nvt.oeb --nanoseconds 0.01
 
@@ -49,9 +49,9 @@ job.classification = [['NVT']]
 job.uuid = "f1ec27a4-63a6-4fba-9649-f0ba51a50faa"
 job.tags = [tag for lists in job.classification for tag in lists]
 
-ifs = DatasetReaderCube("SystemReader", title="System Reader")
-ifs.promote_parameter("data_in", promoted_name="system", title='System Input File',
-                      description="System input file")
+ifs = DatasetReaderCube("SystemReader", title="Flask Reader")
+ifs.promote_parameter("data_in", promoted_name="system", title='Flask Input File',
+                      description="Flask input file")
 
 nvt = ParallelMDNvtCube('nvt', title='NVT simulation')
 nvt.promote_parameter('time', promoted_name='nanoseconds', default=0.01)
