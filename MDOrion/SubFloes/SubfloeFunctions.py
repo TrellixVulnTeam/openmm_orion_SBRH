@@ -78,16 +78,23 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     switch_sub = BoundUnboundSwitchCube("Bound/Unbound Switch NES", title='Bound/Unbound Switch NES')
 
     gathering_sub = RBFECEdgeGathering("Gathering", title="Gathering Equilibrium Runs")
-    gathering_sub.promote_parameter('map_file', promoted_name=options['edge_map_file'], order=2)
+    gathering_sub.promote_parameter('map_file', promoted_name=options['edge_map_file'],
+                                    title="Ligand Edge Map file",
+                                    description="The ligand edge mapping file",
+                                    order=2)
 
     chimera_sub = ParallelNESGMXChimera("GMXChimera", title="GMX Chimera")
     chimera_sub.promote_parameter("trajectory_frames", promoted_name="trajectory_frames",
                                   default=options['n_traj_frames'],
+                                  title="Total number of NES trajectory frames",
                                   description="The total number of trajectory frames to be used along the NE switching", order=2)
 
     unbound_nes_sub = ParallelNESGMX("GMXUnboundNES", title="GMX Unbound NES")
     unbound_nes_sub.promote_parameter("time", promoted_name="nes_time",
-                                      default=options['nes_switch_time_in_ns'], order=3)
+                                      title="NE switching time",
+                                      default=options['nes_switch_time_in_ns'],
+                                      description="The Non-Equilibrium switching time in ns",
+                                      order=3)
 
     unbound_nes_sub.modify_parameter(unbound_nes_sub.instance_type, promoted=False, default='c5')
     unbound_nes_sub.modify_parameter(unbound_nes_sub.cpu_count, promoted=False, default=2)
@@ -109,7 +116,10 @@ def nes_gmx_subfloe(floe_job, input_port_dic, output_port_dic, options):
     nes_analysis_sub = NESAnalysis("NES_Analysis")
 
     ddg_to_dg_sub = PredictDGFromDDG("RBFE to ABFE", title="RBFE to Affinity Estimate")
-    ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp')
+    ddg_to_dg_sub.promote_parameter('lig_exp_file', promoted_name='exp',
+                                    title="Ligand Affinity Experimental file",
+                                    description="The ligand affinity experimental file "
+                                                "with affinities in units of kcal/mol or kJ/mol")
 
     plot_aff_sub = PlotNESResults("Plot Affinity Report", title="Plot Affinity Report")
 
@@ -482,7 +492,6 @@ def setup_gather_cluster(input_floe, input_cube, fail_cube):
     report_gen.failure.connect(fail_cube.fail_in)
 
     return report
-
 
 
 def setup_traj_analysis(input_floe, input_cube, fail_cube):

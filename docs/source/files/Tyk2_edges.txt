@@ -1,0 +1,11 @@
+; Target tyk2 - num edges: 10
+ejm_44 >> ejm_42
+ejm_31 >> ejm_43
+ejm_31 >> ejm_46
+ejm_31 >> ejm_42
+ejm_31 >> ejm_44
+ejm_43 >> ejm_44
+ejm_44 >> ejm_46
+ejm_42 >> ejm_54
+ejm_31 >> ejm_54
+ejm_46 >> ejm_54

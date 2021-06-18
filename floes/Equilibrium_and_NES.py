@@ -55,6 +55,7 @@ ligset.set_parameters(lig_res_name='LIG')
 
 chargelig = ParallelLigandChargeCube("LigCharge", title="Ligand Charge")
 chargelig.promote_parameter('charge_ligands', promoted_name='charge_ligands',
+                            title="Charge the ligands",
                             description="Charge the ligand or not", default=True)
 
 ligid = IDSettingCube("Ligand Ids")
@@ -73,6 +74,7 @@ iprot.promote_parameter("data_in", promoted_name="protein", title='Protein Input
 
 md_prot_components = MDComponentCube("MD Protein Components", title="MD Protein Components")
 md_prot_components.promote_parameter("flask_title", promoted_name="flask_title",
+                                     title="Protein title name",
                                      description='Prefix name used to identity the Protein', default='')
 md_prot_components.set_parameters(multiple_flasks=False)
 
@@ -91,8 +93,11 @@ solvate.modify_parameter(solvate.close_solvent, promoted=False, default=False)
 
 # Force Field Application
 ff = ParallelForceFieldCube("ForceField", title="Apply Force Field")
-ff.promote_parameter('protein_forcefield', promoted_name='protein_ff', default='Amber14SB')
-ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.1a1')
+ff.promote_parameter('protein_forcefield', promoted_name='protein_ff',
+                     title="Protein Force Field", default='Amber14SB')
+ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff',
+                     title="Ligand Force Field",
+                     default='OpenFF_1.3.1a1')
 
 # Switching Bound and Unbound runs
 switch = BoundUnboundSwitchCube("Bound/Unbound Switch", title='Bound/Unbound Switch')
@@ -100,12 +105,13 @@ switch = BoundUnboundSwitchCube("Bound/Unbound Switch", title='Bound/Unbound Swi
 # Run the equilibrium Simulations ot the Unbound-States
 prod_uns = ParallelMDNptCube("Production Unbound States", title="Production Unbound States")
 prod_uns.promote_parameter('time', promoted_name='prod_us_ns', default=6.0,
-                           description='Length of Unbound MD run in nanoseconds')
+                           title="Equilibrium Production Time",
+                           description='The Equilibrium production running time in ns')
 # prod_uns.promote_parameter('trajectory_frames', promoted_name='prod_trajectory_us_frames', default=80,
 #                            description='Total number of trajectory frames used in the NES calculation')
 prod_uns.modify_parameter(prod_uns.trajectory_frames, promoted=False, default=1500)
 prod_uns.promote_parameter('hmr', promoted_name="hmr_us",
-                           title='Use Hydrogen Mass Repartitioning in the Unbound simulation',
+                           title='Hydrogen Mass Repartitioning',
                            default=True,
                            description='Give hydrogens more mass to speed up the MD')
 prod_uns.set_parameters(md_engine='OpenMM')
@@ -133,9 +139,12 @@ warmup_uns.set_parameters(suffix='warmup_un')
 warmup_uns.set_parameters(hmr=False)
 
 # NPT Equilibration stage of the Unbound-States
-equil_uns = ParallelMDNptCube('Equilibration Unbond States', title='Equilibration Unbond States')
+equil_uns = ParallelMDNptCube('Equilibration Unbound States', title='Equilibration Unbound States')
 equil_uns.set_parameters(time=1)
-equil_uns.promote_parameter("hmr", promoted_name="hmr_us", default=True)
+equil_uns.promote_parameter('hmr', promoted_name="hmr_us",
+                            title='Hydrogen Mass Repartitioning',
+                            default=True,
+                            description='Give hydrogens more mass to speed up the MD')
 equil_uns.set_parameters(restraints="noh ligand")
 equil_uns.set_parameters(md_engine='OpenMM')
 equil_uns.set_parameters(restraintWt=0.1)
@@ -148,12 +157,12 @@ job.add_group(md_group_uns)
 
 # Run the equilibrium Simulations ot the Bound-States
 prod_bns = ParallelMDNptCube("Production Bound States", title="Production Bound States")
-prod_bns.promote_parameter('time', promoted_name='prod_us_ns', default=6.0)
+prod_bns.promote_parameter('time', promoted_name='prod_us_ns', default=6.0,
+                           title="Equilibrium Production Time",
+                           description='The Equilibrium production running time in ns')
 # prod_bns.promote_parameter('trajectory_frames', promoted_name='prod_trajectory_us_frames', default=80)
 prod_bns.modify_parameter(prod_bns.trajectory_frames, promoted=False, default=1500)
-prod_bns.promote_parameter('hmr', promoted_name="hmr_bs", title='Use Hydrogen Mass Repartitioning '
-                                                                'in the Bound simulation', default=True,
-                           description='Give hydrogens more mass to speed up the MD')
+prod_bns.promote_parameter('hmr', promoted_name="hmr_us", default=True)
 prod_bns.set_parameters(md_engine='OpenMM')
 prod_bns.set_parameters(reporter_interval=0.002)
 prod_bns.set_parameters(suffix='prod_bn')
@@ -189,7 +198,7 @@ warmup_bns.set_parameters(save_md_stage=True)
 # NPT Bound Equilibration stage 1
 equil1_bns = ParallelMDNptCube('equil1_bns', title='Equilibration I Bound States')
 equil1_bns.set_parameters(time=0.01)
-equil1_bns.promote_parameter("hmr", promoted_name="hmr_bs", default=True)
+equil1_bns.promote_parameter("hmr", promoted_name="hmr_us", default=True)
 equil1_bns.modify_parameter(equil1_bns.restraints, promoted=False, default="noh (ligand or protein)")
 equil1_bns.modify_parameter(equil1_bns.restraintWt, promoted=False, default=1.0)
 equil_uns.set_parameters(md_engine='OpenMM')
@@ -200,7 +209,7 @@ equil1_bns.set_parameters(suffix='equil1_bn')
 # NPT Bound Equilibration stage 2
 equil2_bns = ParallelMDNptCube('equil2_bs', title='Equilibration II Bound States')
 equil2_bns.set_parameters(time=0.02)
-equil2_bns.promote_parameter("hmr", promoted_name="hmr_bs", default=True)
+equil2_bns.promote_parameter('hmr', promoted_name="hmr_us", default=True)
 equil2_bns.modify_parameter(equil2_bns.restraints, promoted=False, default="noh (ligand or protein)")
 equil2_bns.modify_parameter(equil2_bns.restraintWt, promoted=False, default=0.5)
 equil2_bns.set_parameters(md_engine='OpenMM')
@@ -211,7 +220,7 @@ equil2_bns.set_parameters(suffix='equil2_bs')
 # NPT Bound Equilibration stage 3
 equil3_bns = ParallelMDNptCube('equil3_bs', title='Equilibration III Bound States')
 equil3_bns.set_parameters(time=0.1)
-equil3_bns.promote_parameter("hmr", promoted_name="hmr_bs", default=True)
+equil3_bns.promote_parameter('hmr', promoted_name="hmr_us", default=True)
 equil3_bns.modify_parameter(equil3_bns.restraints, promoted=False, default="ca_protein or (noh ligand)")
 equil3_bns.modify_parameter(equil3_bns.restraintWt, promoted=False, default=0.2)
 equil3_bns.set_parameters(md_engine='OpenMM')
@@ -222,7 +231,7 @@ equil3_bns.set_parameters(suffix='equil3_bn')
 # NPT Equilibration stage 4
 equil4_bns = ParallelMDNptCube('equil4_bs', title='Equilibration IV Bound States')
 equil4_bns.modify_parameter(equil4_bns.time, promoted=False, default=0.1)
-equil4_bns.promote_parameter("hmr", promoted_name="hmr_bs", default=True)
+equil4_bns.promote_parameter('hmr', promoted_name="hmr_us", default=True)
 equil4_bns.modify_parameter(equil4_bns.restraints, promoted=False, default="ca_protein or (noh ligand)")
 equil4_bns.modify_parameter(equil4_bns.restraintWt, promoted=False, default=0.1)
 equil4_bns.set_parameters(md_engine='OpenMM')
