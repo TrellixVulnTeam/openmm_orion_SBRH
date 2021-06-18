@@ -166,6 +166,9 @@ class Fields:
 
     collections = OEField("Collections_ID_OPLMD", Types.JSONObject, meta=_metaHidden)
 
+    cycle_id = OEField("Cycle_ID_OPLMD", Types.Int, meta=_metaHidden)
+    schedule = OEField("Schedule_IDS_OPLMD", Types.JSONObject, meta=_metaHidden)
+
     # Stage list Field
     md_stages = OEField("MDStages_OPLMD", Types.RecordVec, meta=_metaHidden)
 

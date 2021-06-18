@@ -27,7 +27,10 @@ from floe.api import (ParallelMixin,
 from MDOrion.Standards import (MDStageTypes,
                                MDEngines, MDStageNames)
 
-from MDOrion.Standards.mdrecord import MDDataRecord
+from orionplatform.ports import (RecordInputPort,
+                                 RecordOutputPort)
+
+from MDOrion.Standards.mdrecord import MDDataRecord, Fields
 
 from MDOrion.MDEngines.utils import (md_simulation,
                                      update_cube_parameters_in_place)
@@ -833,6 +836,91 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
             self.failure.emit(record)
 
         return
+
+
+# class MDProxyCube(RecordPortsMixin, ComputeCube):
+#     title = 'MD ProxyCube'
+#
+#     classification = [['MD Simulations']]
+#     tags = ['Gromacs', 'OpenMM']
+#
+#     description = """
+#     TBD
+#     """
+#
+#     uuid = "1c0882c5-be6c-4405-8fba-ef78cdbc2429"
+#
+#     # Override defaults for some parameters
+#     parameter_overrides = {
+#         "memory_mb": {"default": 14000},
+#         "spot_policy": {"default": "Allowed"},
+#         "prefetch_count": {"default": 1},  # 1 molecule at a time
+#         "item_count": {"default": 1}  # 1 molecule at a time
+#     }
+#
+#     # cycle_in_port = RecordInputPort("cycle_in_port", initializer=False)
+#     cycle_out_port = RecordOutputPort("cycle_out_port", )
+#
+#     time = parameters.DecimalParameter(
+#         'time',
+#         default=0.01,
+#         help_text="Total simulation time in nanoseconds")
+#
+#     def begin(self):
+#         self.opt = vars(self.args)
+#         self.opt['Logger'] = self.log
+#         self.opt['SimType'] = 'npt'
+#
+#         return
+#
+#     def process(self, record, port):
+#         try:
+#             opt = dict(self.opt)
+#             opt['CubeTitle'] = self.title
+#
+#             md_record = MDDataRecord(record)
+#
+#             if not record.has_field(Fields.cycle_id):
+#
+#                 info_dic = md_record.get_stage_info(stg_name='last')
+#
+#                 if 'speed_ns_per_day' not in info_dic:
+#                     raise ValueError("Last MD stage does not have speed information")
+#
+#                 record.set_value(Fields.cycle_id, 0)
+#
+#                 # TODO
+#                 # Define a schedule record info and cube parameter update record for the new MD runs
+#
+#             else:
+#                 current_cycle_id = record.get_value(Fields.cycle_id)
+#
+#                 schedule_dic = record.get_value(Fields.schedule)
+#
+#                 if len(schedule_dic) == current_cycle_id:
+#                     STOP
+#                 else:
+#                     next_cycle_id = current_cycle_id + 1
+#                     record.set_value(Fields.cycle_id, next_cycle_id)
+#
+#                     # TODO
+#                     # Update cube parameter update record for the new MD runs
+#
+#
+#
+#
+#
+#
+#
+#
+#         except Exception as e:
+#
+#             print("Failed to complete", str(e), flush=True)
+#             self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+#             self.log.error(traceback.format_exc())
+#             self.failure.emit(record)
+#
+#         return
 
 
 class ParallelMDMinimizeCube(ParallelMixin, MDMinimizeCube):
