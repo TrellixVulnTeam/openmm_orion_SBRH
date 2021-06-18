@@ -19,7 +19,10 @@ import numpy as np
 
 from openeye import (oechem,
                      oedepict,
-                     oegrapheme)
+                     oegrapheme,
+                     oegrid,
+                     oespicoli,
+                     oedocking)
 import mdtraj as md
 
 from datarecord import OEField
@@ -128,11 +131,11 @@ def extract_aligned_prot_lig_wat_traj(md_components, flask, trj_fn, opt, nmax=30
     protlig = trj[0].atom_slice(np.concatenate((prot_idx, lig_idx)))
     protligAtoms = [atom for atom in protlig.topology.atoms]
 
-    # with open(os.devnull, 'w') as devnull:
-    #     with contextlib.redirect_stderr(devnull):
-    #         trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
+    with open(os.devnull, 'w') as devnull:
+        with contextlib.redirect_stderr(devnull):
+            trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
 
-    trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
+    # trjImaged = trj.image_molecules(inplace=False, anchor_molecules=[protligAtoms], make_whole=True)
 
     count = 0
     water_max_frames = []
@@ -416,6 +419,16 @@ def PoseInteractionsSVG(md_components, width=400, height=300):
     return svgString
 
 
+def GetBFactorColorGradient():
+    colorg = oechem.OELinearColorGradient()
+    colorg.AddStop(oechem.OEColorStop(0.0, oechem.OEDarkBlue))
+    colorg.AddStop(oechem.OEColorStop(10.0, oechem.OELightBlue))
+    colorg.AddStop(oechem.OEColorStop(25.0, oechem.OEYellowTint))
+    colorg.AddStop(oechem.OEColorStop(50.0, oechem.OERed))
+    colorg.AddStop(oechem.OEColorStop(100.0, oechem.OEDarkRose))
+    return colorg
+
+
 def ligand_to_svg_stmd(ligand, ligand_name):
 
     class ColorLigandAtomByBFactor(oegrapheme.OEAtomGlyphBase):
@@ -459,14 +472,8 @@ def ligand_to_svg_stmd(ligand, ligand_name):
 
         oegrapheme.OEPrepareDepictionFrom3D(lig_copy)
 
-        colorg = oechem.OELinearColorGradient()
-        colorg.AddStop(oechem.OEColorStop(0.0, oechem.OEDarkBlue))
-        colorg.AddStop(oechem.OEColorStop(10.0, oechem.OELightBlue))
-        colorg.AddStop(oechem.OEColorStop(25.0, oechem.OEYellowTint))
-        colorg.AddStop(oechem.OEColorStop(50.0, oechem.OERed))
-        colorg.AddStop(oechem.OEColorStop(100.0, oechem.OEDarkRose))
-
-        color_bfactor = ColorLigandAtomByBFactor(colorg)
+        b_factor_color_grad = GetBFactorColorGradient()
+        color_bfactor = ColorLigandAtomByBFactor(b_factor_color_grad)
 
         width, height = 150, 150
         opts = oedepict.OE2DMolDisplayOptions(width, height, oedepict.OEScale_AutoScale)
@@ -557,6 +564,60 @@ def StyleTrajProteinLigandClusters( protein, ligand):
         SetProteinLigandVizStyle( pconf, lconf, colorRGB)
     return True
 
+
+class DUClusterStyler:
+
+    def __init__(self):
+        self.b_factor_color_grad = GetBFactorColorGradient()
+
+        self.acolorer = oechem.OEMolStyleColorer(oechem.OEAtomColorScheme_Element)
+
+
+        self.protein_style = oechem.OE3DMolStyle()
+        self.protein_style.SetAtomStyle(oechem.OEAtomStyle_Hidden)
+        self.protein_style.SetHydrogenVisibility(oechem.OEHydrogenVisibility_Polar)
+        self.protein_style.SetProteinStyle(oechem.OEProteinStyle_Ribbons)
+        self.protein_style.SetProteinColorer(oechem.OEMolStyleColorer(oechem.OEProteinColorScheme_AtomColor))
+
+        self.asite_style = oechem.OE3DMolStyle()
+        self.asite_style.SetAtomStyle(oechem.OEAtomStyle_Wireframe)
+        self.asite_style.SetHydrogenVisibility(oechem.OEHydrogenVisibility_Polar)
+        self.asite_style.SetProteinStyle(oechem.OEProteinStyle_Ribbons)
+        self.asite_style.SetProteinColorer(oechem.OEMolStyleColorer(oechem.OEProteinColorScheme_AtomColor))
+
+        self.ligand_style = oechem.OE3DMolStyle()
+        self.ligand_style.SetAtomStyle(oechem.OEAtomStyle_Stick)
+        self.ligand_style.SetHydrogenVisibility(oechem.OEHydrogenVisibility_Polar)
+
+    def apply_style(self, du):
+        impl = du.GetImpl()
+        asitePred = oechem.OEAtomMatchResidue(du.GetSiteResidues())
+
+        protein = impl.GetProtein()
+        oechem.OEClearStyle(protein)
+
+        for atom in protein.GetAtoms():
+            res = oechem.OEAtomGetResidue(atom)
+            bfactor = res.GetBFactor()
+            color = self.b_factor_color_grad.GetColorAt(bfactor)
+            self.acolorer.AddColor(atom.GetAtomicNum(), color)
+            if asitePred(atom):
+                self.asite_style.SetAtomColorer(self.acolorer)
+                oechem.OESetStyle(atom, self.asite_style)
+            else:
+                self.protein_style.SetAtomColorer(self.acolorer)
+                oechem.OESetStyle(atom, self.protein_style)
+
+        if du.HasLigand():
+            ligand = impl.GetLigand()
+            oechem.OEClearStyle(ligand)
+            for atom in ligand.GetAtoms():
+                res = oechem.OEAtomGetResidue(atom)
+                bfactor = res.GetBFactor()
+                color = self.b_factor_color_grad.GetColorAt(bfactor)
+                self.acolorer.AddColor(atom.GetAtomicNum(), color)
+                self.ligand_style.SetAtomColorer(self.acolorer)
+                oechem.OESetStyle(atom, self.ligand_style)
 
 def MeanAndBootstrapStdErrCI(vec, nreps=2000, nsample=None):
     '''Calculate stats of the mean for the input vector of values:
