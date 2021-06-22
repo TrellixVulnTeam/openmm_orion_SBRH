@@ -40,6 +40,10 @@ import textwrap
 
 import os
 
+from simtk import unit
+
+import math
+
 
 class MDMinimizeCube(RecordPortsMixin, ComputeCube):
     title = 'Minimization Cube'
@@ -248,7 +252,14 @@ class MDMinimizeCube(RecordPortsMixin, ComputeCube):
                         isinstance(v, bool):
                     info_dic[k] = v
 
-            if not mdrecord.add_new_stage(self.title,
+            info_dic['CubeTitle'] = opt['CubeTitle']
+
+            # Update common values that could have been updated
+            for k in info_dic:
+                if k in opt:
+                    info_dic[k] = opt[k]
+
+            if not mdrecord.add_new_stage(opt['CubeTitle'],
                                           MDStageTypes.MINIMIZATION,
                                           flask,
                                           new_mdstate,
@@ -524,8 +535,14 @@ class MDNvtCube(RecordPortsMixin, ComputeCube):
                     info_dic[k] = v
 
             info_dic['speed_ns_per_day'] = opt['speed_ns_per_day']
+            info_dic['CubeTitle'] = opt['CubeTitle']
 
-            if not mdrecord.add_new_stage(self.title,
+            # Update common values that could have been updated
+            for k in info_dic:
+                if k in opt:
+                    info_dic[k] = opt[k]
+
+            if not mdrecord.add_new_stage(opt['CubeTitle'],
                                           MDStageTypes.NVT,
                                           flask,
                                           new_mdstate,
@@ -798,7 +815,7 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
 
             data_fn = opt['out_fn'] + '.tar.gz'
 
-            # Save the cube parameters tha are serializable
+            # Save the cube parameters that are serializable
             info_dic = dict()
             for k, v in dict(vars(self.args)).items():
                 if isinstance(v, str) or \
@@ -808,8 +825,14 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
                     info_dic[k] = v
 
             info_dic['speed_ns_per_day'] = opt['speed_ns_per_day']
+            info_dic['CubeTitle'] = opt['CubeTitle']
 
-            if not mdrecord.add_new_stage(self.title,
+            # Update common values
+            for k in info_dic:
+                if k in opt:
+                    info_dic[k] = opt[k]
+
+            if not mdrecord.add_new_stage(opt['CubeTitle'],
                                           MDStageTypes.NPT,
                                           flask,
                                           new_mdstate,
@@ -838,89 +861,211 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
         return
 
 
-# class MDProxyCube(RecordPortsMixin, ComputeCube):
-#     title = 'MD ProxyCube'
-#
-#     classification = [['MD Simulations']]
-#     tags = ['Gromacs', 'OpenMM']
-#
-#     description = """
-#     TBD
-#     """
-#
-#     uuid = "1c0882c5-be6c-4405-8fba-ef78cdbc2429"
-#
-#     # Override defaults for some parameters
-#     parameter_overrides = {
-#         "memory_mb": {"default": 14000},
-#         "spot_policy": {"default": "Allowed"},
-#         "prefetch_count": {"default": 1},  # 1 molecule at a time
-#         "item_count": {"default": 1}  # 1 molecule at a time
-#     }
-#
-#     # cycle_in_port = RecordInputPort("cycle_in_port", initializer=False)
-#     cycle_out_port = RecordOutputPort("cycle_out_port", )
-#
-#     time = parameters.DecimalParameter(
-#         'time',
-#         default=0.01,
-#         help_text="Total simulation time in nanoseconds")
-#
-#     def begin(self):
-#         self.opt = vars(self.args)
-#         self.opt['Logger'] = self.log
-#         self.opt['SimType'] = 'npt'
-#
-#         return
-#
-#     def process(self, record, port):
-#         try:
-#             opt = dict(self.opt)
-#             opt['CubeTitle'] = self.title
-#
-#             md_record = MDDataRecord(record)
-#
-#             if not record.has_field(Fields.cycle_id):
-#
-#                 info_dic = md_record.get_stage_info(stg_name='last')
-#
-#                 if 'speed_ns_per_day' not in info_dic:
-#                     raise ValueError("Last MD stage does not have speed information")
-#
-#                 record.set_value(Fields.cycle_id, 0)
-#
-#                 # TODO
-#                 # Define a schedule record info and cube parameter update record for the new MD runs
-#
-#             else:
-#                 current_cycle_id = record.get_value(Fields.cycle_id)
-#
-#                 schedule_dic = record.get_value(Fields.schedule)
-#
-#                 if len(schedule_dic) == current_cycle_id:
-#                     STOP
-#                 else:
-#                     next_cycle_id = current_cycle_id + 1
-#                     record.set_value(Fields.cycle_id, next_cycle_id)
-#
-#                     # TODO
-#                     # Update cube parameter update record for the new MD runs
-#
-#
-#
-#
-#
-#
-#
-#
-#         except Exception as e:
-#
-#             print("Failed to complete", str(e), flush=True)
-#             self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
-#             self.log.error(traceback.format_exc())
-#             self.failure.emit(record)
-#
-#         return
+class MDProxyCube(RecordPortsMixin, ComputeCube):
+    title = 'MD ProxyCube'
+
+    classification = [['MD Simulations']]
+    tags = ['Gromacs', 'OpenMM']
+
+    description = """
+    TBD
+    """
+
+    uuid = "1c0882c5-be6c-4405-8fba-ef78cdbc2429"
+
+    # Override defaults for some parameters
+    parameter_overrides = {
+        "memory_mb": {"default": 14000},
+        "spot_policy": {"default": "Allowed"},
+        "prefetch_count": {"default": 1},  # 1 molecule at a time
+        "item_count": {"default": 1}  # 1 molecule at a time
+    }
+
+    # cycle_in_port = RecordInputPort("cycle_in_port", initializer=False)
+    cycle_out_port = RecordOutputPort("cycle_out_port", )
+
+    time = parameters.DecimalParameter(
+        'time',
+        default=0.1,
+        help_text="Total simulation time in nanoseconds")
+
+    trajectory_interval = parameters.DecimalParameter(
+        'trajectory_interval',
+        default=0.01,
+        help_text="""Time interval for trajectory snapshots in ns. 
+        If 0 the trajectory file will not be generated""")
+
+    reporter_interval = parameters.DecimalParameter(
+        'reporter_interval',
+        default=0.0,
+        help_text="""Time interval for reporting data in ns. 
+        If 0 the reporter file will not be generated""")
+
+    cube_max_run_time = parameters.DecimalParameter("cube_max_run_time",
+                                                    default=0.001,
+                                                    help_text="Max Cube Running Time in hrs")
+
+    def begin(self):
+        self.opt = vars(self.args)
+        self.opt['Logger'] = self.log
+        self.opt['SimType'] = 'npt'
+
+        return
+
+    def process(self, record, port):
+        try:
+            opt = dict(self.opt)
+            opt['CubeTitle'] = self.title
+
+            md_record = MDDataRecord(record)
+
+            if not record.has_field(Fields.cycle_id):
+
+                info_dic = md_record.get_stage_info(stg_name='last')
+
+                if 'speed_ns_per_day' not in info_dic:
+                    raise ValueError("Last MD stage does not have speed information")
+
+                speed_ns_per_day = info_dic['speed_ns_per_day']
+                hmr = info_dic['hmr']
+                md_engine = info_dic['md_engine']
+
+                if md_engine == 'Gromacs':
+                    time_step = 2*unit.femtoseconds
+                else:
+                    if hmr:
+                        time_step = 4 * unit.femtoseconds
+                    else:
+                        time_step = 2 * unit.femtoseconds
+
+                cube_max_run_time = opt['cube_max_run_time'] * unit.hours
+                time = opt['time'] * unit.nanoseconds
+                time_ns = time.in_units_of(unit.nanoseconds)
+
+                trajectory_interval = opt['trajectory_interval'] * unit.nanoseconds
+
+                total_steps = math.ceil(time_ns/time_step)
+
+                # Per cycle md running time
+                running_time_per_cycle = cube_max_run_time.value_in_unit(unit.day) * speed_ns_per_day * unit.nanoseconds
+                running_time_per_cycle_in_ns = running_time_per_cycle.in_units_of(unit.nanoseconds)
+
+                md_steps_per_cycle = int(running_time_per_cycle_in_ns/time_step)
+
+                cycles = int(time_ns/running_time_per_cycle_in_ns)
+
+                cycle_rem = time_ns.value_in_unit(unit.nanoseconds) % running_time_per_cycle_in_ns.value_in_unit(unit.nanoseconds)
+
+                schedule = dict()
+                if cycles == 0:
+                    time_step_to_time = int(round(cycle_rem/time_step.value_in_unit(unit.nanoseconds))) * time_step
+                    frame_per_cycle = int(time_step_to_time/trajectory_interval)
+                    schedule[0] = (time_step_to_time, frame_per_cycle)
+                else:
+                    total_frames = int(round(time_ns/trajectory_interval))
+
+                    frac = total_frames/cycles
+
+                    if frac >= 1.0:
+                        frame_per_cycle_dic = {i: int(frac) for i in range(0, cycles)}
+                        frame_per_cycle_dic[cycles] = total_frames - int(frac)*cycles
+                    else:
+                        frame_per_cycle_dic = dict()
+                        delta = (1/frac // 0.1) * 0.1
+
+                        for i in range(0, cycles+1):
+
+                            increment = (i + 1) * delta
+
+                            print(">>>>>>CAZZ", increment)
+
+                            if i > increment:
+                                frame_per_cycle_dic[i] = 1
+                            else:
+                                frame_per_cycle_dic[i] = 0
+
+
+
+
+                    print(frame_per_cycle_dic)
+
+                    raise ValueError("STOP>>>>>>>>>>>>>>>>")
+
+
+
+
+                    time_step_to_time = md_steps_per_cycle * time_step.in_units_of(unit.nanoseconds)
+                    schedule = {i: time_step_to_time.value_in_unit(unit.nanoseconds) for i in range(0, cycles)}
+                    schedule[cycles] = (total_steps - md_steps_per_cycle*cycles)*time_step.value_in_unit(unit.nanoseconds)
+
+                info_str = "Cycle    MD time (ns)    Frames\n"
+                info_str += 31*"-"+"\n"
+
+                tot_time = 0
+                tot_frames = 0
+                for k, v in schedule.items():
+                    frame_per_cycle = int(v/opt['trajectory_interval'])
+
+                    print(">>>>>>", k, v, frame_per_cycle)
+
+                    info_str += "{:5d}    {:.4f}    {:6d}\n".format(k, v, frame_per_cycle)
+                    tot_time += v
+                    tot_frames += frame_per_cycle
+                info_str += 31 * "-" + "\n"
+
+                print(tot_time, tot_frames)
+                info_str += "{:5d}    {:.4f}    {:6d}\n".format(schedule[cycles], tot_time, tot_frames)
+
+                opt['Logger'].info(info_str)
+
+                raise ValueError("STOP>>>>>>>>>>>>>>>")
+
+                record.set_value(Fields.cycle_id, 0)
+                record.set_value(Fields.schedule, schedule)
+
+                # TODO UPDATE ALL THE CUBE PARAMS?
+                new_dic = {'time': schedule[0],
+                           'CubeTitle': 'cycle_0',
+                           'trajectory_interval': opt['trajectory_interval'],
+                           'reporter_interval': opt['reporter_interval']
+                           }
+
+                record.set_value(Fields.cube_parameters_update, new_dic)
+                opt['Logger'].info("Forwarding to next cycle....")
+                self.cycle_out_port.emit(record)
+
+            else:
+                current_cycle_id = record.get_value(Fields.cycle_id)
+
+                schedule_dic = record.get_value(Fields.schedule)
+                next_cycle_id = current_cycle_id + 1
+
+                # Cycle Termination
+                if str(next_cycle_id) not in schedule_dic:
+                    opt['Logger'].info("Cycle complete....")
+                    self.success.emit(record)
+                else:
+
+                    record.set_value(Fields.cycle_id, next_cycle_id)
+
+                    # TODO UPDATE ALL THE CUBE PARAMS?
+                    new_dic = {'time': schedule_dic[str(next_cycle_id)],
+                               'CubeTitle': 'cycle_'+str(next_cycle_id),
+                               'trajectory_interval':  opt['trajectory_interval'],
+                               'reporter_interval': opt['reporter_interval']}
+
+                    record.set_value(Fields.cube_parameters_update, new_dic)
+                    opt['Logger'].info("Forwarding to next cycle....")
+                    self.cycle_out_port.emit(record)
+
+        except Exception as e:
+
+            print("Failed to complete", str(e), flush=True)
+            self.opt['Logger'].info('Exception {} {}'.format(str(e), self.title))
+            self.log.error(traceback.format_exc())
+            self.failure.emit(record)
+
+        return
 
 
 class ParallelMDMinimizeCube(ParallelMixin, MDMinimizeCube):
