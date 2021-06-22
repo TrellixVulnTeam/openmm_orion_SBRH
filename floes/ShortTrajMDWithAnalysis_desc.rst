@@ -4,6 +4,8 @@
     and prepared ligands, then analyzes the trajectory for pose stability.
 * Method Recommendations/Requirements:
 
+  * To avoid excessively large output floe reports, the floe report is
+    truncated at the top 100 ligands by ensemble MMPBSA score.
   * The ligands need to have reasonable 3D coordinates, all atoms, and correct
     chemistry (in particular bond orders and formal charges).
   * Each ligand can have multiple conformers but each conformer will be run
@@ -56,6 +58,13 @@ by a warm up (NVT ensemble) and three equilibration stages (NPT ensemble). In th
 minimization, warm up, and equilibration stages, positional harmonic restraints are
 applied on the ligand and protein. At the end of the equilibration stages a short
 (default 2ns) production run is performed on the unrestrained system.
-The production run is then analyzed in terms of interactions between the
-ligand and the active site and in terms of ligand RMSD after fitting the trajectory
-based on active site C_alphas.
+The production run is then analyzed.
+Trajectories from different starting poses of the same ligand are combined and
+analysed collectively.
+One analysis is in terms of interactions between the
+ligand and the active site.
+Another looks at clustering the ligand positions in the protein active site
+after fitting the trajectory based on active site C_alphas.
+Ensemble MMPBSA and ensemble BintScore calculations are carried out
+on the trajectory and are localized to the ligand clusters.
+An HTML Floe report is generated for the top 100 ligands by ensemble MMPBSA score.
