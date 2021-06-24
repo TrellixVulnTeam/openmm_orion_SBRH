@@ -27,7 +27,7 @@ from os import path
 
 
 floe_title = 'Convert MD Analysis results to Cluster-Centric Dataset'
-tags_for_floe = ['Helper']
+tags_for_floe = ['Utility']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)

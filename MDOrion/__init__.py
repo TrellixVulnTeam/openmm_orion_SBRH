@@ -15,7 +15,7 @@
 # liable for any damages or liability in connection with the Sample Code
 # or its use.
 
-__version__ = '4.0.0'
+__version__ = '4.0.1b2'
 
 from .ComplexPrep.cubes import ComplexPrepCube
 
@@ -48,6 +48,7 @@ from .TrjAnalysis.cubes_trajProcessing import ParallelTrajToOEMolCube
 from .TrjAnalysis.cubes_trajProcessing import ParallelTrajPBSACube
 from .TrjAnalysis.cubes_trajProcessing import ParallelTrajInteractionEnergyCube
 
+from .TrjAnalysis.cubes_clusterAnalysis import MDFloeMakeClusterCentricDataset
 from .TrjAnalysis.cubes_clusterAnalysis import ParallelMDTrajAnalysisClusterReport
 from .TrjAnalysis.cubes_clusterAnalysis import ParallelClusterOETrajCube
 from .TrjAnalysis.cubes_clusterAnalysis import ParallelClusterPopAnalysis

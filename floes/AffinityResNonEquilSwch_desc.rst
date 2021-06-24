@@ -1,7 +1,36 @@
-This floe compares experimental ligand binding free energies with
-those calculated by Non-Equilibrium Switching (NES).
-Only ligand affinities common to both experimental and calculated
-datasets can be compared.
+* Purpose:
+
+  * This Floe postprocesses a Dataset resulting from a
+    Non-Equilibrium Switching (NES) floe to perform a comparison with
+    a set of experimental ligand binding free energies (affinities).
+* Method Recommendations/Requirements:
+
+  * Two inputs are required:
+
+    * An output dataset of edges (DeltaDeltaGs) from an NES floe.
+    * A text file containing experimental binding free energies
+      for at least one ligand, one experimental datapoint per line,
+      of form "ligA_name {deltaG(exptl)} {error_deltaG(exptl)} {units}"
+      for example, "gn1c -8.56 0.17 kcal/mol".
+* Limitations
+
+  * Only ligand affinities common to both experimental and calculated
+    datasets can be compared.
+* Expertise Level:
+
+  * Regular
+* Compute Resource:
+
+  * Minimal
+* Keywords:
+
+  * Utility, FECalc
+* Related Floes:
+
+  * Non Equilibrium Switching [MDPrep] [MD] [FECalc]
+  * Equilibrium and Non Equilibrium Switching [MDPrep] [MD] [FECalc]
+  * Non-Equilibrium Switching Recovery  [Utility] [FECalc]
+
 Since the calculated affinities are based on RBFE calculations,
 they need a reference free energy offset: this floe aligns
 the mean of the calculated affinities with the mean of the
