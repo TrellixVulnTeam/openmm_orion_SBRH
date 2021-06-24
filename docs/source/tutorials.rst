@@ -61,7 +61,7 @@ If the ligands already have good atomic partial charges
 (we recommend RESP or AM1-BCC_ELF10 charges),
 we recommend using these for STMD as opposed to re-charging
 them in the STMD floe.
-Given that this floe only runs a very short timescale (default 2 ns),
+Given that this floe only runs a very short timescale by default (2 ns),
 it is preferable that the input pose be well refined.
 Although bad clashes
 (or poor positioning for interactions which you know are important)
@@ -82,11 +82,12 @@ The ligand input datasets used in this tutorial are:
 
     * :download:`MCL1_1poseLig35_elf10.oeb <files/MCL1_1poseLig35_elf10.oeb>`
     * :download:`MCL1_6poseLig35_elf10.oeb <files/MCL1_6poseLig35_elf10.oeb>`
+    * :download:`mcl1_Span11_minPB_flusD5.oeb <files/mcl1_Span11_minPB_flusD5.oeb>`
 
 
 
 Protein Input
-------------
+-------------
 All the MD floes require correctly prepared protein up to "MD ready" standards.
 This begins with the normal prerequisites for physics-based modeling:
 protein chains must be capped,
@@ -113,37 +114,50 @@ How to use this floe
 
 After selecting the *Short Trajectory MD with Analysis* floe in the Orion UI,
 you will be presented with a job form with parameters to select.
-In Figure `STMD Job Form for ligand 35 (6 poses)` you can see how we filled out
-the key fields of that form for the ligand 35 6-pose case described below.
+In Figure `STMD Job Form for ligand 35 (1 pose)` you can see how we filled out
+the key fields of that form for the ligand 35 1-pose case described below.
 
 .. figure_STMD_jobForm:
 
-.. figure:: ./images/STMD_jobForm_6poses.png
+.. figure:: ./images/STMD_input_form.png
    :width: 800px
    :align: center
-   :alt: STMD Job Form for ligand 35 (6 poses)
+   :alt: STMD Job Form for ligand 35 (1 pose)
 
-   **Key fields of STMD Job Form for ligand 35 (6 poses)**
+   **Key fields of STMD Job Form for ligand 35 (1 pose)**
 
 Aside from the essential user-defined parameters relating to jobname,
 input (protein and ligand datasets as described above), and
 output (output and failure dataset names),
-all other parameters have defaults preset to values that
-we feel are suitable for the non-expert MD user
-(or expert user for that matter) so launching the floe at this point is reasonable.
-That said, some of the other top-level parameters are worth considering:
+all other parameters except "Flask_title" have reasonable defaults.
+This example is for an MCL1 protein, so after setting
+"Flask_title" to "MCL1",
+launching the floe at this point is fine.
+That said, the top-level parameters you may consider changing are:
 
-    * Flask_title (no default): Here is where you can put a handy short name for the protein to use in molecule titles (e.g. "Bace" instead of "beta-secretase").
+    * Flask_title (no default): Here is where you can put a handy
+      short name for the protein to use in molecule titles
+      (e.g. "Bace" instead of "beta-secretase").
+    * N_md_starts (default *1*): This allows the user to ask for
+      *N* independent starts to each ligand/pose, giving rise to *N*
+      independent MD runs; this gives more sampling while keeping
+      the simulation closer to the starting pose.
+    * Charge_ligands (default *True*): If your input ligands already
+      have good atomic partial charges (e.g. `RESP` or `AM1-BCC_ELF10`),
+      set this to *False* to have the floe use the existing ligand charges.
+    * Ligand_forcefield (default *OpenFF1.3.1*): This forcefield choice
+      has a strong impact on the results.
+      We recommend the most recent version of the OpenFF force field
+      from the *Open Force Field Initiative*.
+    * Md_engine (default *OpenMM*): Gromacs is the other alternative
+      but we recommend OpenMM because HMR works with it but not yet with Gromacs.
+    * Hmr: Hydrogen Mass Repartitioning (HMR) gives a two-fold speedup
+      and reduces cost. We recommend leaving it on.
 
-    * Charge_ligands (default *True*): If your input ligands already have good atomic partial charges (e.g. `RESP` or `AM1-BCC_ELF10`), set this to *False* to have the floe use the existing ligand charges.
-
-    * Ligand_forcefield (default *OpenFF1.2*): This forcefield choice has a strong impact on the results. We recommend the most recent version of the OpenFF force field from the *Open Force Field Initiative*.
-
-    * Md_engine (default *OpenMM*): Gromacs is the other alternative but we recommend OpenMM because HMR works with it but not with Gromacs.
-
-    * Hmr: Hydrogen Mass Repartitioning (HMR) gives a two-fold speedup and reduces cost. We recommend leaving it on.
-
-We make the other top-level parameters available for expert users.
+We make the other top-level parameters available for expert users
+by turning on "Show Cube Parameters" at the bottom of the input form
+and then drilling down into the parameters of the desired cube in
+the list below.
 
 Accessing and Understanding the Results
 ---------------------------------------
@@ -153,18 +167,21 @@ through the job output in the `Jobs` tab in Orion's `Floe` page, and
 through orion's `Analyze` page.
 We will look at the results of two jobs run on
 the same MCL1 ligand; in the first case the input ligand had only a
-single pose and in the second case it had six slightly different poses.
+single pose and in the second case it had six slightly different
+docked poses.
 
 MCL1 ligand 35: single input pose
 ---------------------------------
-First we will look at the results of the single-pose run.
+First we will look at the results of the single-pose run,
+with default of 1 for N_md_starts: one start of one ligand with
+one pose, so one 2 ns MD run overall.
 In the `Jobs` tab in Orion's `Floe` page,
 having selected the job name for your STMD job, you should land on
 the job results page.
 The left panel contains the usual orion job information from the run,
-and the right panel has two tabs at the top if the run was not successful
-or three tabs at the top if it was... we will focus on success here!
-Selecting the third tab called *FLOE REPORT* should give you a
+and the right panel has one tab at the top if the run was not successful
+or two tabs at the top if it was... we will focus on success here!
+Selecting the second tab called *FLOE REPORT* should give you a
 page looking similar to Figure `STMD Job results page for a single pose of an MCL1 ligand`.
 
 .. figure_STMD_lig35_jobResults1pose:
@@ -190,10 +207,14 @@ to be more mobile than the buried parts.
 Other information on each tile is:
 
     * The ligand name.
-
-    * The number of clusters formed by clustering the ligand positions in the MD trajectory.
-
-    * The Boltzmann-weighted MMPBSA score for ligand binding over the trajectories for all poses.
+    * The number of clusters formed by clustering the ligand positions
+      in the MD trajectory.
+    * The Boltzmann-weighted MMPBSA score for ligand binding
+      over the trajectories for all poses.
+    * The simple ensemble average BintScore for ligand binding
+      over the trajectories for all poses (lower score is better).
+    * The stability of the pose relative to the starting pose
+      (varies between 0 (no stability) and 1 (completely stable)).
 
 Clicking on the tile drills down into the detailed analysis of that simulation,
 resulting in Figure `Detailed results for ligand 35 (single pose)`:
@@ -211,8 +232,8 @@ resulting in Figure `Detailed results for ligand 35 (single pose)`:
 In the graphic we see a 2D representation of the ligand binding
 interactions for the whole trajectory, with the default display
 of the `Overall` tab at the top of the graphic. It is an interactive
-graphic: selecting the `Cluster 0` tab in blue or the `Cluster 1` tab
-in green will change the binding
+graphic: selecting the `Cluster 0` tab in blue
+will change the binding
 interaction representation to that corresponding to the selected cluster.
 Hovering over one of the interaction in the diagram lights up a
 strip chart on the right-hand side grey arrow showing the occupancy
@@ -226,11 +247,17 @@ calculated B-factors for the selected cluster as in the parent tile,
 but additionally shows the calculated B-factor for each active site
 amino acid close to the ligand. To the right of the graphic is
 information about the clustering of the ligand trajectory, including
-a table giving the ensemble average MMPBSA energy (with standard error)
-for each cluster. These averages are used to compute the Boltzmann-weighted
-average for the ligand as a whole. Note that cluster 1 (green), the low
-occupancy cluster, is much less stable than cluster 0 (blue), so the
-Boltzmann-weighted result represents cluster 0 completely.
+a table giving the ensemble average MMPBSA energy and BintScore
+(each with standard error)
+for each cluster. The MMPBSA value represents a Boltzmann-weighted
+average over all major clusters,
+But for BintScore it is a simple ensmble average for the ligand as a whole.
+Note with only one cluster here,
+the Boltzmann-weighted result represents cluster 0 completely.
+The remaining value, "Pose Stability", is derived from the
+ensemble BintScore and represents how stable the overall
+protein-ligand binding interactions are compared to the starting pose
+(varies between 0 (no stability) and 1 (completely stable)).
 
 Scrolling down exposes a strip chart and two tables detailing relevant
 analyses of the trajectories for all poses of the ligand.
@@ -248,14 +275,12 @@ in Figure `Strip Chart results for ligand 35 (single pose)`:
 
 The strip chart shows a time course over the MD trajectory,
 maintaining always the same color scheme as in the interactive graphic:
-blue and green for cluster 0 and 1, respectively.
+blue for cluster 0.
 Additionally, cluster outliers, which are ligand configurations
 that do not belong to any cluster, are shown in black.
 The chart simply shows the cluster occupancy of each frame,
-telling us that the trajectory started out in the blue Cluster 0,
-then transitioned to the green Cluster 1 late in the trajectory.
-From this sampling, it appears Cluster 0 is the predominant and
-preferred cluster.
+telling us that the trajectory spent most of the time in the blue Cluster 0,
+occasionally sampling outliers. It seems like quite a stable pose!
 
 The two tables below the strip chart, shown in
 `Cluster/Pose information for ligand 35 (single pose)`
@@ -274,15 +299,18 @@ starting poses.
 
 With only one pose used for this run the tables
 are terse, but below when we look at 6 input poses for the
-same ligand they will be more informative. The upper table
-"Cluster Percentage by Starting Pose" simply describes the
-occupancy that we see in the strip chart: the ligand spends
-71% of its time in cluster 0 and 8% in cluster 1. The second
-table describes how closely each cluster stays to the
+same ligand they will be more informative.
+The upper table
+"Cluster RMSD from each Starting Pose" describes
+how closely each cluster stays to the
 starting pose: the blue Cluster 0 sticks closely
-to the initial pose (1.13 |A| RMSD), whereas the green Cluster 0
-has moved somewhat farther away ( 2.72 |A| RMSD).
-This tells us the predominant and preferred blue Cluster 0
+to the initial pose (1.38 |A| RMSD).
+The second table
+"Cluster Percentage by Starting Pose" simply describes
+the occupancy that we see in the strip chart:
+the ligand spends
+96% of its time in cluster 0.
+These figures tells us the blue Cluster 0 is stable and
 stays close to the initial pose.
 
 
@@ -338,16 +366,22 @@ resulting in Figure `Detailed results for ligand 35 (6 poses)`:
 
    **Detailed results for ligand 35 (single pose)**
 
-Overall it looks quite similar to the single-pose case; although
-the 2D representation shows a different orientation the binding
-interactions are the same. There are still two clusters, but now
-the clusters are very different from the single-pose case,
-which will emerge as we look at the results in more detail.
-Look to the right of the graphic at the table giving
-the ensemble average MMPBSA energy (with standard error)
-for each cluster. We see that both clusters have low MMPBSA
-energies, now with the green cluster 1 slightly lower energy than
-the blue cluster 0.
+The results look quite different from the single-pose case although
+the binding interactions are mostly the same
+(the 2D representation shows a different orientation).
+There are now four major clusters.
+The table to the right of the graphic gives key information
+on each cluster.
+The blue cluster 0 is dominant, accounting for 45% of the trajectory
+and with the best (lowest) ensemble MMPBSA and Bintscore.
+Cluster 1 (green) is second largest at 36%, and has less
+good MMPBSA score and BintScore.
+Cluster 2 (orange) at only 13% abundance scores the worst
+compared to the others, while
+Cluster 3 (pink) scores second best by both MMPBSA and BintScore
+even though it is the smallest cluster at 5%.
+How do these clusters relate to the different input poses?
+
 
 Scrolling down to the strip chart, shown below in
 Figure `Strip Chart results for ligand 35 (6 poses)`,
@@ -355,8 +389,10 @@ we see the time course over the MD trajectories for all starting
 poses concatenated and analyzed together.
 The strip chart and the table below it (table `Cluster Percentage by
 Pose for ligand 35 (6 poses)` both point to a clear grouping by pose:
-poses 0, 3,and 5 only show cluster 0 occupancy (blue), and poses 1, 2, and 4
-only cluster 1 occupancy (green).
+poses 0, 3,and 5
+show predominantly cluster 0 occupancy (blue),
+and poses 1, 2, and 4
+show predominantly cluster 1 occupancy (green).
 
 .. figure_STMD_lig35_stripChart6poses:
 
@@ -381,9 +417,10 @@ methyl "down" starting poses and the latter to the methyl "up" starting
 poses, which we can confirm in the Orion 3D page. While the short trajectories
 in this run (2 ns for each pose) do not allow interconversion between
 methyl "up" and "down" poses, it appears that the 3 poses in each category
-have collapsed to a single cluster. How close is the cluster to any of
-the starting poses? This answered by the final table in the Floe
-Report, Table `Cluster RMSD from Pose for ligand 35 (6 poses)`
+have collapsed to a single dominant cluster.
+How close is the cluster to any of
+the starting poses? This answered by the
+Table `Cluster RMSD from Pose for ligand 35 (6 poses)`
 
 .. figure_STMD_lig35_tableClusRMSD6Poses:
 
@@ -396,20 +433,32 @@ Report, Table `Cluster RMSD from Pose for ligand 35 (6 poses)`
 
 This table confirms that cluster 0 is quite close to the starting
 poses (0, 3, and 5) that contributed to it, though slightly closer
-to Pose 0. Cluster 1 is still within 2 |A| of all six poses, but
+to Pose 0. Cluster 1 is still within 2 |A| of 5/6 poses, but
 closest to Pose 1 out of all.
 
 We can visually confirm this by selecting the output dataset (in
 the "Data" tab of Orion) and then going to the "3D" tab. Under the
-list of structures for ligand 35, the starting poses appear as
-"Conformer (6)", the average structures for the clusters
-under "Average 35" with the average ligands under "Conformers (2)"
-and the average proteins underneath that. Selecting starting poses
-0, 3, and 5 with the average ligand and protein for cluster 0 (blue)
+list of structures for ligand 35, the starting poses are conformers
+under the molecule named simply "35".
+Unfortunately the conformer number in this structure are off by 1,
+starting from "1", compared to the analysis, which starts from 0!
+This bug will be fixed in a future release.
+The average and median for each cluster appear as a separate
+protein-ligand complex, labeled accordingly
+(for example "35_clus0_Avg" for the average of cluster 0).
+Selecting starting poses corresponding to "down" poses
+0, 3, and 5 (i.e. conformers 1, 4, and 6)
+and displaying them with the average for cluster 0 ("35_clus0_Avg")
 gives the upper panel in Figure `Starting Poses and Cluster Averages
-for ligand 35`. Selecting starting poses
-1, 2, and 4 with the average ligand and protein for cluster 1 (green)
+for ligand 35`.
+Selecting starting poses corresponding to "up" poses
+1, 2, and 4 (i.e. conformers 2, 3, and 5)
+and displaying them with the average for cluster 1 ("35_clus1_Avg")
 gives the lower panel.
+Interestingly, with the averages color by calculated B-factor
+it is obvious that the "down" cluster is markedly more stable
+in the active site than the "up" cluster, as well as being
+more energetically favorable by MMPBSA and BintScore.
 
 .. figure_STMD_lig35_tableClusRMSD6Poses:
 
@@ -425,18 +474,22 @@ gives the lower panel.
    **Starting Poses and Cluster Averages for ligand 35**
 
 These visually confirm what we had seen emerging from the analysis:
-the 6 poses collapse into a single consensus methyl "up" and methyl
+the 6 poses collapse into a predominant methyl "up" and methyl
 "down" pose. Cluster 0 lies close to one of the starting poses, but
-Cluster 1 lies in between two of the starting poses. The ensemble
-MMPBSA energies of the two clusters are very similar, so we cannot
-pick a preferred binding mode... perhaps both would occur.
+Cluster 1 lies in between two of the starting poses.
+Cluster 0 has a more stable pose than Cluster 1, and the ensemble
+MMPBSA energies and BintScores also favor Cluster 0.
 
 
 Analyzing a Set of Ligands
 --------------------------
-Finally we will look at how to visualize the results for the entire
-MCL1 dataset of 10 ligands, each with multiple input poses, all
+Finally we will look at how to visualize the results for
+a 11-ligand subset that spans the range of activities for the
+MCL1 dataset.
+Each of 11 ligands has 5 reasonable input poses from docking.
+The whole subset will be
 run in the same job in the "Short Trajectory MD with Analysis" floe.
+which will consist of 11 ligands * 6 poses each = 66 MD run of 2ns each.
 Selecting the output dataset in the "Data" tab and moving to the
 "Analyze" tab, the results for the entire dataset can be viewed at
 once as in Figure `Analyze page for MCL1 dataset`:
@@ -452,26 +505,26 @@ once as in Figure `Analyze page for MCL1 dataset`:
 
 There are a lot of results showing in this page, encompassing
 both numerical and 3D information. The 3D info is brought in by
-selecting `Analyze 3D` under the `Layout` pull-down menu at the
+selecting `Analyze with 3D` under the `Layout` pull-down menu at the
 top right. The axes of the scatterplot were selected to display
-the experimental deltaG (included as an SD tag on the input
-ligands) on the x axis and the Boltzmann-weighted emsemble MMPBSA value on the y axis.
-Scrolling down the spreadsheet to ligand 35 and selecting that
-row, the 3D visualizer jumps to a series of entries relating to
-ligand 35 and the point in the scatter plot corresponding to
-ligand 35 is highlighted.
-In the 3D window, the initial input poses for ligand 35 are shown in gold.
-Expanding the menu under `Average 35` allows us to turn on the
-average structure for Clusters 0 and 1, again maintaining
-the colors for each of blue and green, respectively.
-Just above `Average 35` are the corresponding average protein structures,
-in matching color, to go with the average ligand for each cluster.
+the experimental deltaG (included as SD tag 'r_user_dG.exp' on the input
+ligands) on the x axis and the Boltzmann-weighted ensemble MMPBSA
+value on the y axis.
+In the 3D visualizer, select ligand 49 and unroll the list of
+associated structures.
+The point in the scatter plot corresponding to
+ligand 49 and the corresponding line in the spreadsheet is highlighted.
+In the 3D window, the 5 initial input poses for ligand 49 are
+under Molecule "49" and display in  in gold if selected.
+Turn on the protein-ligand
+average structures for Clusters 0 and 1,
+which will be colored by B-factor as before.
 This way we can compare the poses to the representative
 average for each cluster, helping us to evaluate and prioritize that ligand.
 To call up the detailed MD analysis once again, go to the spreadsheet
-row for ligand 35, and under the column titled `Floe_report_URL`
+row for ligand 49, and under the column titled `Floe_report_URL`
 click on the little square to open up another tab in your
-browser with the same detailed analysis floe report for ligand 35.
+browser with the same detailed analysis floe report as we saw above.
 
 There is a lot of information to look at in the results from
 the *Short Trajectory MD with Analysis* floe, but this should get
@@ -716,12 +769,17 @@ Their meaning is explained below:
       runs will be set to 4fs otherwise to 2 fs
     * *Equilibrium Running Time* (Default 6ns) The total equilibrium time for the Bound and Unbound simulations
     * *Ligand Affinity Experimental File* (Default None) The experimental text file with the binding affinity in *kcal/mol* or *kJ/mol*.
-      The syntax of this text file is strict. Each line entry must be in the syntax form:
+      The syntax of this text file is strict.
+      Each line entry must be in the syntax form:
+
         * *ligA* :math:`\Delta G` :math:`\Delta G_{error}` *units*
+
       where *ligA* is the molecule title name, :math:`\Delta G` the binding affinity value, :math:`\Delta G_{error}` the
       binding affinity valuer error and *units* in the syntax form of kcal/mol or kJ/mol. The :math:`\Delta G_{error}` is optional
-      and if not provided will not be used. An example of this file for the Tyk2 receptor can be download here:
-        * * :download:`Tyk2_exp_affinities.txt <files/Tyk2_exp_affinities.txt>`
+      and if not provided will not be used.
+      An example of this file for the Tyk2 receptor can be downloaded here:
+
+        * :download:`Tyk2_exp_affinities.txt <files/Tyk2_exp_affinities.txt>`
 
 Accessing and Understanding the Results
 ---------------------------------------
