@@ -886,12 +886,12 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
 
     time = parameters.DecimalParameter(
         'time',
-        default=0.1,
+        default=1000.0,
         help_text="Total simulation time in nanoseconds")
 
     trajectory_interval = parameters.DecimalParameter(
         'trajectory_interval',
-        default=0.01,
+        default=0.5,
         help_text="""Time interval for trajectory snapshots in ns. 
         If 0 the trajectory file will not be generated""")
 
@@ -902,7 +902,7 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
         If 0 the reporter file will not be generated""")
 
     cube_max_run_time = parameters.DecimalParameter("cube_max_run_time",
-                                                    default=0.001,
+                                                    default=10.0,
                                                     help_text="Max Cube Running Time in hrs")
 
     def begin(self):
@@ -953,7 +953,6 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
                 md_steps_per_cycle = int(running_time_per_cycle_in_ns/time_step)
 
                 cycles = int(time_ns/running_time_per_cycle_in_ns)
-
                 cycle_rem = time_ns.value_in_unit(unit.nanoseconds) % running_time_per_cycle_in_ns.value_in_unit(unit.nanoseconds)
 
                 schedule = dict()
@@ -963,58 +962,40 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
                     schedule[0] = (time_step_to_time, frame_per_cycle)
                 else:
                     total_frames = int(round(time_ns/trajectory_interval))
-
                     frac = total_frames/cycles
+
+                    print(">>>>>>>>>>>", total_frames, cycles, frac)
 
                     if frac >= 1.0:
                         frame_per_cycle_dic = {i: int(frac) for i in range(0, cycles)}
                         frame_per_cycle_dic[cycles] = total_frames - int(frac)*cycles
                     else:
-                        frame_per_cycle_dic = dict()
                         delta = (1/frac // 0.1) * 0.1
 
-                        for i in range(0, cycles+1):
+                        frame_per_cycle_dic = {i: 0 for i in range(0, cycles+1)}
 
-                            increment = (i + 1) * delta
+                        increment = delta
 
-                            print(">>>>>>CAZZ", increment)
-
-                            if i > increment:
-                                frame_per_cycle_dic[i] = 1
-                            else:
-                                frame_per_cycle_dic[i] = 0
-
-
-
-
-                    print(frame_per_cycle_dic)
-
-                    raise ValueError("STOP>>>>>>>>>>>>>>>>")
-
-
-
+                        while increment < cycles+1:
+                            frame_per_cycle_dic[math.floor(increment)] = 1
+                            increment += delta
 
                     time_step_to_time = md_steps_per_cycle * time_step.in_units_of(unit.nanoseconds)
-                    schedule = {i: time_step_to_time.value_in_unit(unit.nanoseconds) for i in range(0, cycles)}
-                    schedule[cycles] = (total_steps - md_steps_per_cycle*cycles)*time_step.value_in_unit(unit.nanoseconds)
+                    schedule = {i: (time_step_to_time.value_in_unit(unit.nanoseconds), frame_per_cycle_dic[i]) for i in range(0, cycles)}
+                    schedule[cycles] = ((total_steps - md_steps_per_cycle*cycles)*time_step.value_in_unit(unit.nanoseconds),  frame_per_cycle_dic[cycles])
 
-                info_str = "Cycle    MD time (ns)    Frames\n"
+                info_str = "\nCycle    MD time (ns)    Frames\n"
                 info_str += 31*"-"+"\n"
 
                 tot_time = 0
                 tot_frames = 0
-                for k, v in schedule.items():
-                    frame_per_cycle = int(v/opt['trajectory_interval'])
-
-                    print(">>>>>>", k, v, frame_per_cycle)
-
-                    info_str += "{:5d}    {:.4f}    {:6d}\n".format(k, v, frame_per_cycle)
-                    tot_time += v
-                    tot_frames += frame_per_cycle
+                for k, pair in schedule.items():
+                    info_str += "{:5d}    {:.4f}    {:5d}\n".format(k, pair[0], pair[1])
+                    tot_time += pair[0]
+                    tot_frames += pair[1]
                 info_str += 31 * "-" + "\n"
 
-                print(tot_time, tot_frames)
-                info_str += "{:5d}    {:.4f}    {:6d}\n".format(schedule[cycles], tot_time, tot_frames)
+                info_str += "{:5d}    {:.4f}    {:5d}\n".format(cycles+1, tot_time, tot_frames)
 
                 opt['Logger'].info(info_str)
 
