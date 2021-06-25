@@ -564,7 +564,7 @@ by using alchemical methods: :math:`\Delta\Delta G=\Delta G_{Bound}-\Delta G_{Un
 
    **RBFE and alternative thermodynamics paths**
 
-Indeed, in the *Unbound* path the starting ligand is mutated into the final one just
+In the *Unbound* path the starting ligand is mutated into the final one just
 in solution while, in the *Bound* path, the mutation happens in the
 complex binding site. In the NES approach, these mutations are done in a *non-equilibrium
 regime* many and many times starting from equilibrium snapshots and building the

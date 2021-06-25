@@ -34,7 +34,7 @@ from snowball.utils.dataset_reader_opt import DatasetReaderOptCube
 from snowball import ExceptHandlerCube
 
 floe_title = 'Equilibrium and Non Equilibrium Switching'
-tags_for_floe = ['MDPrep', 'MD', 'FECalc']
+tags_for_floe = ['MDPrep', 'MDRun', 'FECalc']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)

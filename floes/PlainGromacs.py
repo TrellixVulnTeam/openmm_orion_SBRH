@@ -29,9 +29,8 @@ from MDOrion.MDEngines.Gromacs.cubes import (InputGromacs,
 from orionplatform.cubes import DatasetWriterCube
 
 
-
 floe_title = 'Plain Gromacs'
-tags_for_floe = ['MD']
+tags_for_floe = ['MDRun']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)
