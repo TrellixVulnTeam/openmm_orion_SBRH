@@ -28,7 +28,7 @@ from MDOrion.FEC.RFEC.cubes import BoundUnboundSwitchCube
 from snowball import ExceptHandlerCube
 
 floe_title = 'Ligand Bound and Unbound Equilibration for NES'
-tags_for_floe = ['MDPrep', 'MD']
+tags_for_floe = ['MDPrep', 'MDRun']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)

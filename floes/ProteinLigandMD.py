@@ -34,7 +34,7 @@ from snowball import (ExceptHandlerCube,
 
 
 floe_title = 'Bound Protein-Ligand MD'
-tags_for_floe = ['MDPrep', 'MD']
+tags_for_floe = ['MDPrep', 'MDRun']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)
