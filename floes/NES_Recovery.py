@@ -36,7 +36,7 @@ from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 from snowball import ExceptHandlerCube
 
 floe_title = 'Non-Equilibrium Switching Recovery'
-tags_for_floe = ['Helper','FECalc']
+tags_for_floe = ['Utility', 'FECalc']
 #
 tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
 job = WorkFloe(floe_title, title=floe_title+tag_str)
