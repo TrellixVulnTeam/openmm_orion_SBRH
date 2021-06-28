@@ -385,7 +385,11 @@ class OpenMMSimulations(MDSimulations):
             self.str_logger += '\n' + info
 
             if self.opt['trajectory_interval']:
-                total_frames = int(round(self.opt['time'] / self.opt['trajectory_interval']))
+
+                trajectory_steps = int(round(self.opt['trajectory_interval'] / (
+                        self.opt['timestep'].in_units_of(unit.nanoseconds) / unit.nanoseconds)))
+
+                total_frames = int(self.opt['steps']/trajectory_steps)
 
                 self.opt['Logger'].info('[{}] Total trajectory frames : {}'.format(self.opt['CubeTitle'], total_frames))
                 info = '{:<25} = {:<10}'.format('Total trajectory frames', total_frames)

@@ -40,9 +40,7 @@ import textwrap
 
 import os
 
-from simtk import unit
-
-import math
+from MDOrion.MDEngines.utils import schedule_cycles
 
 
 class MDMinimizeCube(RecordPortsMixin, ComputeCube):
@@ -886,29 +884,28 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
 
     time = parameters.DecimalParameter(
         'time',
-        default=1000.0,
+        default=5.0,
         help_text="Total simulation time in nanoseconds")
 
     trajectory_interval = parameters.DecimalParameter(
         'trajectory_interval',
-        default=0.5,
-        help_text="""Time interval for trajectory snapshots in ns. 
+        default=0.21,
+        help_text="""Time interval per cycle for trajectory snapshots in ns. 
         If 0 the trajectory file will not be generated""")
 
     reporter_interval = parameters.DecimalParameter(
         'reporter_interval',
-        default=0.0,
+        default=0.01,
         help_text="""Time interval for reporting data in ns. 
         If 0 the reporter file will not be generated""")
 
     cube_max_run_time = parameters.DecimalParameter("cube_max_run_time",
-                                                    default=10.0,
+                                                    default=0.05,
                                                     help_text="Max Cube Running Time in hrs")
 
     def begin(self):
         self.opt = vars(self.args)
         self.opt['Logger'] = self.log
-        self.opt['SimType'] = 'npt'
 
         return
 
@@ -919,96 +916,39 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
 
             md_record = MDDataRecord(record)
 
-            if not record.has_field(Fields.cycle_id):
+            info_dic = md_record.get_stage_info(stg_name='last')
 
-                info_dic = md_record.get_stage_info(stg_name='last')
+            if not record.has_field(Fields.cycle_id):
 
                 if 'speed_ns_per_day' not in info_dic:
                     raise ValueError("Last MD stage does not have speed information")
 
-                speed_ns_per_day = info_dic['speed_ns_per_day']
-                hmr = info_dic['hmr']
-                md_engine = info_dic['md_engine']
+                schedule = schedule_cycles(opt, info_dic)
 
-                if md_engine == 'Gromacs':
-                    time_step = 2*unit.femtoseconds
-                else:
-                    if hmr:
-                        time_step = 4 * unit.femtoseconds
-                    else:
-                        time_step = 2 * unit.femtoseconds
-
-                cube_max_run_time = opt['cube_max_run_time'] * unit.hours
-                time = opt['time'] * unit.nanoseconds
-                time_ns = time.in_units_of(unit.nanoseconds)
-
-                trajectory_interval = opt['trajectory_interval'] * unit.nanoseconds
-
-                total_steps = math.ceil(time_ns/time_step)
-
-                # Per cycle md running time
-                running_time_per_cycle = cube_max_run_time.value_in_unit(unit.day) * speed_ns_per_day * unit.nanoseconds
-                running_time_per_cycle_in_ns = running_time_per_cycle.in_units_of(unit.nanoseconds)
-
-                md_steps_per_cycle = int(running_time_per_cycle_in_ns/time_step)
-
-                cycles = int(time_ns/running_time_per_cycle_in_ns)
-                cycle_rem = time_ns.value_in_unit(unit.nanoseconds) % running_time_per_cycle_in_ns.value_in_unit(unit.nanoseconds)
-
-                schedule = dict()
-                if cycles == 0:
-                    time_step_to_time = int(round(cycle_rem/time_step.value_in_unit(unit.nanoseconds))) * time_step
-                    frame_per_cycle = int(time_step_to_time/trajectory_interval)
-                    schedule[0] = (time_step_to_time, frame_per_cycle)
-                else:
-                    total_frames = int(round(time_ns/trajectory_interval))
-                    frac = total_frames/cycles
-
-                    print(">>>>>>>>>>>", total_frames, cycles, frac)
-
-                    if frac >= 1.0:
-                        frame_per_cycle_dic = {i: int(frac) for i in range(0, cycles)}
-                        frame_per_cycle_dic[cycles] = total_frames - int(frac)*cycles
-                    else:
-                        delta = (1/frac // 0.1) * 0.1
-
-                        frame_per_cycle_dic = {i: 0 for i in range(0, cycles+1)}
-
-                        increment = delta
-
-                        while increment < cycles+1:
-                            frame_per_cycle_dic[math.floor(increment)] = 1
-                            increment += delta
-
-                    time_step_to_time = md_steps_per_cycle * time_step.in_units_of(unit.nanoseconds)
-                    schedule = {i: (time_step_to_time.value_in_unit(unit.nanoseconds), frame_per_cycle_dic[i]) for i in range(0, cycles)}
-                    schedule[cycles] = ((total_steps - md_steps_per_cycle*cycles)*time_step.value_in_unit(unit.nanoseconds),  frame_per_cycle_dic[cycles])
-
-                info_str = "\nCycle    MD time (ns)    Frames\n"
-                info_str += 31*"-"+"\n"
+                info_str = "\nIter  time(ns)    Frames\n"
+                info_str += 27*"-"+"\n"
 
                 tot_time = 0
                 tot_frames = 0
-                for k, pair in schedule.items():
-                    info_str += "{:5d}    {:.4f}    {:5d}\n".format(k, pair[0], pair[1])
-                    tot_time += pair[0]
-                    tot_frames += pair[1]
-                info_str += 31 * "-" + "\n"
-
-                info_str += "{:5d}    {:.4f}    {:5d}\n".format(cycles+1, tot_time, tot_frames)
+                for iteration, (time, frame) in schedule.items():
+                    info_str += "{:4d}  {:8.4f}  {:8d}  {}\n".format(iteration, time, frame, "*" if iteration == 0 else "")
+                    tot_time += time
+                    tot_frames += frame
+                info_str += 27 * "-" + "\n"
+                info_str += "      {:8.4f}  {:8d}\n".format(tot_time, tot_frames)
 
                 opt['Logger'].info(info_str)
-
-                raise ValueError("STOP>>>>>>>>>>>>>>>")
 
                 record.set_value(Fields.cycle_id, 0)
                 record.set_value(Fields.schedule, schedule)
 
                 # TODO UPDATE ALL THE CUBE PARAMS?
-                new_dic = {'time': schedule[0],
+                new_dic = {'time': schedule[0][0],
                            'CubeTitle': 'cycle_0',
+                           'suffix': 'cycle_0',
                            'trajectory_interval': opt['trajectory_interval'],
-                           'reporter_interval': opt['reporter_interval']
+                           'reporter_interval': opt['reporter_interval'],
+                           'hmr': info_dic['hmr']
                            }
 
                 record.set_value(Fields.cube_parameters_update, new_dic)
@@ -1018,11 +958,12 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
             else:
                 current_cycle_id = record.get_value(Fields.cycle_id)
 
-                schedule_dic = record.get_value(Fields.schedule)
+                schedule = record.get_value(Fields.schedule)
+
                 next_cycle_id = current_cycle_id + 1
 
                 # Cycle Termination
-                if str(next_cycle_id) not in schedule_dic:
+                if str(next_cycle_id) not in schedule:
                     opt['Logger'].info("Cycle complete....")
                     self.success.emit(record)
                 else:
@@ -1030,12 +971,29 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
                     record.set_value(Fields.cycle_id, next_cycle_id)
 
                     # TODO UPDATE ALL THE CUBE PARAMS?
-                    new_dic = {'time': schedule_dic[str(next_cycle_id)],
+                    new_dic = {'time': schedule[str(next_cycle_id)][0],
                                'CubeTitle': 'cycle_'+str(next_cycle_id),
+                               'suffix': 'cycle_'+str(next_cycle_id),
                                'trajectory_interval':  opt['trajectory_interval'],
-                               'reporter_interval': opt['reporter_interval']}
+                               'reporter_interval': opt['reporter_interval'],
+                               'hmr': info_dic['hmr']
+                               }
 
                     record.set_value(Fields.cube_parameters_update, new_dic)
+
+                    info_str = "\nIter  time(ns)    Frames\n"
+                    info_str += 27 * "-" + "\n"
+
+                    tot_time = 0
+                    tot_frames = 0
+                    for iteration, (time, frame) in schedule.items():
+                        info_str += "{:4d}  {:8.4f}  {:8d}  {}\n".format(int(iteration), time, frame, "*" if int(iteration) == next_cycle_id else "")
+                        tot_time += time
+                        tot_frames += frame
+                    info_str += 27 * "-" + "\n"
+                    info_str += "      {:8.4f}  {:8d}\n".format(tot_time, tot_frames)
+
+                    opt['Logger'].info(info_str)
                     opt['Logger'].info("Forwarding to next cycle....")
                     self.cycle_out_port.emit(record)
 
