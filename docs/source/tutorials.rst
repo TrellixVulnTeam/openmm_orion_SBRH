@@ -4,7 +4,7 @@
 Tutorials
 #############
 
-These are tutorials for how to use specific floes.
+These are tutorials about how to use specific floes.
 
 Short Trajectory MD with Analysis
 =================================
@@ -16,7 +16,7 @@ hypotheses for ligand binding.
 Each pose will be evaluated by this floe to be validated (or not) as a good pose.
 We are not primarily asking the question "what is the pose for this ligand?"
 but rather "is this a good pose for this ligand?", or with multiple poses,
-"which of these poses is best?". We seek an answer by running a
+"which of these poses is best?" We seek an answer by running a
 short MD trajectory on each pose separately and comparing the results to the
 starting (input) pose and between the poses (if more than one).
 
@@ -35,7 +35,7 @@ A minimization stage is performed on the flask followed by
 a warm up (NVT ensemble) and several equilibration stages (NPT ensemble).
 In the minimization, warm up, and equilibration stages,
 positional harmonic restraints are applied on the ligand and protein.
-At the end of the equilibration stages a short (default 2ns) production run
+At the end of the equilibration stages, a short (default 2ns) production run
 is performed on the unrestrained flask.
 The production run is then analyzed in terms of interactions between
 the ligand and the active site and in terms of ligand RMSD,
@@ -61,14 +61,17 @@ If the ligands already have good atomic partial charges
 (we recommend RESP or AM1-BCC_ELF10 charges),
 we recommend using these for STMD as opposed to re-charging
 them in the STMD floe.
+
 Given that this floe only runs a very short timescale by default (2 ns),
 it is preferable that the input pose be well refined.
+
 Although bad clashes
 (or poor positioning for interactions which you know are important)
 can be (and often are) cleaned up by even this short trajectory,
 it starts off the "evaluation" purpose of the floe on the wrong foot
 by giving a poor comparator.
-Poor initial poses might even be considered outside the scope of this floe
+
+Poor initial poses might even be considered outside the scope of this floe,
 given how short is the default timescale.
 This is why we **strongly recommend** that docked poses be
 subsequently minimized in the active site **before input to STMD**.
@@ -76,7 +79,7 @@ This will resolve high gradients
 (usually clashes) with the protein and to allow protein-ligand
 interactions to optimize in the context of a good force field.
 It is possible that even with this pre-MD refinement,
-the docked-pose starting points could be re-evaluated and
+the docked-pose starting points could be reevaluated and
 triaged prior to the extra effort and expense of STMD.
 The ligand input datasets used in this tutorial are:
 
@@ -90,15 +93,19 @@ Protein Input
 -------------
 All the MD floes require correctly prepared protein up to "MD ready" standards.
 This begins with the normal prerequisites for physics-based modeling:
-protein chains must be capped,
-all atoms in protein residues (including hydrogens) must be present, and missing
-protein loops resolved or capped.
+
+    *   Protein chains must be capped,
+    *   All atoms in protein residues (including hydrogens) must be present, and
+    *   Missing protein loops resolved or capped.
+
 Of course, protein side chain formal charges and protonation
 at this point determine their tautomeric state.
+
 Additionally, cofactors and structured internal waters are also important to include,
 not only those in the immediate vicinity of the ligand and active site
 but also distally because they can have an important effect on the
 protein structure and dynamics over the course of the MD.
+
 We **strongly recommend** using *Spruce* for protein preparation.
 The protein input dataset used in this tutorial is:
 
@@ -535,15 +542,15 @@ at physiological temperatures in the context of explicit water solvation
 can help validate the initial input pose(s).
 
 
-Non-Equilibrium Switching
+Nonequilibrium Switching
 =========================
 
-The Non-Equilibrium Switching (NES) method is a relatively novel method
+The Nonequilibrium Switching (NES) method is a relatively novel method
 in the Binding Free context to calculate Relative Binding Affinities
 (RBFE) of a given target and its ligands. The theory was developed
-during the 1990s [#]_ [#]_ however, due to its high computational demand,
-the approach has not fully explored, and few pioneering works have
-been published so far [#]_.
+during the 1990s [#]_ [#]_. However, due to its high computational demand,
+the approach has not been fully explored, and few pioneering works have
+been published so far [#]_
 
 In general, the relative binding affinity :math:`\Delta\Delta G` is defined as the free energy
 difference between the binding affinities of a ligand A :math:`\Delta G_{A}` and B :math:`\Delta G_{B}`
@@ -566,7 +573,7 @@ by using alchemical methods: :math:`\Delta\Delta G=\Delta G_{Bound}-\Delta G_{Un
 
 In the *Unbound* path the starting ligand is mutated into the final one just
 in solution while, in the *Bound* path, the mutation happens in the
-complex binding site. In the NES approach, these mutations are done in a *non-equilibrium
+complex binding site. In the NES approach, these mutations are done in a *nonequilibrium
 regime* many and many times starting from equilibrium snapshots and building the
 *forward* and *reverse* work probability distribution functions that can be used
 to estimate :math:`\Delta G_{Bound}` and :math:`\Delta G_{Unbound}`. For this reason,
@@ -584,20 +591,21 @@ for example, from activities measurements, IC50 etc.
     carried out between similar ligands i.e. where a common ligand scaffold can be identified and small different
     functional groups are mutated.
 
-The Equilibrium and Non-Equilibrium Switching floe
+The Equilibrium and Nonequilibrium Switching floe
 --------------------------------------------------
 
-The Equilibrium and Non-Equilibrium switching floe can be divided into four main sections
-shown here
+The Equilibrium and Nonequilibrium switching floe can be divided into four main sections
+shown here.
 
 .. _figure_EQ_and_NES_floe:
 
 .. figure:: ./images/EQ_and_NES_floe.png
    :width: 1000px
    :align: center
-   :alt: The Equilibrium and Non-Equilibrium Switching floe
+   :alt: The Equilibrium and Nonequilibrium Switching floe
 
-   **The four main sections of the Equilibrium and Non-Equilibrium Switching floe**
+   **The four main sections of the Equilibrium and Nonequilibrium Switching floe**
+
 
 The first and second floe sections are designed to assemble and run the Bound and Unbound simulations. The protocol for
 the Bound simulations is similar to the tutorial on the Short Trajectory MD with Analysis and it is not
@@ -614,9 +622,9 @@ The third section of the floe carries out the NES calculations and is shown here
 .. figure:: ./images/NES.png
    :width: 1000px
    :align: center
-   :alt: The Non-Equilibrium Switching floe section
+   :alt: The Nonequilibrium Switching floe section
 
-   **The Non-Equilibrium Switching floe section**
+   **The Nonequilibrium Switching floe section**
 
 In this section, important cubes are the *Gathering* cube which selects the equilibrium runs
 involved in a RBFE calculation and handing them to the *Chimera* cube. In this cube, a chimeric molecule between
@@ -624,12 +632,13 @@ the ligands participating in an edge is created (the ligand edge are topological
 into selected equilibrium trajectory frames collected during the equilibrium runs. In the NES method, for each chimeric molecule (or edge)
 the following switching simulations are performed per each selected equilibrium frame:
 
+
     * A Bound forward (ligA is mutate to ligB in the complex binding site)
     * A Bound reverse (ligB is mutate to ligA in the complex binding site)
     * An Unbound forward (ligA is mutate to ligB just in solution)
     * An Unbound reverse (ligB is mutate to ligA just in solution)
 
-By default 80 equilibrium frames are selected for the Bound and Unbound runs therefore, for each
+By default, 80 equilibrium frames are selected for the Bound and Unbound runs therefore, for each
 edge a total of:
 
 80 (Bound forward) + 80 (Bound reverse) + 80 (Unbound forward) + 80 (Unbound reverse) = 320
@@ -651,10 +660,11 @@ The final NES-floe section analyzes the NES data to produce binding affinities a
    **The NES Analysis floe section**
 
 For each edge, the forward and reverse works for the Bound and Unbound switching are evaluated
-by using the *Bennet Acceptance ratio* for Non-Equilibrium and these values are used to
+by using the *Bennet Acceptance ratio* for Nonequilibrium and these values are used to
 compute the :math:`\Delta G_{Bound}` and :math:`\Delta G_{Unbound}` free energies that are related to :math:`\Delta\Delta G`.
 The RBFE values for an edge are used to attempt estimates of the affinity values by using the maximum likelihood estimator.
 However, this approach succeeds if the provided ligand edge map is enough connected, otherwise no estimates will be done.
+
 
 Protein, Ligand and Edge mapping file inputs
 --------------------------------------------
@@ -691,6 +701,7 @@ mapper in further releases.
 For this tutorial the Tyk2 receptor and few ligands have been selected. The files
 can be download below with the ligand mapping text file as well.
 
+
     * :download:`Tyk2_4GIHA_protein.oeb.gz <files/Tyk2_4GIHA_protein.oeb.gz>`
     * :download:`Tyk2_ligands.oeb <files/Tyk2_ligands.oeb>`
     * :download:`Tyk2_edges.txt <files/Tyk2_edges.txt>`
@@ -699,9 +710,9 @@ can be download below with the ligand mapping text file as well.
 How to use the floe
 -------------------
 
-After selecting the *Equilibrium and Non-Equilibrium Switching* floe in the Orion UI,
+After selecting the *Equilibrium and Nonequilibrium Switching* floe in the Orion UI,
 you will be presented with a job form with inputs, outputs and parameters to select.
-In next Figures you can see how we filled out the key fields for the Tyk2 receptor case.
+In next the Figures you can see how we filled out the key fields for the Tyk2 receptor case.
 
 .. _figure_NES_floe_inputs:
 
@@ -712,7 +723,7 @@ In next Figures you can see how we filled out the key fields for the Tyk2 recept
 
    **The NES floe inputs**
 
-The *Equilibrium and Non-Equilibrium Switching* floe requires two mandatory inputs and
+The *Equilibrium and Nonequilibrium Switching* floe requires two mandatory inputs and
 two optional inputs. The mandatory inputs are the **ligand datasets** and the **ligand edge mapping**
 text file. The two optional inputs are the **protein input** file and the **experimental binding
 affinity** text file. However, If the optional **protein is not provided**, the floe
@@ -730,7 +741,8 @@ comparison plots and tables between experimental and predicted results for :math
    The protein input is optional but, if it is **not provided** the protein **must** be present on the ligand input datasets
    as *Spruce Design Unit*.
 
-In order to submit the floe to Orion output dataset names have to be input to the floe
+In order to submit the floe to Orion output dataset names have to be input to the floe.
+
 
 .. _figure_NES_floe_outputs:
 
@@ -743,13 +755,14 @@ In order to submit the floe to Orion output dataset names have to be input to th
 
 The *Equilibrium Bound* and *Unbound* dataset outputs are the datasets produced at the end of the Equilibrium runs.
 The Bound dataset can be further used as input in the Analysis floe for Short Trajectory MD to triage
-stable from unstable ligand poses. If the provided edge mapping file is well connect the NES floe will be
-able to predict Affinities and these results are saved in the *Affinity* dataset output. The *NES* and *Failure* datasets
+stable from unstable ligand poses. If the provided edge mapping file is well connected, the NES floe can predict Affinities, and these
+results are saved in the *Affinity* dataset output. The *NES* and *Failure* datasets
 are also produced as outputs. The first contains  all the information produced along the
+
 NES runs at edge and ligand level while, the latter gathers all the failures produce along the whole floe
 for debugging purposes. Finally, the user must provide a dataset name for the *Recovery* dataset. Indeed, occasionally, Orion and
 the AWS cloud infrastructures could have severe problems and the produced *recovery dataset* can be used to try to
-recover and generate partial results from the NES runs by using the designed recovery *Non-Equilibrium Switching Recovery* floe.
+recover and generate partial results from the NES runs by using the designed recovery *Nonequilibrium Switching Recovery* floe.
 
 The final NES floe selection is related to the promoted parameters
 
@@ -762,25 +775,27 @@ The final NES floe selection is related to the promoted parameters
 
    **The NES floe parameters**
 
-Their meaning is explained below:
+Their meanings are explained below:
 
     * *Total Number of NES Trajectory Frames* (Default 80) This parameters controls how many snapshots are taken
-      from the Bound and Unbound Equilibrium trajectories to run the NES switching. For example
-      suppose that in the Bound equilibrium run for 6ns production we collected a total of 1000
-      frames. From these frames 80 equally distanced frames are selected (~each 12 frames). The chimeric
-      molecule is injected into these frames to run the forward and reverse Bound and Unbound switching
+
+      from the Bound and Unbound Equilibrium trajectories to run the NES switching. For example,
+      suppose that in the Bound equilibrium run for 6ns production, we collected a total of 1000
+      frames. From these frames, 80 equally distanced frames are selected (~each 12 frames). The chimeric
+      molecule is injected into these frames to run the forward and reverse Bound and Unbound runs.
+
     * *NES Switching Time* (Default 50ps) This parameter controls the time length of the NES switching. For
-      difficult and large mutations this parameter could be used to try to have better bound/unbound work
-      convergence
+      difficult and large mutations, this parameter could be used to try to have better bound/unbound work
+      convergence.
     * *Protein Title Name* (Default blanc) The protein name used to identify your flask. This name will be used
-      for the produced output file names and other info
+      for the produced output file names and other information.
     * *Charge The Ligand* (Default True) If *True* the ligand will be charged by using the ELF10 methods
-      otherwise the ligand partial charged will be used (if any)
-    * *Ligand Force Field* (Default OpenFF 1.3) The ligand force field to be used
-    * *Protein Force Field* (Default Amber14SB) The protein force field to be used
+      otherwise the ligand partial charged will be used (if any).
+    * *Ligand Force Field* (Default OpenFF 1.3) The ligand force field to be used.
+    * *Protein Force Field* (Default Amber14SB) The protein force field to be used.
     * *Hydrogen Mass Repartitioning* (Default True) If true the md time step used along the equilibrium
-      runs will be set to 4fs otherwise to 2 fs
-    * *Equilibrium Running Time* (Default 6ns) The total equilibrium time for the Bound and Unbound simulations
+      runs will be set to 4fs otherwise to 2 fs.
+    * *Equilibrium Running Time* (Default 6ns) The total equilibrium time for the Bound and Unbound simulations.
     * *Ligand Affinity Experimental File* (Default None) The experimental text file with the binding affinity in *kcal/mol* or *kJ/mol*.
       The syntax of this text file is strict.
       Each line entry must be in the syntax form:
@@ -810,12 +825,12 @@ results produced by running the Tyk2 receptor and ten selected relative binding 
 
    **The NES floe finished job**
 
-From the NES run job page the **NES Report** is accessible by clicking on the tab. Here many info are shown
-but, the most relevant are the edges results for the submitted RBFE calculations in form of tiles.
-Each tile shows the edge and the predicted RBFE by using the Bennet Acceptance Ratio method for Non-Equilibrium.
-In addition, other relevant information are shown like the total floe running time and its cost. Clicking on each
-tile will show important information related to the RBFE calculation. For example, in the figure below, the detailed info
-are shown for the edge involving the ligand *ejm_46* to *ejm_54*
+From the NES run job page, the **NES Report** is accessible by clicking on the tab. Here, many pieces of information are shown,
+but the most relevant are the edges related to the submitted RBFE calculations in form of tiles.
+Each tile shows the edge and the predicted RBFE by using the Bennet Acceptance Ratio method for Nonequilibrium.
+In addition, other relevant pieces of information are shown, like the total floe running time and its cost. Clicking on each
+tile will show important information related to the RBFE calculation. For example, in the below figure, the detailed calculation
+information are shown for the edge involving the ligand *ejm_46* to *ejm_54*
 
 .. _figure_NES_good_edge:
 
@@ -851,9 +866,9 @@ The figure below reports the RBFE calculation involving the ligand *ejm_43* to *
 In this case, both the Bound and Unbound graphs and work probability distributions do not overlap well and the
 results should not be trustable.
 
-From the NES job page another report the **Affinity Report** is selectable from the tabs. The affinity report
-shows two main sections. A first section where a comparison between experimental and predicted
-affinities are compared. Here a graph between :math:`\Delta G_{Experimental}` vs  :math:`\Delta G_{Predicted}` is shown.
+From the NES job page, another report, the **Affinity Report**, is selectable from the tabs. The affinity report
+shows two main sections. In the first section, experimental and predicted
+affinities are compared. Here, a graph between :math:`\Delta G_{Experimental}` vs  :math:`\Delta G_{Predicted}` is shown.
 This graph is available if the experimental affinity file has been provided and the ligand edge map is connected enough
 to be able to make affinity predictions.
 
@@ -866,7 +881,7 @@ to be able to make affinity predictions.
 
    **Experimental vs predicted affinities**
 
-In addition, the graph data are tabled and different statistical metrics are shown like correlation metrics and
+In addition, the graph data are tabulated, and different statistical metrics are shown, such as correlation metrics and
 linear models. The second section of the Affinity Report shows a comparison between the experimental and
 predicted relative binding affinities :math:`\Delta\Delta G_{Experimental}` vs  :math:`\Delta\Delta G_{Predicted}` in a graph and tables with the statistical metrics as well.
 
