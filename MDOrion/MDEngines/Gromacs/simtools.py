@@ -250,6 +250,12 @@ class GromacsSimulations(MDSimulations):
                 trajectory_steps = int(round(opt['trajectory_interval'] / (
                         opt['timestep'].in_units_of(unit.nanoseconds) / unit.nanoseconds)))
 
+                total_frames = int(opt['steps'] / trajectory_steps)
+
+                if total_frames == 0:
+                    trajectory_steps = 0
+                    opt['trajectory_interval'] = 0.0
+
             elif opt['trajectory_frames']:
 
                 if opt['steps'] < opt['trajectory_frames']:

@@ -889,7 +889,7 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
 
     trajectory_interval = parameters.DecimalParameter(
         'trajectory_interval',
-        default=0.21,
+        default=0.10,
         help_text="""Time interval per cycle for trajectory snapshots in ns. 
         If 0 the trajectory file will not be generated""")
 
@@ -948,7 +948,8 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
                            'suffix': 'cycle_0',
                            'trajectory_interval': opt['trajectory_interval'],
                            'reporter_interval': opt['reporter_interval'],
-                           'hmr': info_dic['hmr']
+                           'hmr': info_dic['hmr'],
+                           'md_engine': info_dic['md_engine']
                            }
 
                 record.set_value(Fields.cube_parameters_update, new_dic)
@@ -976,7 +977,8 @@ class MDProxyCube(RecordPortsMixin, ComputeCube):
                                'suffix': 'cycle_'+str(next_cycle_id),
                                'trajectory_interval':  opt['trajectory_interval'],
                                'reporter_interval': opt['reporter_interval'],
-                               'hmr': info_dic['hmr']
+                               'hmr': info_dic['hmr'],
+                               'md_engine': info_dic['md_engine']
                                }
 
                     record.set_value(Fields.cube_parameters_update, new_dic)

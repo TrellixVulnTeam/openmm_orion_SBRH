@@ -253,6 +253,7 @@ def update_cube_parameters_in_place(record, parameter_dic):
                                                                                               cube_parameters_dic[p]))
         parameter_dic.update({k: cube_parameters_dic[k] for k in parameters_intersection_set})
 
+
 def schedule_cycles(cube_param_dic, record_info_dic):
 
     speed_ns_per_day = record_info_dic['speed_ns_per_day']
