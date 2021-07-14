@@ -33,6 +33,8 @@ from MDOrion.Flask.cubes import (IDSettingCube,
                                  CollectionSetting,
                                  ParallelRecordSizeCheck)
 
+from snowball import (ExceptHandlerCube,
+                      SuccessCounterCube)
 
 floe_title = 'Solvate and Run MD'
 tags_for_floe = ['MDPrep', 'MDRun']
@@ -84,8 +86,12 @@ fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
                        description="MD Dataset Failures out", order=2)
 
+
+exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
+
+
 job.add_cubes(ifs, sysid, md_comp, solvate, coll_open,
-              coll_close, check_rec, ofs, fail)
+              coll_close, check_rec, exceptions, ofs, fail)
 
 # Connections before setup_MD_startup subfloe
 ifs.success.connect(sysid.intake)
@@ -109,7 +115,8 @@ MD_outcube.failure.connect(check_rec.fail_in)
 coll_close.success.connect(check_rec.intake)
 coll_close.failure.connect(check_rec.fail_in)
 check_rec.success.connect(ofs.intake)
-check_rec.failure.connect(fail.intake)
+check_rec.failure.connect(exceptions.intake)
+exceptions.success.connect(fail.intake)
 
 
 if __name__ == "__main__":

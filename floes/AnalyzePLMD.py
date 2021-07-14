@@ -84,7 +84,7 @@ traj_anlys_outcube.failure.connect(check_rec.fail_in)
 coll_open.failure.connect(check_rec.fail_in)
 coll_close.failure.connect(check_rec.fail_in)
 check_rec.failure.connect(exceptions.intake)
-exceptions.failure.connect(fail.intake)
+exceptions.success.connect(fail.intake)
 
 
 if __name__ == "__main__":

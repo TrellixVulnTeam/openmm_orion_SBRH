@@ -67,7 +67,7 @@ fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
                        description="MD Dataset Failures out", order=3)
 
-job.add_cubes(coll_open, coll_close, check_rec,exceptions,  ofs, fail)
+job.add_cubes(coll_open, coll_close, check_rec, exceptions,  ofs, fail)
 
 # Call subfloe function to set up the solvated protein-ligand complex
 PLComplex_for_MD_options = {}
@@ -96,7 +96,7 @@ coll_close.success.connect(check_rec.intake)
 coll_close.failure.connect(check_rec.fail_in)
 check_rec.success.connect(ofs.intake)
 check_rec.failure.connect(exceptions.intake)
-exceptions.failure.connect(fail.intake)
+exceptions.success.connect(fail.intake)
 
 
 if __name__ == "__main__":

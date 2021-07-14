@@ -342,7 +342,7 @@ switch_out.failure.connect(check_bound_rec.fail_in)
 check_bound_rec.failure.connect(exceptions.intake)
 check_unbound_rec.failure.connect(exceptions.intake)
 
-exceptions.failure.connect(fail.intake)
+exceptions.success.connect(fail.intake)
 
 if __name__ == "__main__":
     job.run()
