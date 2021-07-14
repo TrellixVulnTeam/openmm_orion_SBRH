@@ -358,7 +358,7 @@ coll_close.success.connect(rec_check.intake)
 rec_check.success.connect(ofs_nes.intake)
 rec_check_DG.success.connect(ofs_DG.intake)
 rec_check_recovery.success.connect(ofs_recovery.intake)
-exceptions.failure.connect(fail.intake)
+exceptions.success.connect(fail.intake)
 
 # Fail port connections
 ligset.failure.connect(rec_check.fail_in)

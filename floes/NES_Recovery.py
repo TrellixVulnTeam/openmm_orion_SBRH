@@ -111,7 +111,7 @@ coll_close.failure.connect(rec_check.fail_in)
 
 rec_check.failure.connect(exceptions.intake)
 rec_check_DG.failure.connect(exceptions.intake)
-exceptions.failure.connect(fail.intake)
+exceptions.success.connect(fail.intake)
 
 
 
