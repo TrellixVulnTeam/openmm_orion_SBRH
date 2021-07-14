@@ -236,7 +236,7 @@ def setup_MD_startup(input_floe, input_cube, fail_cube, options):
     # Force Field Application
     ff = ParallelForceFieldCube("ForceField", title="Apply Force Field")
     ff.promote_parameter('protein_forcefield', promoted_name='protein_ff', default='Amber14SB')
-    ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.0')
+    ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.1a1')
 
     # Production run
     prod = ParallelMDNptCube("Production", title="Production")
@@ -354,7 +354,7 @@ def setup_MD_startup(input_floe, input_cube, fail_cube, options):
 def setup_MDsmallmol_startup(input_floe, input_cube, fail_cube, options):
     # Force Field Application
     ff_small = ParallelForceFieldCube("ForceField", title="Apply Force Field")
-    ff_small.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.0')
+    ff_small.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.1a1')
 
     # Production run
     prod_small = ParallelMDNptCube("Production Unbound State", title="Production Unbound State")

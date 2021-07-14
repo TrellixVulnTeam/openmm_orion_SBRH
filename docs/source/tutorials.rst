@@ -109,7 +109,7 @@ protein structure and dynamics over the course of the MD.
 We **strongly recommend** using *Spruce* for protein preparation.
 The protein input dataset used in this tutorial is:
 
-    * :download:`MCL1_SchrodingerFEP_4HW3A_extprot_v2.oeb.gz <files/MCL1_SchrodingerFEP_4HW3A_extprot_v2.oeb.gz>`
+    * :download:`MCL1_JACS15_4HW3A_extprot_v2.oeb.gz <files/MCL1_JACS15_4HW3A_extprot_v2.oeb.gz>`
 
 
 .. warning::
@@ -252,7 +252,7 @@ of these shows a radial bar graph of the occupancy of the torsion on
 the right-hand side. Selecting `B-factor` yields a depiction of the
 calculated B-factors for the selected cluster as in the parent tile,
 but additionally shows the calculated B-factor for each active site
-amino acid close to the ligand. To the right of the graphic is
+amino acid close to the ligand. To the left of the graphic is
 information about the clustering of the ligand trajectory, including
 a table giving the ensemble average MMPBSA energy and BintScore
 (each with standard error)
