@@ -42,6 +42,8 @@ import os
 
 from MDOrion.MDEngines.utils import schedule_cycles
 
+from MDOrion.Standards.utils import check_filename
+
 
 class MDMinimizeCube(RecordPortsMixin, ComputeCube):
     title = 'Minimization Cube'
@@ -239,7 +241,7 @@ class MDMinimizeCube(RecordPortsMixin, ComputeCube):
             flask.SetCoords(new_mdstate.get_oe_positions())
             mdrecord.set_flask(flask)
 
-            data_fn = os.path.basename(mdrecord.cwd) + '_' + opt['system_title'] + '_' + str(opt['system_id']) + '-' + opt['suffix'] + '.tar.gz'
+            data_fn = check_filename(os.path.basename(mdrecord.cwd) + '_' + opt['system_title'] + '_' + str(opt['system_id']) + '-' + opt['suffix'] + '.tar.gz')
 
             # Save the cube parameters tha are serializable
             info_dic = dict()
@@ -492,10 +494,10 @@ class MDNvtCube(RecordPortsMixin, ComputeCube):
             opt['str_logger'] = str_logger
             opt['Logger'].info('[{}] START NVT SIMULATION: {}'.format(opt['CubeTitle'], system_title))
 
-            opt['out_fn'] = os.path.basename(opt['out_directory']) + '_' + \
-                            opt['system_title'] + '_' + \
-                            str(opt['system_id']) + '-' + \
-                            opt['suffix']
+            opt['out_fn'] = check_filename(os.path.basename(opt['out_directory']) + '_' +
+                                           opt['system_title'] + '_' +
+                                           str(opt['system_id']) + '-' +
+                                           opt['suffix'])
 
             # Trajectory file name if any generated
             opt['trj_fn'] = opt['out_fn'] + '_' + 'traj.tar.gz'
@@ -781,10 +783,10 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
             opt['str_logger'] = str_logger
             opt['Logger'].info('[{}] START NPT SIMULATION: {}'.format(opt['CubeTitle'], system_title))
 
-            opt['out_fn'] = os.path.basename(opt['out_directory']) + '_' + \
-                            opt['system_title'] + '_' + \
-                            str(opt['system_id']) + '-' + \
-                            opt['suffix']
+            opt['out_fn'] = check_filename(os.path.basename(opt['out_directory']) + '_' +
+                                           opt['system_title'] + '_' +
+                                           str(opt['system_id']) + '-' +
+                                           opt['suffix'])
 
             # Trajectory file name if any generated
             opt['trj_fn'] = opt['out_fn'] + '_' + 'traj.tar.gz'

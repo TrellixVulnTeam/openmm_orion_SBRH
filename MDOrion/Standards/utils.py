@@ -152,6 +152,23 @@ class DesignUnit(CustomHandler):
         return design_unit
 
 
+def check_filename(filename):
+    special_shell_characters = ['~', '`', '#', '$', '&', '*', '(', ')', '\\', '|', '[', ']',
+                                '{', '}', ';', '\'', '\"', '>', '<', '/', '?', '!']
+
+    if any(c in special_shell_characters for c in filename):
+        new_filename = ''
+        for c in filename:
+            if c in special_shell_characters:
+                new_filename += '_'
+            else:
+                new_filename += c
+
+        return new_filename
+    else:
+        return filename
+
+
 def upload_file(filename, orion_ui_name='OrionFile'):
 
     if in_orion():

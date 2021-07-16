@@ -45,6 +45,7 @@ class MDStageNames:
     EquilibrationI = "EquilibrationI"
     EquilibrationII = "EquilibrationII"
     EquilibrationIII = "EquilibrationIII"
+    EquilibrationIV = "EquilibrationIV"
     Production = "Production"
 
 

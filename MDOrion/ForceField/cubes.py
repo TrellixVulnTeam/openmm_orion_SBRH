@@ -29,6 +29,8 @@ from MDOrion.Standards import MDStageNames, MDStageTypes
 
 from MDOrion.Standards.mdrecord import MDDataRecord, Fields
 
+from MDOrion.Standards.utils import check_filename
+
 from MDOrion.MDEngines.utils import MDState
 
 from openeye import oechem
@@ -203,7 +205,7 @@ class ForceFieldCube(RecordPortsMixin, ComputeCube):
 
             mdrecord.set_parmed(flask_pmd_structure, shard_name="Parmed_" + flask_title + '_' + str(sys_id))
 
-            data_fn = os.path.basename(mdrecord.cwd) + '_' + flask_title+'_' + str(sys_id) + '-' + opt['suffix']+'.tar.gz'
+            data_fn = check_filename(os.path.basename(mdrecord.cwd) + '_' + flask_title+'_' + str(sys_id) + '-' + opt['suffix']+'.tar.gz')
 
             # Save the cube parameters tha are serializable
             info_dic = dict()

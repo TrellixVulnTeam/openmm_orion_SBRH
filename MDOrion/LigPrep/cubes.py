@@ -198,13 +198,13 @@ class LigandSetting(RecordPortsMixin, ComputeCube):
 
             n_md_starts = self.args.n_md_starts
             self.opt['Logger'].info('ligand {}: running {} independent MD starts for each ligand/conformer'.
-                format(lig_title,n_md_starts))
-            if n_md_starts>1:
+                                    format(lig_title, n_md_starts))
+            if n_md_starts > 1:
                 newlig = oechem.OEMol(ligand)
                 newlig.DeleteConfs()
                 for baseconf in ligand.GetConfs():
                     newlig.NewConf(baseconf)
-                    for start in range(1,self.args.n_md_starts):
+                    for start in range(1, self.args.n_md_starts):
                         newlig.NewConf(baseconf)
                 record.set_value(Fields.primary_molecule, newlig)
                 ligand = newlig
