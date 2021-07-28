@@ -291,7 +291,7 @@ class OpenMMSimulations(MDSimulations):
             opt['steps'] = int(round(opt['time'] / (self.stepLen.in_units_of(unit.nanoseconds) / unit.nanoseconds)))
 
             # Set Reporters
-            for rep in getReporters(**opt):
+            for rep in getReporters(opt):
                 simulation.reporters.append(rep)
 
         # OpenMM platform information
@@ -385,7 +385,11 @@ class OpenMMSimulations(MDSimulations):
             self.str_logger += '\n' + info
 
             if self.opt['trajectory_interval']:
-                total_frames = int(round(self.opt['time'] / self.opt['trajectory_interval']))
+
+                trajectory_steps = int(round(self.opt['trajectory_interval'] / (
+                        self.opt['timestep'].in_units_of(unit.nanoseconds) / unit.nanoseconds)))
+
+                total_frames = int(self.opt['steps']/trajectory_steps)
 
                 self.opt['Logger'].info('[{}] Total trajectory frames : {}'.format(self.opt['CubeTitle'], total_frames))
                 info = '{:<25} = {:<10}'.format('Total trajectory frames', total_frames)
@@ -411,6 +415,10 @@ class OpenMMSimulations(MDSimulations):
 
             # Value in ns/day
             self.speed = speed.value_in_unit(unit.nanoseconds)
+
+            self.opt['speed_ns_per_day'] = self.speed
+
+            self.opt['str_logger'] += '\n' + "Simulation speed {} ns/day".format(self.speed)
 
             if box is not None:
                 state = self.omm_simulation.context.getState(getPositions=True,
@@ -472,18 +480,14 @@ class OpenMMSimulations(MDSimulations):
         return
 
 
-def getReporters(totalSteps=None, outfname=None, **opt):
+def getReporters(opt):
     """
     Creates 3 OpenMM Reporters for the simulation.
 
     Parameters
     ----------
-    totalSteps : int
-        The total number of simulation steps
-    reportInterval : (opt), int, default=1000
-        Step frequency to write to reporter file.
-    outfname : str
-        Specifies the filename prefix for the reporters.
+    opt: python dict
+        The dictionary containing the md simulation parameters
 
     Returns
     -------
@@ -524,9 +528,13 @@ def getReporters(totalSteps=None, outfname=None, **opt):
         trajectory_steps = int(round(opt['trajectory_interval'] / (
                 opt['timestep'].in_units_of(unit.nanoseconds) / unit.nanoseconds)))
 
-        traj_reporter = mdtraj.reporters.HDF5Reporter(opt['omm_trj_fn'], trajectory_steps, velocities=True)
+        total_frames = int(opt['steps'] / trajectory_steps)
 
-        reporters.append(traj_reporter)
+        if total_frames > 0:
+            traj_reporter = mdtraj.reporters.HDF5Reporter(opt['omm_trj_fn'], trajectory_steps, velocities=True)
+            reporters.append(traj_reporter)
+        else:
+            opt['trajectory_interval'] = 0.0
 
     elif opt['trajectory_frames']:
 

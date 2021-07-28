@@ -847,9 +847,9 @@ class MDDataRecord(object):
         return False
 
     @mdstages
-    def get_stage_info(self, stg_name='last'):
+    def get_stage_logs(self, stg_name='last'):
         """
-        This method returns the info related to the selected stage name. If no stage name is passed
+        This method returns the logs related to the selected stage name. If no stage name is passed
         the last stage is selected.
 
         Parameters
@@ -866,6 +866,79 @@ class MDDataRecord(object):
         stage = self.get_stage_by_name(stg_name)
 
         return stage.get_value(Fields.log_data)
+
+    @mdstages
+    def get_stage_info(self, stg_name='last'):
+        """
+        This method returns the info related to the selected stage name. If no stage name is passed
+        the last stage is selected.
+
+        Parameters
+        ----------
+        stg_name: String
+            The MD stage name
+
+        Returns
+        -------
+        info_string: String
+            The info associated with the selected MD stage otherwise None
+        """
+
+        stage = self.get_stage_by_name(stg_name)
+
+        return stage.get_value(Fields.stage_info)
+
+    @mdstages
+    def has_stage_info(self, stg_name='last'):
+        """
+         This method returns True if MD stage selected by passing the string name has infos present
+         on the MD stage record otherwise False.
+
+         Parameters
+         -----------
+         stg_name: String
+             The MD stage name
+
+         Returns
+         -------
+         boolean: Bool
+             True if the MD stage has info otherwise False
+         """
+
+        stage = self.get_stage_by_name(stg_name)
+
+        if stage.has_field(Fields.stage_info):
+            return True
+        else:
+            return False
+
+    @mdstages
+    def set_stage_info(self, info_dic, stg_name='last'):
+        """
+        This method sets the stage info field on the selected stage by name
+
+        Parameters
+        ----------
+        stg_name: String
+            The MD Stage name
+
+        info_dic: Python dic
+            The dictionary containing the Plain Data info to save
+
+        Returns
+        -------
+        boolean : Bool
+            True if the system Title has been set on the record
+        """
+
+        if not isinstance(info_dic, dict):
+            raise ValueError(" The info must be a dictionary containing plain data: {}".format(info_dic))
+
+        stage = self.get_stage_by_name(stg_name)
+
+        stage.set_value(Fields.stage_info, info_dic)
+
+        return True
 
     @stage_system
     @mdstages
@@ -995,6 +1068,7 @@ class MDDataRecord(object):
                       data_fn,
                       append=True,
                       log=None,
+                      info=None,
                       trajectory_fn=None,
                       trajectory_engine=None,
                       trajectory_orion_ui='OrionFile'):
@@ -1019,6 +1093,8 @@ class MDDataRecord(object):
             the last stage will be overwritten by the new created MD stage
         log: String or None
             Log info
+        info: Python Dictionary or None
+            Info Dictionary of Plain Data
         trajectory_fn: String, Int or None
             The trajectory name for local run or id in Orion associated with the new MD stage
         trajectory_engine: String or None
@@ -1039,6 +1115,9 @@ class MDDataRecord(object):
 
         if log is not None:
             record.set_value(Fields.log_data, log)
+
+        if info is not None:
+            record.set_value(Fields.stage_info, info)
 
         with TemporaryDirectory() as output_directory:
 

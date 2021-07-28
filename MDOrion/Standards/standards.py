@@ -45,6 +45,7 @@ class MDStageNames:
     EquilibrationI = "EquilibrationI"
     EquilibrationII = "EquilibrationII"
     EquilibrationIII = "EquilibrationIII"
+    EquilibrationIV = "EquilibrationIV"
     Production = "Production"
 
 
@@ -116,6 +117,9 @@ class Fields:
     # Primary Molecule
     primary_molecule = OEPrimaryMolField()
 
+    # Cube Parameters update record
+    cube_parameters_update = OEField("Cube_Parameters_Update_OPLMD", Types.JSONObject, meta=_metaHidden)
+
     # Parmed Structure, Trajectory, MDData and Protein trajectory conformers Fields
     if in_orion():
         pmd_structure = OEField('Structure_Parmed_OPLMD', Types.Int, meta=_metaHidden)
@@ -145,6 +149,9 @@ class Fields:
     # MD State
     md_state = OEField("MDState_OPLMD", MDStateData)
 
+    # MD Stage Info dictionary
+    stage_info = OEField('Stage_info_OPLMD', Types.JSONObject)
+
     # Design Unit Field
     design_unit = OEField('Design_Unit_OPLMD', DesignUnit)
 
@@ -159,6 +166,9 @@ class Fields:
     # collection = OEField("Collection_ID_OPLMD", Types.Int, meta=_metaHidden)
 
     collections = OEField("Collections_ID_OPLMD", Types.JSONObject, meta=_metaHidden)
+
+    cycle_id = OEField("Cycle_ID_OPLMD", Types.Int, meta=_metaHidden)
+    schedule = OEField("Schedule_IDS_OPLMD", Types.JSONObject, meta=_metaHidden)
 
     # Stage list Field
     md_stages = OEField("MDStages_OPLMD", Types.RecordVec, meta=_metaHidden)
