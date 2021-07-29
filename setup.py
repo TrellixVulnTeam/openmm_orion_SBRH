@@ -24,14 +24,12 @@ from setuptools import setup, find_packages
 
 from pip._internal.req import parse_requirements
 
-from pip._internal.download import PipSession
-
 
 def get_reqs(reqs):
-    return [str(ir.req) for ir in reqs]
+    return [str(ir.requirement) for ir in reqs]
 
 
-install_reqs = get_reqs(parse_requirements("requirements_dev.txt", session=PipSession()))
+install_reqs = get_reqs(parse_requirements("requirements_dev.txt", session=None))
 
 
 def get_version():
@@ -66,5 +64,4 @@ setup(
         [console_scripts]
         mdocli=MDOcli.command_line:main
     ''',
-    zip_safe=False
-)
+    zip_safe=False)

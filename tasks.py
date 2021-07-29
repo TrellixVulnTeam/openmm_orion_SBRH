@@ -25,10 +25,6 @@ from invoke import task, run
 
 from json import loads, dump
 
-from glob import iglob
-
-from importlib.machinery import SourceFileLoader
-
 import importlib
 
 import MDOrion
@@ -42,25 +38,13 @@ def flake8(ctx):
 
 
 @task
-def test_cubes(ctx):
+def test_local(ctx):
     """
-    run cube tests
+    run cube and floe local tests
     """
 
     clean(ctx)
     run("py.test -s -v -m 'local'")
-
-
-@task
-def test_floes(ctx, test="all"):
-    """
-    run tests
-    """
-    clean(ctx)
-    if test == "all":
-        run("py.test -s -v ./tests ")
-    else:
-        run("""py.test -s -v -m "{}" ./tests """.format(test))
 
 
 @task
@@ -206,6 +190,9 @@ def clean_pycache(ctx):
 
 @task
 def clean_docs(ctx):
+
+    if os.path.isdir("docs/docs"):
+        shutil.rmtree("docs/docs")
 
     if os.path.isdir("docs/build"):
         shutil.rmtree("docs/build")

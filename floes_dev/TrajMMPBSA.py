@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# (C) 2019 OpenEye Scientific Software Inc. All rights reserved.
+# (C) 2021 OpenEye Scientific Software Inc. All rights reserved.
 #
 # TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
 # provided to current licensees or subscribers of OpenEye products or
@@ -21,35 +21,42 @@ from floe.api import WorkFloe
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
-from MDOrion.TrjAnalysis.cubes_trajProcessing import (ParallelTrajInteractionEnergyCube,
-                                                      ParallelTrajPBSACube)
+from MDOrion.SubFloes.SubfloeFunctions import (setup_traj_mmpbsa)
 
-from MDOrion.TrjAnalysis.cubes_clusterAnalysis import MDFloeReportCube
+from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
-job = WorkFloe('Trajectory MMPBSA from Traj OEMOls',
-               title='Trajectory MMPBSA from Traj OEMOls')
+from snowball import ExceptHandlerCube
+
+
+floe_title = 'MMPBSA Processing of Protein-Ligand MD Dataset'
+tags_for_floe = ['MDAnalysis']
+#
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = """
-An MMPBSA analysis is carried out on trajectory OEMols for protein, ligand
-and possibly waters.
+An MMPBSA analysis is carried out on trajectories from a Protein-Ligand MD Dataset.
 
 Required Input Parameters:
 --------------------------
-.oedb of records containing protein, ligand and possibly water
-trajectory OEMols from an MD Short Trajectory run.
+.oedb of records from a Protein-Ligand MD Dataset.
 
 Outputs:
 --------
-out (.oedb file): file of the Analysis results for all ligands.
+out (.oedb file): Dataset of the Traj OEMols and MMPBSA  results.
 """
 
 job.uuid = "2717cf39-5bdd-4a1e-880e-5208bb232959"
 
-job.classification = [['Analysis']]
-job.tags = [tag for lists in job.classification for tag in lists]
 
 ifs = DatasetReaderCube("ifs")
-ifs.promote_parameter("data_in", promoted_name="in", title="System Input OERecord", description="OERecord file name")
+ifs.promote_parameter("data_in", promoted_name="in", title="Flask Input OERecord", description="OERecord file name")
+
+check_rec = ParallelRecordSizeCheck("Record Check Success")
+
+exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
 
 ofs = DatasetWriterCube('ofs', title='MD Out')
 ofs.promote_parameter("data_out", promoted_name="out")
@@ -57,18 +64,17 @@ ofs.promote_parameter("data_out", promoted_name="out")
 fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail")
 
-IntECube = ParallelTrajInteractionEnergyCube("TrajInteractionEnergyCube")
-PBSACube = ParallelTrajPBSACube("TrajPBSACube")
+job.add_cubes(ifs, check_rec, exceptions, ofs, fail)
 
-report = MDFloeReportCube("report", title="Floe Report")
+# Call subfloe function to process the trajectories
+traj_proc_outcube = setup_traj_mmpbsa(job, ifs, check_rec)
 
-job.add_cubes(ifs, IntECube, PBSACube, ofs, fail)
-
-ifs.success.connect(IntECube.intake)
-IntECube.success.connect(PBSACube.intake)
-IntECube.failure.connect(fail.intake)
-PBSACube.success.connect(ofs.intake)
-PBSACube.failure.connect(fail.intake)
+# Connections
+traj_proc_outcube.success.connect(check_rec.intake)
+traj_proc_outcube.failure.connect(check_rec.fail_in)
+check_rec.success.connect(ofs.intake)
+check_rec.failure.connect(exceptions.intake)
+exceptions.failure.connect(fail.intake)
 
 if __name__ == "__main__":
     job.run()

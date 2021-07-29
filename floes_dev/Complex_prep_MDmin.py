@@ -21,16 +21,18 @@ from floe.api import WorkFloe
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
+from snowball.utils import DatasetReaderOptCube
+
 from MDOrion.LigPrep.cubes import LigandSetting
 from MDOrion.LigPrep.cubes import ParallelLigandChargeCube
 
-from MDOrion.System.cubes import IDSettingCube
+from MDOrion.Flask.cubes import IDSettingCube
 
-from MDOrion.System.cubes import MDComponentCube
+from MDOrion.Flask.cubes import MDComponentCube
 
 from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 
-from MDOrion.System.cubes import ParallelSolvationCube
+from MDOrion.Flask.cubes import ParallelSolvationCube
 
 from MDOrion.ForceField.cubes import ParallelForceFieldCube
 
@@ -77,27 +79,27 @@ ligset.set_parameters(lig_res_name='LIG')
 
 ligid = IDSettingCube("Ligand Ids")
 
-iprot = DatasetReaderCube("Protein Reader", title="Protein Reader")
+iprot = DatasetReaderOptCube("Protein Reader", title="Protein Reader")
 iprot.promote_parameter("data_in", promoted_name="protein", title="Protein Input File", description="Protein file name")
 
 complx = ComplexPrepCube("Complex")
 
-solvate = ParallelSolvationCube("Hydration", title='System Hydration')
+solvate = ParallelSolvationCube("Hydration", title='Flask Hydration')
 solvate.promote_parameter('density', promoted_name='density', default=1.03,
                           description="Solution density in g/ml")
 solvate.promote_parameter('salt_concentration', promoted_name='salt_concentration', default=50.0,
                           description='Salt concentration (Na+, Cl-) in millimolar')
 solvate.set_parameters(close_solvent=True)
 
-ff = ParallelForceFieldCube("ForceField", title="System Parametrization")
+ff = ParallelForceFieldCube("ForceField", title="Flask Parametrization")
 ff.promote_parameter('protein_forcefield', promoted_name='protein_ff', default='Amber99SBildn')
-ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='Gaff2')
+ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='OpenFF_1.3.0')
 
 mdcomp = MDComponentCube("MDComponentSetting", title="MDComponentSetting")
 mdcomp.promote_parameter("flask_title", promoted_name="slack_title", default="")
 
 # Minimization
-minimize = ParallelMDMinimizeCube('minComplex', title="System Minimization")
+minimize = ParallelMDMinimizeCube('minComplex', title="Flask Minimization")
 minimize.promote_parameter('steps', promoted_name='steps', default=2000)
 minimize.promote_parameter('md_engine', promoted_name='md_engine', default='OpenMM',
                            description='Select the MD Engine')

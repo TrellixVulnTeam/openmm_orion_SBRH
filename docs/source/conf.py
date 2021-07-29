@@ -43,6 +43,7 @@ html_show_sourcelink = False
 
 # TODO ADDED TO INCLUDE THE MDDatarecord API
 extensions = ['sphinx.ext.mathjax', 'sphinxcontrib.bibtex', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+bibtex_bibfiles = []
 # import sys, os
 # sys.path.insert(0, os.path.abspath('../../MDOrion/Standards/mdrecord.py'))
 autoclass_content = 'both'
@@ -92,7 +93,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static', './doc-theme/_static', 'images']
+html_static_path = ['./doc-theme/_static', 'images']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

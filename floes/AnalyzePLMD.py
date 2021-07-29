@@ -19,68 +19,39 @@
 
 from os import path
 
-from floe.api import (WorkFloe,
-                      ParallelCubeGroup)
+from floe.api import (WorkFloe)
+
+from MDOrion.SubFloes.SubfloeFunctions import setup_traj_analysis
 
 from orionplatform.cubes import DatasetReaderCube, DatasetWriterCube
 
-from MDOrion.System.cubes import (ParallelRecordSizeCheck)
+from snowball import (ExceptHandlerCube,
+                      SuccessCounterCube)
 
-from MDOrion.TrjAnalysis.cubes_trajProcessing import (ParallelTrajToOEMolCube,
-                                                      ParallelTrajInteractionEnergyCube,
-                                                      ParallelTrajPBSACube,
-                                                      ConformerGatheringData,
-                                                      ParallelConfTrajsToLigTraj,
-                                                      ParallelConcatenateTrajMMPBSACube)
+from MDOrion.Flask.cubes import ParallelRecordSizeCheck
 
-from MDOrion.TrjAnalysis.cubes_clusterAnalysis import (ParallelClusterOETrajCube,
-                                                       ParallelMakeClusterTrajOEMols,
-                                                       ParallelMDTrajAnalysisClusterReport,
-                                                       ParallelClusterPopAnalysis,
-                                                       ParallelTrajAnalysisReportDataset,
-                                                       MDFloeReportCube)
+from MDOrion.Flask.cubes import CollectionSetting
 
-from MDOrion.System.cubes import CollectionSetting
 
-job = WorkFloe('Analyze Protein-Ligand MD',
-               title='Analyze Protein-Ligand MD')
+floe_title = 'Analyze Protein-Ligand MD'
+tags_for_floe = ['MDAnalysis']
+#
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = open(path.join(path.dirname(__file__), 'AnalyzePLMD_desc.rst'), 'r').read()
-
-job.classification = [['Specialized MD']]
 job.uuid = "7438db4d-30b1-478c-afc0-e921f0336c78"
-job.tags = [tag for lists in job.classification for tag in lists]
 
 # Ligand setting
 iMDInput = DatasetReaderCube("MDInputReader", title="MD Input Reader")
 iMDInput.promote_parameter("data_in", promoted_name="in",
-                           title="MD Input Dataset", description="MD Input Dataset")
+                           title="MD Input Dataset", description="MD Input Dataset", order=0)
 
 # This Cube is necessary for the correct work of collection and shard
 coll_open = CollectionSetting("OpenCollection", title="Open Collection")
 coll_open.set_parameters(open=True)
-
-trajCube = ParallelTrajToOEMolCube("TrajToOEMolCube", title="Trajectory To OEMols")
-IntECube = ParallelTrajInteractionEnergyCube("TrajInteractionEnergyCube", title="MM Energies")
-PBSACube = ParallelTrajPBSACube("TrajPBSACube", title="PBSA Energies")
-
-trajproc_group = ParallelCubeGroup(cubes=[trajCube, IntECube, PBSACube])
-job.add_group(trajproc_group)
-
-confGather = ConformerGatheringData("Gathering Conformer Records",  title="Gathering Conformer Records")
-catLigTraj = ParallelConfTrajsToLigTraj("ConfTrajsToLigTraj", title="Combine Pose Trajectories")
-catLigMMPBSA = ParallelConcatenateTrajMMPBSACube('ConcatenateTrajMMPBSACube', title="Concatenate MMPBSA Energies")
-clusCube = ParallelClusterOETrajCube("ClusterOETrajCube", title="Clustering")
-clusPop = ParallelClusterPopAnalysis('ClusterPopAnalysis',  title="Clustering Analysis")
-clusOEMols = ParallelMakeClusterTrajOEMols('MakeClusterTrajOEMols', title="Per-Cluster Analysis")
-prepDataset = ParallelTrajAnalysisReportDataset('TrajAnalysisReportDataset', title="Analysis Report")
-report_gen = ParallelMDTrajAnalysisClusterReport("MDTrajAnalysisClusterReport", title="Relevant Output Extraction")
-
-analysis_group = ParallelCubeGroup(cubes=[catLigTraj, catLigMMPBSA, clusCube, clusPop,
-                                          clusOEMols, prepDataset, report_gen])
-job.add_group(analysis_group)
-
-report = MDFloeReportCube("report", title="Floe Report")
 
 # This Cube is necessary for the correct working of collection and shard
 coll_close = CollectionSetting("CloseCollection", title="Close Collection")
@@ -88,54 +59,32 @@ coll_close.set_parameters(open=False)
 
 check_rec = ParallelRecordSizeCheck("Record Check Success", title="Record Check Success")
 
-ofs = DatasetWriterCube('ofs', title='MD Out')
+ofs = DatasetWriterCube('ofs', title='MD Analysis Output')
 ofs.promote_parameter("data_out", promoted_name="out",
-                      title="MD Out", description="MD Dataset out")
+                      title="MD Analysis Output", description="MD Analysis output dataset name")
+
+exceptions = ExceptHandlerCube(floe_report_name="Analyze Floe Failure Report")
 
 fail = DatasetWriterCube('fail', title='Failures')
 fail.promote_parameter("data_out", promoted_name="fail", title="Failures",
-                       description="MD Dataset Failures out")
+                       description="MD Dataset Failures out", order=2)
 
-job.add_cubes(iMDInput, coll_open,
-              trajCube, IntECube, PBSACube, confGather,
-              catLigTraj, catLigMMPBSA, clusCube, clusPop, clusOEMols,
-              prepDataset, report_gen, report,
-              coll_close, check_rec,  ofs, fail)
+job.add_cubes(iMDInput, coll_open, coll_close, check_rec,  ofs, exceptions, fail)
+
+traj_anlys_outcube = setup_traj_analysis(job, coll_open, check_rec)
 
 # Success Connections
 iMDInput.success.connect(coll_open.intake)
-coll_open.success.connect(trajCube.intake)
-trajCube.success.connect(IntECube.intake)
-IntECube.success.connect(PBSACube.intake)
-PBSACube.success.connect(confGather.intake)
-confGather.success.connect(catLigTraj.intake)
-catLigTraj.success.connect(catLigMMPBSA.intake)
-catLigMMPBSA.success.connect(clusCube.intake)
-clusCube.success.connect(clusPop.intake)
-clusPop.success.connect(clusOEMols.intake)
-clusOEMols.success.connect(prepDataset.intake)
-prepDataset.success.connect(report_gen.intake)
-report_gen.success.connect(report.intake)
-report.success.connect(coll_close.intake)
+traj_anlys_outcube.success.connect(coll_close.intake)
 coll_close.success.connect(check_rec.intake)
 check_rec.success.connect(ofs.intake)
 
 # Fail Connections
+traj_anlys_outcube.failure.connect(check_rec.fail_in)
 coll_open.failure.connect(check_rec.fail_in)
-trajCube.failure.connect(check_rec.fail_in)
-IntECube.failure.connect(check_rec.fail_in)
-PBSACube.failure.connect(check_rec.fail_in)
-confGather.failure.connect(check_rec.fail_in)
-catLigTraj.failure.connect(check_rec.fail_in)
-catLigMMPBSA.failure.connect(check_rec.fail_in)
-clusCube.failure.connect(check_rec.fail_in)
-clusPop.failure.connect(check_rec.fail_in)
-clusOEMols.failure.connect(check_rec.fail_in)
-prepDataset.failure.connect(check_rec.fail_in)
-report_gen.failure.connect(check_rec.fail_in)
-report.failure.connect(check_rec.fail_in)
 coll_close.failure.connect(check_rec.fail_in)
-check_rec.failure.connect(fail.intake)
+check_rec.failure.connect(exceptions.intake)
+exceptions.success.connect(fail.intake)
 
 
 if __name__ == "__main__":

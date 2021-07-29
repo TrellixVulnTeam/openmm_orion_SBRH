@@ -39,8 +39,8 @@ class MDStageTypes:
 
 
 class MDStageNames:
-    ForceField = "System Parametrization"
-    Minimization = "System Minimization"
+    ForceField = "Flask Parametrization"
+    Minimization = "Flask Minimization"
     WarmUp = "WarmUp"
     EquilibrationI = "EquilibrationI"
     EquilibrationII = "EquilibrationII"
@@ -64,6 +64,14 @@ class MDFileNames:
     trajectory = "trajectory.tar.gz"
     trajectory_conformers = "trajectory_confs.oeb"
     mddata = "data.tar.gz"
+
+# ---------------- Collection  Name Standards -------------- #
+
+
+class CollectionsNames:
+    none = ''
+    md = 'MD_OPLMD'
+    nes = 'NES_OPLMD'
 
 
 # Orion Hidden meta data options
@@ -91,8 +99,7 @@ class Fields:
     confid = OEField("ConfID_OPLMD", Types.Int, meta=_metaIDHidden)
 
     # The Ligand field should be used to save in a record a ligand as an OEMolecule
-    ligand = OEField("Ligand_OPLMD", Types.Chem.Mol, meta=OEFieldMeta(options=[Meta.Hints.Chem.Ligand,
-                                                                               Meta.Display.Hidden]))
+    ligand = OEField("Ligand_OPLMD", Types.Chem.Mol, meta=OEFieldMeta(options=[Meta.Hints.Chem.Ligand, Meta.Display.Hidden]))
 
     # The ligand name
     ligand_name = OEField("Ligand_name_OPLMD", Types.String, meta=_metaHidden)
@@ -115,11 +122,13 @@ class Fields:
         trajectory = OEField("Trajectory_OPLMD", Types.Int, meta=_metaHidden)
         mddata = OEField("MDData_OPLMD", Types.Int, meta=_metaHidden)
         protein_traj_confs = OEField("ProtTraj_OPLMD", Types.Int, meta=_metaHidden)
+        extra_data_tar = OEField("ExtraData_OPLMD", Types.Int, meta=_metaHidden)
     else:
         pmd_structure = OEField('Structure_Parmed_OPLMD', ParmedData, meta=_metaHidden)
         trajectory = OEField("Trajectory_OPLMD", Types.String, meta=_metaHidden)
         mddata = OEField("MDData_OPLMD", Types.String, meta=_metaHidden)
         protein_traj_confs = OEField("ProtTraj_OPLMD", Types.Chem.Mol, meta=_metaHidden)
+        extra_data_tar = OEField("ExtraData_OPLMD", Types.String, meta=_metaHidden)
 
     # The Stage Name
     stage_name = OEField('Stage_name_OPLMD', Types.String)
@@ -147,7 +156,9 @@ class Fields:
     md_components = OEField('MDComponents_OPLMD', MDComponentData)
 
     # Collection is used to offload data from the record which must be < 100Mb
-    collection = OEField("Collection_ID_OPLMD", Types.Int, meta=_metaHidden)
+    # collection = OEField("Collection_ID_OPLMD", Types.Int, meta=_metaHidden)
+
+    collections = OEField("Collections_ID_OPLMD", Types.JSONObject, meta=_metaHidden)
 
     # Stage list Field
     md_stages = OEField("MDStages_OPLMD", Types.RecordVec, meta=_metaHidden)
@@ -156,6 +167,10 @@ class Fields:
 
     floe_report_svg_lig_depiction = OEField("Floe_report_lig_svg_OPLMD", Types.String,
                                             meta=OEFieldMeta().set_option(Meta.Hints.Image_SVG))
+
+    floe_report_sort_string = OEField('Floe_report_sort_str_OPLMD', Types.String, meta=_metaHidden)
+
+    floe_report_sort_float = OEField('Floe_report_sort_float_OPLMD', Types.Float, meta=_metaHidden)
 
     floe_report_label = OEField('Floe_report_label_OPLMD', Types.String, meta=_metaHidden)
 
@@ -206,6 +221,14 @@ class Fields:
         zapMMPBSA_fld = OEField("OEZap_MMPBSA6_Bind", Types.FloatVec,
                                   meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal))
 
+        # mmpbsa ensemble cluster average
+        mmpbsa_cluster_mean = OEField('MMPBSAClusterMean', Types.Float,
+                                   meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol))
+
+        metaMMPBSA_cluster_serr = OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol)
+        metaMMPBSA_cluster_serr.add_relation(Meta.Relations.ErrorsFor, mmpbsa_cluster_mean)
+        mmpbsa_cluster_serr = OEField('MMPBSAClusterSerr', Types.Float, meta=metaMMPBSA_cluster_serr)
+
         # mmpbsa ensemble average over the whole trajectory
         mmpbsa_traj_mean = OEField('MMPBSATrajMean', Types.Float,
                                    meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol))
@@ -218,35 +241,67 @@ class Fields:
         n_major_clusters = OEField("n major clusters", Types.Int)
 
         # Trajectory cluster averages and medians of protein and ligand
-        ClusLigAvg_fld = OEField('ClusLigAvgMol', Types.Chem.Mol)
-        ClusProtAvg_fld = OEField('ClusProtAvgMol', Types.Chem.Mol)
-        ClusLigMed_fld = OEField('ClusLigMedMol', Types.Chem.Mol)
-        ClusProtMed_fld = OEField('ClusProtMedMol', Types.Chem.Mol)
+        #ClusLigAvg_fld = OEField('ClusLigAvgMol', Types.Chem.Mol)
+        #ClusProtAvg_fld = OEField('ClusProtAvgMol', Types.Chem.Mol)
+        #ClusLigMed_fld = OEField('ClusLigMedMol', Types.Chem.Mol)
+        #ClusProtMed_fld = OEField('ClusProtMedMol', Types.Chem.Mol)
 
+        LigTraj_fld = OEField('LigTraj', Types.Chem.Mol)
+        ProtTraj_fld = OEField('ProtTraj', Types.Chem.Mol)
+        MedianDU_fld = OEField('MedianDU', Types.Chem.DesignUnit)
+        AverageDU_fld = OEField('AverageDU', Types.Chem.DesignUnit)
+        ExtraDURec_fld = OEField('ExtraDURec', Types.Record)
+        ClusterDURecs_fld = OEField('ClusterRecs', Types.RecordVec)
+        ClusID_fld = OEField('ClusID', Types.Int)
         max_waters = OEField("MaxWaters_OPLMD", Types.Int, meta=_metaHidden)
 
-        # Free Energy Yank
-        # Analysis Fields
-        free_energy = OEField('FE_OPLMD', Types.Float,
-                              meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol))
+        # # Free Energy
+        # # Analysis Fields
+        # free_energy = OEField('FE_OPLMD', Types.Float,
+        #                       meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol))
+        #
+        # metaFreeEnergy_err = OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol)
+        # metaFreeEnergy_err.add_relation(Meta.Relations.ErrorsFor, free_energy)
+        # free_energy_err = OEField('FE_Error_OPLMD', Types.Float, meta=metaFreeEnergy_err)
 
-        metaFreeEnergy_err = OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol)
-        metaFreeEnergy_err.add_relation(Meta.Relations.ErrorsFor, free_energy)
-        free_energy_err = OEField('FE_Error_OPLMD', Types.Float, meta=metaFreeEnergy_err)
+    class Bint:
+
+        # The BintScore subrecord containing Bint info
+        oebint_rec = OEField('BintRecord', Types.Record, meta=_metaHidden)
+        # The list of per-frame BintScores for a trajectory
+        trajBintScoreList = OEField('TrajBintScoreList', Types.FloatVec, meta=_metaHidden)
+        # The BintScore for the Initial Pose and the traj are floats
+        initBintScore = OEField('InitBintScore', Types.Float)
+        trajBintScore = OEField('TrajBintScore', Types.Float)
+        metaTrajBintStderr = OEFieldMeta().add_relation(Meta.Relations.ErrorsFor, trajBintScore)
+        trajBintStderr = OEField('TrajBintStderr', Types.Float, meta=metaTrajBintStderr)
+        poseStability = OEField('PoseStability', Types.Float)
+        metaPoseStabilityStderr = OEFieldMeta().add_relation(Meta.Relations.ErrorsFor, poseStability)
+        poseStabilityStderr = OEField('PoseStabilityStderr', Types.Float, meta=metaPoseStabilityStderr)
 
     class FEC:
         # Free Energy
         free_energy = OEField('FE_OPLMD', Types.Float,
                               meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol))
-
         metaFreeEnergy_err = OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol)
         metaFreeEnergy_err.add_relation(Meta.Relations.ErrorsFor, free_energy)
         free_energy_err = OEField('FE_Error_OPLMD', Types.Float, meta=metaFreeEnergy_err)
+
+        binding_fe = OEField('BindDeltaG_OPLMD', Types.Float, meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol))
+        meta_binding_fe_err = OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol)
+        meta_binding_fe_err.add_relation(Meta.Relations.ErrorsFor, binding_fe)
+        binding_fe_err = OEField('BindDeltaG_Error_OPLMD', Types.Float, meta=meta_binding_fe_err)
+
+        binding_exptl_fe = OEField('BindDeltaG_Exptl_OPLMD', Types.Float, meta=OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol))
+        meta_binding_exptl_fe_err = OEFieldMeta().set_option(Meta.Units.Energy.kCal_per_mol)
+        meta_binding_exptl_fe_err.add_relation(Meta.Relations.ErrorsFor, binding_exptl_fe)
+        binding_exptl_fe_err = OEField('BindDeltaG_Exptl_Error_OPLMD', Types.Float, meta=meta_binding_exptl_fe_err)
 
         class RBFEC:
             # Oriented Edge field for relative free energy calculations
             # The first integer of the list is the ligand ID of the starting
             # thermodynamic state and the second the final one
+
             edgeid = OEField("EdgeID_OPLMD", Types.Int, meta=_metaHidden)
             edge_name = OEField("EdgeName_OPLMD", Types.String)
 
@@ -256,11 +311,17 @@ class Fields:
 
             class NESC:
 
-                state_A = OEField("StateA_OPLMD", Types.Record)
-                state_B = OEField("StateB_OPLMD", Types.Record)
+                state_A = OEField("StateA_OPLMD", Types.RecordVec, meta=_metaHidden)
+                state_B = OEField("StateB_OPLMD", Types.RecordVec, meta=_metaHidden)
+
+                forward = OEField("Forward_OPLMD", Types.String)
+                reverse = OEField("Reverse_OPLMD", Types.String)
+
+                direction = OEField("Direction_OPLMD", Types.String)
 
                 gmx_top = OEField("GMX_Top_OPLMD", Types.String, meta=_metaHidden)
                 gmx_gro = OEField("GMX_Gro_OPLMD", Types.String, meta=_metaHidden)
+
                 work = OEField("GMX_Work_OPLMD", Types.Float,
                                meta=OEFieldMeta().set_option(Meta.Units.Energy.kJ_per_mol))
                 frame_count = OEField("frame_count", Types.Int, meta=_metaHidden)
@@ -273,9 +334,3 @@ class Fields:
                 # different analysis methods used to compute it
                 DDG_rec = OEField("DDG_Record_OPLMD", Types.Record)
 
-
-# def get_meta_attributes(record, field_name):
-#     field_with_meta = record.get_field(field_name, include_meta=True)
-#     meta_from_field = field_with_meta.get_meta()
-#     meta_dict = meta_from_field.to_dict()
-#     return meta_dict

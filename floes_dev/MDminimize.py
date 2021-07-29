@@ -48,11 +48,11 @@ job.classification = [['Simulation']]
 job.uuid = "57f233a2-751c-43bc-b613-f064ce685468"
 job.tags = [tag for lists in job.classification for tag in lists]
 
-ifs = DatasetReaderCube("SystemReader", title="System Reader")
-ifs.promote_parameter("data_in", promoted_name="system", title='System Input File',
-                      description="System input file")
+ifs = DatasetReaderCube("SystemReader", title="Flask Reader")
+ifs.promote_parameter("data_in", promoted_name="system", title='Flask Input File',
+                      description="Flask input file")
 
-min = ParallelMDMinimizeCube('Minimize', title="System Minimization")
+min = ParallelMDMinimizeCube('Minimize', title="Flask Minimization")
 min.promote_parameter('steps', promoted_name='steps', default=0)
 min.promote_parameter('md_engine', promoted_name='md_engine', default='OpenMM',
                       description='Select the MD Engine')

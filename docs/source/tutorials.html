@@ -1,0 +1,1361 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.15.2: http://docutils.sourceforge.net/" />
+<title>Tutorials</title>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 7952 2016-07-26 18:15:59Z milde $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+.subscript {
+  vertical-align: sub;
+  font-size: smaller }
+
+.superscript {
+  vertical-align: super;
+  font-size: smaller }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title, .code .error {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left, table.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right, table.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table.align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+.align-top    {
+  vertical-align: top }
+
+.align-middle {
+  vertical-align: middle }
+
+.align-bottom {
+  vertical-align: bottom }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+pre.literal-block, pre.doctest-block, pre.math, pre.code {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+pre.code .ln { color: grey; } /* line numbers */
+pre.code, code { background-color: #eeeeee }
+pre.code .comment, code .comment { color: #5C6576 }
+pre.code .keyword, code .keyword { color: #3B0D06; font-weight: bold }
+pre.code .literal.string, code .literal.string { color: #0C5404 }
+pre.code .name.builtin, code .name.builtin { color: #352B84 }
+pre.code .deleted, code .deleted { background-color: #DEB0A1}
+pre.code .inserted, code .inserted { background-color: #A3D289}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+/* "booktabs" style (no vertical lines) */
+table.docutils.booktabs {
+  border: 0px;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  border-collapse: collapse;
+}
+table.docutils.booktabs * {
+  border: 0px;
+}
+table.docutils.booktabs th {
+  border-bottom: thin solid;
+  text-align: left;
+}
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+<style type="text/css">
+
+/*
+*   math2html: convert LaTeX equations to HTML output.
+*
+*   Copyright (C) 2009,2010 Alex Fernández
+*
+*   Released under the terms of the `2-Clause BSD license'_, in short:
+*   Copying and distribution of this file, with or without modification,
+*   are permitted in any medium without royalty provided the copyright
+*   notice and this notice are preserved.
+*   This file is offered as-is, without any warranty.
+*
+* .. _2-Clause BSD license: http://www.spdx.org/licenses/BSD-2-Clause
+*
+*   Based on eLyXer: convert LyX source files to HTML output.
+*   http://elyxer.nongnu.org/
+*/
+/* --end--
+* CSS file for LaTeX formulas.
+*/
+
+/* Formulas */
+.formula {
+	text-align: center;
+	font-family: "Droid Serif", "DejaVu Serif", "STIX", serif;
+	margin: 1.2em 0;
+}
+span.formula {
+	white-space: nowrap;
+}
+div.formula {
+	padding: 0.5ex;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/* Basic features */
+a.eqnumber {
+	display: inline-block;
+	float: right;
+	clear: right;
+	font-weight: bold;
+}
+span.unknown {
+	color: #800000;
+}
+span.ignored, span.arraydef {
+	display: none;
+}
+.formula i {
+	letter-spacing: 0.1ex;
+}
+
+/* Alignment */
+.align-left, .align-l {
+	text-align: left;
+}
+.align-right, .align-r {
+	text-align: right;
+}
+.align-center, .align-c {
+	text-align: center;
+}
+
+/* Structures */
+span.overline, span.bar {
+	text-decoration: overline;
+}
+.fraction, .fullfraction {
+	display: inline-block;
+	vertical-align: middle;
+	text-align: center;
+}
+.fraction .fraction {
+	font-size: 80%;
+	line-height: 100%;
+}
+span.numerator {
+	display: block;
+}
+span.denominator {
+	display: block;
+	padding: 0ex;
+	border-top: thin solid;
+}
+sup.numerator, sup.unit {
+	font-size: 70%;
+	vertical-align: 80%;
+}
+sub.denominator, sub.unit {
+	font-size: 70%;
+	vertical-align: -20%;
+}
+span.sqrt {
+	display: inline-block;
+	vertical-align: middle;
+	padding: 0.1ex;
+}
+sup.root {
+	font-size: 70%;
+	position: relative;
+	left: 1.4ex;
+}
+span.radical {
+	display: inline-block;
+	padding: 0ex;
+	font-size: 150%;
+	vertical-align: top;
+}
+span.root {
+	display: inline-block;
+	border-top: thin solid;
+	padding: 0ex;
+	vertical-align: middle;
+}
+span.symbol {
+	line-height: 125%;
+	font-size: 125%;
+}
+span.bigsymbol {
+	line-height: 150%;
+	font-size: 150%;
+}
+span.largesymbol {
+	font-size: 175%;
+}
+span.hugesymbol {
+	font-size: 200%;
+}
+span.scripts {
+	display: inline-table;
+	vertical-align: middle;
+}
+.script {
+	display: table-row;
+	text-align: left;
+	line-height: 150%;
+}
+span.limits {
+	display: inline-table;
+	vertical-align: middle;
+}
+.limit {
+	display: table-row;
+	line-height: 99%;
+}
+sup.limit, sub.limit {
+	line-height: 100%;
+}
+span.symbolover {
+	display: inline-block;
+	text-align: center;
+	position: relative;
+	float: right;
+	right: 100%;
+	bottom: 0.5em;
+	width: 0px;
+}
+span.withsymbol {
+	display: inline-block;
+}
+span.symbolunder {
+	display: inline-block;
+	text-align: center;
+	position: relative;
+	float: right;
+	right: 80%;
+	top: 0.3em;
+	width: 0px;
+}
+
+/* Environments */
+span.array, span.bracketcases, span.binomial, span.environment {
+	display: inline-table;
+	text-align: center;
+	border-collapse: collapse;
+	margin: 0em;
+	vertical-align: middle;
+}
+span.arrayrow, span.binomrow {
+	display: table-row;
+	padding: 0ex;
+	border: 0ex;
+}
+span.arraycell, span.bracket, span.case, span.binomcell, span.environmentcell {
+	display: table-cell;
+	padding: 0ex 0.2ex;
+	line-height: 99%;
+	border: 0ex;
+}
+/*
+* CSS file for LaTeX formulas, extra stuff:
+* binomials, vertical braces, stackrel, fonts and colors.
+*/
+
+/* Inline binomials */
+span.binom {
+	display: inline-block;
+	vertical-align: middle;
+	text-align: center;
+	font-size: 80%;
+}
+span.binomstack {
+	display: block;
+	padding: 0em;
+}
+
+/* Over- and underbraces */
+span.overbrace {
+	border-top: 2pt solid;
+}
+span.underbrace {
+	border-bottom: 2pt solid;
+}
+
+/* Stackrel */
+span.stackrel {
+	display: inline-block;
+	text-align: center;
+}
+span.upstackrel {
+	display: block;
+	padding: 0em;
+	font-size: 80%;
+	line-height: 64%;
+	position: relative;
+	top: 0.15em;
+
+}
+span.downstackrel {
+	display: block;
+	vertical-align: bottom;
+	padding: 0em;
+}
+
+/* Fonts */
+span.mathsf, span.textsf {
+	font-style: normal;
+	font-family: sans-serif;
+}
+span.mathrm, span.textrm {
+	font-style: normal;
+	font-family: serif;
+}
+span.text, span.textnormal {
+	font-style: normal;
+}
+span.textipa {
+	color: #008080;
+}
+span.fraktur {
+	font-family: "Lucida Blackletter", eufm10, blackletter;
+}
+span.blackboard {
+	font-family: Blackboard, msbm10, serif;
+}
+span.scriptfont {
+	font-family: "Monotype Corsiva", "Apple Chancery", "URW Chancery L", cursive;
+	font-style: italic;
+}
+
+/* Colors */
+span.colorbox {
+	display: inline-block;
+	padding: 5px;
+}
+span.fbox {
+	display: inline-block;
+	border: thin solid black;
+	padding: 2px;
+}
+span.boxed, span.framebox {
+	display: inline-block;
+	border: thin solid black;
+	padding: 5px;
+}
+
+
+</style>
+</head>
+<body>
+<div class="document" id="tutorials">
+<h1 class="title">Tutorials</h1>
+
+<p>These are tutorials for how to use specific floes.</p>
+<div class="section" id="short-trajectory-md-with-analysis">
+<h1>Short Trajectory MD with Analysis</h1>
+<p>The Floe <em>Short Trajectory MD with Analysis</em> (STMD) is for pose validation.
+You should start with a ligand with one or more conformers already well posed
+in the active site, with protein-ligand interactions in place, serving as
+hypotheses for ligand binding.
+Each pose will be evaluated by this floe to be validated (or not) as a good pose.
+We are not primarily asking the question &quot;what is the pose for this ligand?&quot;
+but rather &quot;is this a good pose for this ligand?&quot;, or with multiple poses,
+&quot;which of these poses is best?&quot;. We seek an answer by running a
+short MD trajectory on each pose separately and comparing the results to the
+starting (input) pose and between the poses (if more than one).</p>
+<div class="section" id="what-this-floe-does">
+<h2>What this Floe does</h2>
+<p>The structure of the STMD floe is shown in figure
+<cite>Structure of the STMD floe</cite>.
+Given the inputs of the protein and posed ligands,
+the complex is formed with each ligand/conformer separately,
+and the complex is solvated and parametrized according to
+the selected force fields.
+We refer to this ready-to-run molecular assembly as a &quot;flask&quot;
+by analogy to experiment: all the components are combined into
+the flask, upon which we run our experiment.
+A minimization stage is performed on the flask followed by
+a warm up (NVT ensemble) and several equilibration stages (NPT ensemble).
+In the minimization, warm up, and equilibration stages,
+positional harmonic restraints are applied on the ligand and protein.
+At the end of the equilibration stages a short (default 2ns) production run
+is performed on the unrestrained flask.
+The production run is then analyzed in terms of interactions between
+the ligand and the active site and in terms of ligand RMSD,
+after fitting the trajectory based on active site C_alphas.</p>
+<!-- figure_STMD_floe: -->
+<div class="figure align-center">
+<img alt="Structure of the STMD floe" src="./images/STMD_floe.png" style="width: 800px;" />
+<p class="caption"><strong>Structure of the STMD floe</strong></p>
+</div>
+</div>
+<div class="section" id="ligand-input">
+<h2>Ligand Input</h2>
+<p>Just to be able to run, this floe requires ligands to have
+reasonable 3D coordinates, all atoms, and correct chemistry
+(in particular bond orders and formal charges).
+If the ligands already have good atomic partial charges
+(we recommend RESP or AM1-BCC_ELF10 charges),
+we recommend using these for STMD as opposed to re-charging
+them in the STMD floe.
+Given that this floe only runs a very short timescale (default 2 ns),
+it is preferable that the input pose be well refined.
+Although bad clashes
+(or poor positioning for interactions which you know are important)
+can be (and often are) cleaned up by even this short trajectory,
+it starts off the &quot;evaluation&quot; purpose of the floe on the wrong foot
+by giving a poor comparator.
+Poor initial poses might even be considered outside the scope of this floe
+given how short is the default timescale.
+This is why we <strong>strongly recommend</strong> that docked poses be
+subsequently minimized in the active site <strong>before input to STMD</strong>.
+This will resolve high gradients
+(usually clashes) with the protein and to allow protein-ligand
+interactions to optimize in the context of a good force field.
+It is possible that even with this pre-MD refinement,
+the docked-pose starting points could be re-evaluated and
+triaged prior to the extra effort and expense of STMD.
+The ligand input datasets used in this tutorial are:</p>
+<blockquote>
+<ul>
+<li><p class="first"><a href="#id1"><span class="problematic" id="id2">:download:`MCL1_1poseLig35_elf10.oeb &lt;files/MCL1_1poseLig35_elf10.oeb&gt;`</span></a></p>
+<div class="system-message" id="id1">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/gcalabro/Projects/Gaetano/openmm_orion/docs/source/tutorials.rst</tt>, line 83); <em><a href="#id2">backlink</a></em></p>
+<p>Unknown interpreted text role &quot;download&quot;.</p>
+</div>
+</li>
+<li><p class="first"><a href="#id3"><span class="problematic" id="id4">:download:`MCL1_6poseLig35_elf10.oeb &lt;files/MCL1_6poseLig35_elf10.oeb&gt;`</span></a></p>
+<div class="system-message" id="id3">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/gcalabro/Projects/Gaetano/openmm_orion/docs/source/tutorials.rst</tt>, line 84); <em><a href="#id4">backlink</a></em></p>
+<p>Unknown interpreted text role &quot;download&quot;.</p>
+</div>
+</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="protein-input">
+<h2>Protein Input</h2>
+<p>All the MD floes require correctly prepared protein up to &quot;MD ready&quot; standards.
+This begins with the normal prerequisites for physics-based modeling:
+protein chains must be capped,
+all atoms in protein residues (including hydrogens) must be present, and missing
+protein loops resolved or capped.
+Of course, protein side chain formal charges and protonation
+at this point determine their tautomeric state.
+Additionally, cofactors and structured internal waters are also important to include,
+not only those in the immediate vicinity of the ligand and active site
+but also distally because they can have an important effect on the
+protein structure and dynamics over the course of the MD.
+We <strong>strongly recommend</strong> using <em>Spruce</em> for protein preparation.
+The protein input dataset used in this tutorial is:</p>
+<blockquote>
+<ul>
+<li><p class="first"><a href="#id5"><span class="problematic" id="id6">:download:`MCL1_SchrodingerFEP_4HW3A_extprot_v2.oeb.gz &lt;files/MCL1_SchrodingerFEP_4HW3A_extprot_v2.oeb.gz&gt;`</span></a></p>
+<div class="system-message" id="id5">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/gcalabro/Projects/Gaetano/openmm_orion/docs/source/tutorials.rst</tt>, line 104); <em><a href="#id6">backlink</a></em></p>
+<p>Unknown interpreted text role &quot;download&quot;.</p>
+</div>
+</li>
+</ul>
+</blockquote>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Unfortunately, proteins with covalently bound ligands or covalently bound cofactors are currently not tractable</p>
+</div>
+</div>
+<div class="section" id="how-to-use-this-floe">
+<h2>How to use this floe</h2>
+<p>After selecting the <em>Short Trajectory MD with Analysis</em> floe in the Orion UI,
+you will be presented with a job form with parameters to select.
+In Figure <cite>STMD Job Form for ligand 35 (6 poses)</cite> you can see how we filled out
+the key fields of that form for the ligand 35 6-pose case described below.</p>
+<!-- figure_STMD_jobForm: -->
+<div class="figure align-center">
+<img alt="STMD Job Form for ligand 35 (6 poses)" src="./images/STMD_jobForm_6poses.png" style="width: 800px;" />
+<p class="caption"><strong>Key fields of STMD Job Form for ligand 35 (6 poses)</strong></p>
+</div>
+<p>Aside from the essential user-defined parameters relating to jobname,
+input (protein and ligand datasets as described above), and
+output (output and failure dataset names),
+all other parameters have defaults preset to values that
+we feel are suitable for the non-expert MD user
+(or expert user for that matter) so launching the floe at this point is reasonable.
+That said, some of the other top-level parameters are worth considering:</p>
+<blockquote>
+<ul class="simple">
+<li>Flask_title (no default): Here is where you can put a handy short name for the protein to use in molecule titles (e.g. &quot;Bace&quot; instead of &quot;beta-secretase&quot;).</li>
+<li>Charge_ligands (default <em>True</em>): If your input ligands already have good atomic partial charges (e.g. <cite>RESP</cite> or <cite>AM1-BCC_ELF10</cite>), set this to <em>False</em> to have the floe use the existing ligand charges.</li>
+<li>Ligand_forcefield (default <em>OpenFF1.2</em>): This forcefield choice has a strong impact on the results. We recommend the most recent version of the OpenFF force field from the <em>Open Force Field Initiative</em>.</li>
+<li>Md_engine (default <em>OpenMM</em>): Gromacs is the other alternative but we recommend OpenMM because HMR works with it but not with Gromacs.</li>
+<li>Hmr: Hydrogen Mass Repartitioning (HMR) gives a two-fold speedup and reduces cost. We recommend leaving it on.</li>
+</ul>
+</blockquote>
+<p>We make the other top-level parameters available for expert users.</p>
+</div>
+<div class="section" id="accessing-and-understanding-the-results">
+<h2>Accessing and Understanding the Results</h2>
+<p>The results from the STMD floe are accessed via two main avenues:
+through the job output in the <cite>Jobs</cite> tab in Orion's <cite>Floe</cite> page, and
+through orion's <cite>Analyze</cite> page.
+We will look at the results of two jobs run on
+the same MCL1 ligand; in the first case the input ligand had only a
+single pose and in the second case it had six slightly different poses.</p>
+</div>
+<div class="section" id="mcl1-ligand-35-single-input-pose">
+<h2>MCL1 ligand 35: single input pose</h2>
+<p>First we will look at the results of the single-pose run.
+In the <cite>Jobs</cite> tab in Orion's <cite>Floe</cite> page,
+having selected the job name for your STMD job, you should land on
+the job results page.
+The left panel contains the usual orion job information from the run,
+and the right panel has two tabs at the top if the run was not successful
+or three tabs at the top if it was... we will focus on success here!
+Selecting the third tab called <em>FLOE REPORT</em> should give you a
+page looking similar to Figure <cite>STMD Job results page for a single pose of an MCL1 ligand</cite>.</p>
+<!-- figure_STMD_lig35_jobResults1pose: -->
+<div class="figure align-center">
+<img alt="STMD Job results page for a single pose of an MCL1 ligand" src="./images/STMD_JobResults_1pose.png" style="width: 1000px;" />
+<p class="caption"><strong>STMD Job results page for a single pose of an MCL1 ligand</strong></p>
+</div>
+<p>The floe report shows a tile for each MD simulation, here there was
+only one ligand in the input file.
+The atom colors correspond to calculated B-factors, similar to Xray
+B-factors, depicting the mobility of those atoms in the active site
+over the course of the MD trajectory.
+This gives an immediate read-out on how much various fragments of
+the ligand were moving around in the active site. As a general principle
+greater movement suggests that that fragment is not as tightly bound
+in the active site, but inferences are only qualitative. Certainly
+fragments hanging out in water of even a tightly bound inhibitor will be expected
+to be more mobile than the buried parts.
+Other information on each tile is:</p>
+<blockquote>
+<ul class="simple">
+<li>The ligand name.</li>
+<li>The number of clusters formed by clustering the ligand positions in the MD trajectory.</li>
+<li>The Boltzmann-weighted MMPBSA score for ligand binding over the trajectories for all poses.</li>
+</ul>
+</blockquote>
+<p>Clicking on the tile drills down into the detailed analysis of that simulation,
+resulting in Figure <cite>Detailed results for ligand 35 (single pose)</cite>:</p>
+<!-- figure_STMD_lig35_interactiveSVG1pose: -->
+<div class="figure align-center">
+<img alt="Detailed results for ligand 35 (single pose)" src="./images/STMD_interactiveSVG_1pose.png" style="width: 1000px;" />
+<p class="caption"><strong>Detailed results for ligand 35 (single pose)</strong></p>
+</div>
+<p>In the graphic we see a 2D representation of the ligand binding
+interactions for the whole trajectory, with the default display
+of the <cite>Overall</cite> tab at the top of the graphic. It is an interactive
+graphic: selecting the <cite>Cluster 0</cite> tab in blue or the <cite>Cluster 1</cite> tab
+in green will change the binding
+interaction representation to that corresponding to the selected cluster.
+Hovering over one of the interaction in the diagram lights up a
+strip chart on the right-hand side grey arrow showing the occupancy
+of that interaction over the course of the trajectory.
+Within the heavy frame of the graphic, we see that the interactive
+graph is on <cite>interactions</cite>; selecting <cite>torsions</cite> changes the depiction
+to show a heavy black dot in each rotatable bond. Hovering over one
+of these shows a radial bar graph of the occupancy of the torsion on
+the right-hand side. Selecting <cite>B-factor</cite> yields a depiction of the
+calculated B-factors for the selected cluster as in the parent tile,
+but additionally shows the calculated B-factor for each active site
+amino acid close to the ligand. To the right of the graphic is
+information about the clustering of the ligand trajectory, including
+a table giving the ensemble average MMPBSA energy (with standard error)
+for each cluster. These averages are used to compute the Boltzmann-weighted
+average for the ligand as a whole. Note that cluster 1 (green), the low
+occupancy cluster, is much less stable than cluster 0 (blue), so the
+Boltzmann-weighted result represents cluster 0 completely.</p>
+<p>Scrolling down exposes a strip chart and two tables detailing relevant
+analyses of the trajectories for all poses of the ligand.
+The strip chart for ligand 35 (single pose) is shown
+in Figure <cite>Strip Chart results for ligand 35 (single pose)</cite>:</p>
+<!-- figure_STMD_lig35_stripChart1pose: -->
+<div class="figure align-center">
+<img alt="Strip Chart results for ligand 35 (single pose)" src="./images/STMD_stripChart_1pose.png" style="width: 800px;" />
+<p class="caption"><strong>Strip Chart results for ligand 35 (single pose)</strong></p>
+</div>
+<p>The strip chart shows a time course over the MD trajectory,
+maintaining always the same color scheme as in the interactive graphic:
+blue and green for cluster 0 and 1, respectively.
+Additionally, cluster outliers, which are ligand configurations
+that do not belong to any cluster, are shown in black.
+The chart simply shows the cluster occupancy of each frame,
+telling us that the trajectory started out in the blue Cluster 0,
+then transitioned to the green Cluster 1 late in the trajectory.
+From this sampling, it appears Cluster 0 is the predominant and
+preferred cluster.</p>
+<p>The two tables below the strip chart, shown in
+<cite>Cluster/Pose information for ligand 35 (single pose)</cite>
+describe a relationship
+between each cluster found in the MD for the ligand and the
+starting poses.</p>
+<!-- figure_STMD_lig35_tables1pose: -->
+<div class="figure align-center">
+<img alt="Cluster/Pose information for ligand 35 (single pose)" src="./images/Tables_1Pose.png" style="width: 1000px;" />
+<p class="caption"><strong>Cluster/Pose information for ligand 35 (single pose)</strong></p>
+</div>
+<p>With only one pose used for this run the tables
+are terse, but below when we look at 6 input poses for the
+same ligand they will be more informative. The upper table
+&quot;Cluster Percentage by Starting Pose&quot; simply describes the
+occupancy that we see in the strip chart: the ligand spends
+71% of its time in cluster 0 and 8% in cluster 1. The second
+table describes how closely each cluster stays to the
+starting pose: the blue Cluster 0 sticks closely
+to the initial pose (1.13 Å RMSD), whereas the green Cluster 0
+has moved somewhat farther away ( 2.72 Å RMSD).
+This tells us the predominant and preferred blue Cluster 0
+stays close to the initial pose.</p>
+</div>
+<div class="section" id="mcl1-ligand-35-6-input-poses">
+<h2>MCL1 ligand 35: 6 input poses</h2>
+<p>Now we will look at the results of another run on the same ligand 35,
+but this time with 6 different input poses: 3 related poses with the
+methyl &quot;up&quot; in the upper panel of Figure <cite>Input poses for the 6-pose run</cite> and
+3 related poses with the methyl &quot;down&quot; in lower panel of the same Figure.
+The &quot;up&quot; and &quot;down&quot; poses are only differentiated in the Figure for
+clarity; in the input file all 6 poses are together as the 6 conformers
+of the ligand 35 molecule. Poses 0, 3, and 5 have the methyl &quot;down&quot; and
+poses 1, 2, and 4 have the methyl &quot;up&quot;... this will be important later.
+The question we might be asking here is whether
+the &quot;up&quot; methyl or &quot;down&quot; methyl is preferred, and which of the input
+poses (if any) is preferred. And of course we want to see if the
+preferred cluster by MD still retains the binding interactions we
+thought were good enough to carry ligand 35 along up to this point.</p>
+<!-- figure_STMD_lig35_input6poses: -->
+<div class="figure align-center">
+<img alt="Input poses for the 6-pose run up" src="./images/Start3Pose_MeUp.png" style="width: 1000px;" />
+</div>
+<div class="figure align-center">
+<img alt="Input poses for the 6-pose run" src="./images/Start3Pose_MeDown.png" style="width: 1000px;" />
+<p class="caption"><strong>Input poses for the 6-pose run: 3 with the methyl &quot;up&quot; (top) and 3 with the methyl &quot;down&quot; (bottom)</strong></p>
+</div>
+<p>Once the run is completed, again we go to the job results page,
+not shown here because it is so similar to what we saw with the single-pose example
+in Figure  <cite>STMD Job results page for a single pose of an MCL1 ligand</cite> (above).
+Selecting the third tab (&quot;<em>FLOE REPORT</em>&quot;),
+there is still only a single tile for the single ligand; the results
+for all 6 poses have been aggregated and analyzed together for that
+ligand.
+The atom colors corresponding to the calculated B-factors will often
+be a lot &quot;hotter&quot; (more red) for multiple-pose inputs because trajectories
+for diverse poses are aggregated together, often giving higher per-atom
+fluctuations.
+Click on the tile to drill down into the detailed analysis,
+resulting in Figure <cite>Detailed results for ligand 35 (6 poses)</cite>:</p>
+<!-- figure_STMD_lig35_interactiveSVG6poses: -->
+<div class="figure align-center">
+<img alt="Detailed results for ligand 35 (single pose)" src="./images/STMD_interactiveSVG_6Poses.png" style="width: 1000px;" />
+<p class="caption"><strong>Detailed results for ligand 35 (single pose)</strong></p>
+</div>
+<p>Overall it looks quite similar to the single-pose case; although
+the 2D representation shows a different orientation the binding
+interactions are the same. There are still two clusters, but now
+the clusters are very different from the single-pose case,
+which will emerge as we look at the results in more detail.
+Look to the right of the graphic at the table giving
+the ensemble average MMPBSA energy (with standard error)
+for each cluster. We see that both clusters have low MMPBSA
+energies, now with the green cluster 1 slightly lower energy than
+the blue cluster 0.</p>
+<p>Scrolling down to the strip chart, shown below in
+Figure <cite>Strip Chart results for ligand 35 (6 poses)</cite>,
+we see the time course over the MD trajectories for all starting
+poses concatenated and analyzed together.
+The strip chart and the table below it (table <cite>Cluster Percentage by
+Pose for ligand 35 (6 poses)</cite> both point to a clear grouping by pose:
+poses 0, 3,and 5 only show cluster 0 occupancy (blue), and poses 1, 2, and 4
+only cluster 1 occupancy (green).</p>
+<!-- figure_STMD_lig35_stripChart6poses: -->
+<div class="figure align-center">
+<img alt="Strip Chart results for ligand 35  (6 poses)" src="./images/STMD_stripChart_6Poses.png" style="width: 800px;" />
+<p class="caption"><strong>Strip Chart results for ligand 35  (6 poses)</strong></p>
+</div>
+<!-- figure_STMD_lig35_tableClusPercent6Poses: -->
+<div class="figure align-center">
+<img alt="Cluster Percentage by Pose for ligand 35 (6 poses)" src="./images/TableClusPerct_6Pose.png" style="width: 800px;" />
+<p class="caption"><strong>Cluster Percentage by Pose for ligand 35 (6 poses)</strong></p>
+</div>
+<p>The former poses correspond to the
+methyl &quot;down&quot; starting poses and the latter to the methyl &quot;up&quot; starting
+poses, which we can confirm in the Orion 3D page. While the short trajectories
+in this run (2 ns for each pose) do not allow interconversion between
+methyl &quot;up&quot; and &quot;down&quot; poses, it appears that the 3 poses in each category
+have collapsed to a single cluster. How close is the cluster to any of
+the starting poses? This answered by the final table in the Floe
+Report, Table <cite>Cluster RMSD from Pose for ligand 35 (6 poses)</cite></p>
+<!-- figure_STMD_lig35_tableClusRMSD6Poses: -->
+<div class="figure align-center">
+<img alt="Cluster RMSD from Pose for ligand 35 (6 poses)" src="./images/TableClusRMSD_6Pose.png" style="width: 800px;" />
+<p class="caption"><strong>Cluster RMSD from Pose for ligand 35 (6 poses)</strong></p>
+</div>
+<p>This table confirms that cluster 0 is quite close to the starting
+poses (0, 3, and 5) that contributed to it, though slightly closer
+to Pose 0. Cluster 1 is still within 2 Å of all six poses, but
+closest to Pose 1 out of all.</p>
+<p>We can visually confirm this by selecting the output dataset (in
+the &quot;Data&quot; tab of Orion) and then going to the &quot;3D&quot; tab. Under the
+list of structures for ligand 35, the starting poses appear as
+&quot;Conformer (6)&quot;, the average structures for the clusters
+under &quot;Average 35&quot; with the average ligands under &quot;Conformers (2)&quot;
+and the average proteins underneath that. Selecting starting poses
+0, 3, and 5 with the average ligand and protein for cluster 0 (blue)
+gives the upper panel in Figure <cite>Starting Poses and Cluster Averages
+for ligand 35</cite>. Selecting starting poses
+1, 2, and 4 with the average ligand and protein for cluster 1 (green)
+gives the lower panel.</p>
+<!-- figure_STMD_lig35_tableClusRMSD6Poses: -->
+<div class="figure align-center">
+<img alt="./images/Final3Pose_MeDown.png" src="./images/Final3Pose_MeDown.png" style="width: 800px;" />
+</div>
+<div class="figure align-center">
+<img alt="Starting Poses and Cluster Averages for ligand 35" src="./images/Final3Pose_MeUp.png" style="width: 800px;" />
+<p class="caption"><strong>Starting Poses and Cluster Averages for ligand 35</strong></p>
+</div>
+<p>These visually confirm what we had seen emerging from the analysis:
+the 6 poses collapse into a single consensus methyl &quot;up&quot; and methyl
+&quot;down&quot; pose. Cluster 0 lies close to one of the starting poses, but
+Cluster 1 lies in between two of the starting poses. The ensemble
+MMPBSA energies of the two clusters are very similar, so we cannot
+pick a preferred binding mode... perhaps both would occur.</p>
+</div>
+<div class="section" id="analyzing-a-set-of-ligands">
+<h2>Analyzing a Set of Ligands</h2>
+<p>Finally we will look at how to visualize the results for the entire
+MCL1 dataset of 10 ligands, each with multiple input poses, all
+run in the same job in the &quot;Short Trajectory MD with Analysis&quot; floe.
+Selecting the output dataset in the &quot;Data&quot; tab and moving to the
+&quot;Analyze&quot; tab, the results for the entire dataset can be viewed at
+once as in Figure <cite>Analyze page for MCL1 dataset</cite>:</p>
+<!-- figure_STMD_lig1b_analyze: -->
+<div class="figure align-center">
+<img alt="Analyze page for MCL1 dataset" src="./images/STMD_MCL1_analyze.png" style="width: 1000px;" />
+<p class="caption"><strong>Analyze page for MCL1 dataset</strong></p>
+</div>
+<p>There are a lot of results showing in this page, encompassing
+both numerical and 3D information. The 3D info is brought in by
+selecting <cite>Analyze 3D</cite> under the <cite>Layout</cite> pull-down menu at the
+top right. The axes of the scatterplot were selected to display
+the experimental deltaG (included as an SD tag on the input
+ligands) on the x axis and the Boltzmann-weighted emsemble MMPBSA value on the y axis.
+Scrolling down the spreadsheet to ligand 35 and selecting that
+row, the 3D visualizer jumps to a series of entries relating to
+ligand 35 and the point in the scatter plot corresponding to
+ligand 35 is highlighted.
+In the 3D window, the initial input poses for ligand 35 are shown in gold.
+Expanding the menu under <cite>Average 35</cite> allows us to turn on the
+average structure for Clusters 0 and 1, again maintaining
+the colors for each of blue and green, respectively.
+Just above <cite>Average 35</cite> are the corresponding average protein structures,
+in matching color, to go with the average ligand for each cluster.
+This way we can compare the poses to the representative
+average for each cluster, helping us to evaluate and prioritize that ligand.
+To call up the detailed MD analysis once again, go to the spreadsheet
+row for ligand 35, and under the column titled <cite>Floe_report_URL</cite>
+click on the little square to open up another tab in your
+browser with the same detailed analysis floe report for ligand 35.</p>
+<p>There is a lot of information to look at in the results from
+the <em>Short Trajectory MD with Analysis</em> floe, but this should get
+you started. We emphasize that a lot of the analyses can only
+be interpreted qualitatively at this stage, but nevertheless
+we feel that the sampling of both protein and ligand configurations
+at physiological temperatures in the context of explicit water solvation
+can help validate the initial input pose(s).</p>
+</div>
+</div>
+<div class="section" id="non-equilibrium-switching">
+<h1>Non-Equilibrium Switching</h1>
+<p>The Non-Equilibrium Switching (NES) method is a relatively novel method
+in the Binding Free context to calculate Relative Binding Affinities
+(RBFE) of a given target and its ligands. The theory was developed
+during the 1990s <a class="footnote-reference" href="#id20" id="id7">[1]</a> <a class="footnote-reference" href="#id21" id="id8">[2]</a> however due to its high computational demand
+the approach has not fully explored, and few pioneering works have
+been published so far <a class="footnote-reference" href="#id22" id="id9">[3]</a></p>
+<p>The methodology uses alchemical methods to calculate the RBFE between two
+ligands (<strong>Egde</strong>) where a starting ligand A is “mutated” into a final one B.
+In general, the relative binding affinity <span class="formula">ΔΔ<i>G</i></span> is defined as the free energy
+difference between the binding affinities of a ligand A <span class="formula">Δ<i>G</i><sub><i>A</i></sub></span> and B <span class="formula">Δ<i>G</i><sub><i>B</i></sub></span>
+related to their target. However, the direct computation of these affinities
+can be quite challenging because a direct binding process need to be simulated and
+other easy thermodynamics paths are often used. For example, <span class="formula">ΔΔ<i>G</i></span> can also be computed following the
+paths shown in the figure where <span class="formula">Δ<i>G</i><sub><i>Bound</i></sub></span> and <span class="formula">Δ<i>G</i><sub><i>Unbound</i></sub></span> are estimated.</p>
+<div class="figure align-center" id="figure-rbfe">
+<img alt="RBFE and alternative thermodynamics paths" src="./images/RBFE.png" style="width: 300px;" />
+<p class="caption"><strong>RBFE and alternative thermodynamics paths</strong></p>
+</div>
+<p>In the Unbound path the starting ligand is mutated into the final one just
+in solution while in the Bound path the mutation happens in the
+binding site. In the NES approach these mutations are done in a non-equilibrium
+regime many and many times starting from equilibrium snapshots and building the
+forward and reverse work probability distribution functions that can be used
+to estimate <span class="formula">ΔΔ<i>G</i></span>. For this reason, the methodology requires prior to run to have
+the equilibrium ensembles for the Bound and the Unbound systems.</p>
+<p>In addition, the implemented floe-protocol tries to estimate the Affinities from
+the computed RBFEs by using the maximum likelihood estimator method <a class="footnote-reference" href="#id23" id="id10">[4]</a> making possible
+to directly compare the predicted values with the experimental results derived
+for example from activities measurements, IC50 etc.</p>
+<div class="section" id="the-equilibrium-and-non-equilibrium-switching-floe">
+<h2>The Equilibrium and Non-Equilibrium Switching floe</h2>
+<p>The Equilibrium and Non-Equilibrium switching floe can be divided into four main sections
+shown here</p>
+<div class="figure align-center" id="figure-eq-and-nes-floe">
+<img alt="The Equilibrium and Non-Equilibrium Switching floe" src="./images/EQ_and_NES_floe.png" style="width: 1000px;" />
+<p class="caption"><strong>The four main sections of the Equilibrium and Non-Equilibrium Switching floe</strong></p>
+</div>
+<p>The first and second sections of the floe assemble and run the Bound and Unbound simulations. The protocol for
+the bound simulations is similar to the tutorial on the Short Trajectory MD with Analysis and it is not
+repeated here while for the Unbound simulations each ligand is charged, solvated in a box of solvent and
+parametrized accordingly to the selected force field. Then the Unbound flask is equilibrated in
+three different steps performing restrained runs such as minimization, NVT and NPT.
+Finally, the Bound and Unbound flasks are set into an Equilibrium production stage where they run for
+a total of a default 6ns.</p>
+<p>The third section of the floe performs the NES calculations and is shown here</p>
+<div class="figure align-center" id="figure-nes-section">
+<img alt="The Non-Equilibrium Switching floe section" src="./images/NES.png" style="width: 1000px;" />
+<p class="caption"><strong>The Non-Equilibrium Switching floe section</strong></p>
+</div>
+<p>In this section important cubes are the gathering cube which selects the equilibrium runs
+involved into an edge and inputting them to the Chimera cube. Here a chimeric molecule between
+the ligand edge are merged together (topologically and in force field terms) and injected
+into the equilibrium trajectory frames collected during the equilibrium runs. For each edge
+four per equilibrium frame simulations are performed:</p>
+<blockquote>
+<ul class="simple">
+<li>A Bound forward</li>
+<li>A Bound reverse</li>
+<li>An Unbound forward</li>
+<li>An Unbound reverse</li>
+</ul>
+</blockquote>
+<p>By default 80 equilibrium frames are selected for the Bound and Unbound runs therefore, for each
+edge a total of:</p>
+<p>80 (Bound forward) + 80 (Bound reverse) + 80 (Unbound forward) + 80 (Unbound reverse) = 320</p>
+<p>runs are performed. Each run is effectively made with a short NPT equilibration of 5ps
+to adapt the equilibrium frame flask to the new chimeric molecule followed by a default 50ps NPT
+ensemble simulation where the chimeric molecule is switched between the starting and final
+ligand thermodynamic states. All the runs are done by using Gromacs as md engine at this stage.</p>
+<p>The final section of the NES floe Analyze the NES data and produces the results.</p>
+<div class="figure align-center" id="figure-nes-analysis-section">
+<img alt="The NES Analysis floe section" src="./images/NES_Analysis.png" style="width: 1000px;" />
+<p class="caption"><strong>The NES Analysis floe section</strong></p>
+</div>
+<p>For each edge the forward and reverse works for the Bound and Unbound runs are evaluated
+by using the Bennet Acceptance ratio for Non-Equilibrium and these values are used to
+compute the <span class="formula">Δ<i>G</i><sub><i>Bound</i></sub></span> and <span class="formula">Δ<i>G</i><sub><i>Unbound</i></sub></span> free energy changes that are related to the <span class="formula">ΔΔ<i>G</i></span>. The RBFE values
+for a given edge are used to give an estimate of the affinity values by using the maximum likelihood estimator.
+However, this approach succeeds if the provided ligand edge map is enough connected otherwise no estimates is done.</p>
+</div>
+<div class="section" id="protein-ligand-and-edge-mapping-file-inputs">
+<h2>Protein, Ligand and Edge mapping file inputs</h2>
+<p>As like the Short Trajectory MD floe the NES floe requires ligands to have
+reasonable 3D coordinates, all atoms, and correct chemistry
+in particular bond orders and formal charges should be correctly assigned. The floe can
+be directly input from docking programs like <em>Posit</em> but bad clashes should have
+been relaxed prior to input the floe to resolve high gradients with the protein
+or other components like cofactors. In general, bad poses will evaluated and
+eventually rejected at floe running-time.</p>
+<p>The NES floe requires correctly prepared protein up to &quot;MD ready&quot; standards which requires
+chain capping, all atoms in protein residues (including hydrogens)
+and missing protein loops resolved or capped. Protein side chain formal charges and
+protonation at this point determine their tautomeric state. Additionally, cofactors
+and structured internal waters are also important to be included. We <strong>strongly recommend</strong>
+using <em>Spruce</em> for protein preparation.</p>
+<p>At this stage of the NES development the floe requires a ligand mapping that describes which
+relative binding affinity calculation to be performed. This is done by using a text file as
+floe input. The text file has a strict grammar where the first entry of a line is the
+starting ligand molecule title name, the second entry is the symbol concatenation &quot;&gt;&gt;&quot;
+and determines the RBFE calculation or edge direction and the third entry is the final ligand molecule title name.
+For example, for the RBFE calculation involving the edge where the ligA has molecule title name
+&quot;ligA&quot; mutated to the ligaB molecule with title name &quot;ligB&quot; the syntax for this entry into
+the mapping edge file would be:</p>
+<p>ligA &gt;&gt; ligB</p>
+<p>We are going to easy this step by implementing an automated mapper in further releases.</p>
+<p>For this tutorial the Tyk2 receptor is used with just few Tyk2 ligands. The files
+used in the tutorial can be download below. In addition to the receptor and ligands
+the ligand edge text file is required.</p>
+<blockquote>
+<ul>
+<li><p class="first"><a href="#id11"><span class="problematic" id="id12">:download:`Tyk2_4GIHA_protein.oeb.gz &lt;files/Tyk2_4GIHA_protein.oeb.gz&gt;`</span></a></p>
+<div class="system-message" id="id11">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/gcalabro/Projects/Gaetano/openmm_orion/docs/source/tutorials.rst</tt>, line 633); <em><a href="#id12">backlink</a></em></p>
+<p>Unknown interpreted text role &quot;download&quot;.</p>
+</div>
+</li>
+<li><p class="first"><a href="#id13"><span class="problematic" id="id14">:download:`Tyk2_ligands.oeb &lt;files/Tyk2_ligands.oeb&gt;`</span></a></p>
+<div class="system-message" id="id13">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/gcalabro/Projects/Gaetano/openmm_orion/docs/source/tutorials.rst</tt>, line 634); <em><a href="#id14">backlink</a></em></p>
+<p>Unknown interpreted text role &quot;download&quot;.</p>
+</div>
+</li>
+<li><p class="first"><a href="#id15"><span class="problematic" id="id16">:download:`Tyk2_edges.txt &lt;files/Tyk2_edges.txt&gt;`</span></a></p>
+<div class="system-message" id="id15">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/gcalabro/Projects/Gaetano/openmm_orion/docs/source/tutorials.rst</tt>, line 635); <em><a href="#id16">backlink</a></em></p>
+<p>Unknown interpreted text role &quot;download&quot;.</p>
+</div>
+</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="how-to-use-the-floe">
+<h2>How to use the floe</h2>
+<p>After selecting the <em>Equilibrium and Non-Equilibrium Switching</em> floe in the Orion UI,
+you will be presented with a job form with inputs, outputs and parameters to select.
+In next Figures you can see how we filled out the key fields for the Tyk2 receptor case.</p>
+<div class="figure align-center" id="figure-nes-floe-inputs">
+<img alt="The NES floe inputs" src="./images/NES_floe_inputs.png" style="width: 700px;" />
+<p class="caption"><strong>The NES floe inputs</strong></p>
+</div>
+<p>The <em>Equilibrium and Non-Equilibrium Switching</em> floe requires two mandatory inputs and
+two optional inputs. The mandatory inputs are the ligand datasets and the ligand edge mapping
+text file. The two optional inputs are the protein input file and the experimental binding
+affinity text file. If the protein is not provided, the floe at running-time
+will check if the protein is present on the ligand datasets in form of <cite>Design Unit</cite> produced
+by <em>Spruce</em>. If this data cannot be found  a running-time error will be raised and
+the floe will fail. The OpenEye <em>Posit</em> floe is able to produce datasets in this form otherwise
+the user must provides a protein as input as well. In the case that the protein is provided as input and,
+also the protein is present on the ligand input dataset the protein on the protein input will be used only.
+The other optional input is the experimental affinity file which will be used to generate
+comparison plots and tables between experimental and predicted results for the predicted <span class="formula">ΔΔ<i>Gs</i></span> and
+<span class="formula">Δ<i>Gs</i></span> in the floe reports.</p>
+<p>In order to submit the floe to Orion output dataset names have to be input to the floe</p>
+<div class="figure align-center" id="figure-nes-floe-outputs">
+<img alt="The NES floe outputs" src="./images/NES_floe_outputs.png" style="width: 700px;" />
+<p class="caption"><strong>The NES floe outputs</strong></p>
+</div>
+<p>The <em>Equilibrium Bound</em> and <em>Unbound</em> dataset outputs are the datasets produced at the end of the Equilibrium runs.
+The Bound dataset can be further used as input in the Analysis floe for Short Trajectory MD to triage
+stable from unstable ligand poses. If the provided edge mapping file is well connect the NES floe will be
+able to predict Affinities and these results are saved in the <em>Affinity</em> dataset output. The <em>NES</em> and <em>Failure</em> datasets
+are also produced as outputs. The first contains  all the information produced along the
+NES runs at edge and ligand level while the latter will gather all the failures produce along the whole floe run
+for debugging purposes. Finally the user must provide a dataset name for the <em>Recovery</em> dataset. Occasionally Orion and
+the AWS cloud infrastructures could have severe problems and the recovery dataset can be used in these circumstances to try to
+recover and generate partial results from the NES runs by using the designed recovery floe <em>Non-Equilibrium Switching Recovery</em></p>
+<p>The final NES floe selection is related to the promoted parameters</p>
+<div class="figure align-center" id="figure-nes-floe-parameters">
+<img alt="The NES floe parameters" src="./images/NES_floe_parameters.png" style="width: 700px;" />
+<p class="caption"><strong>The NES floe parameters</strong></p>
+</div>
+<p>Their meaning is explained below:</p>
+<blockquote>
+<ul>
+<li><p class="first"><em>Total Number of NES Trajectory Frames</em> (Default 80) This parameters controls how many snapshots are taken
+from the Bound and Unbound Equilibrium trajectories to run the NES switching. For example
+suppose that in the Bound equilibrium run for 6ns production we collected a total of 1000
+frames. From these frames 80 equally distanced frames are selected (~each 12 frames). The chimeric
+molecule is injected into these frames to run the forward and reverse Bound and Unbound runs</p>
+</li>
+<li><p class="first"><em>NES Switching Time</em> (Default 50ps) This parameter controls the time length of the NES switching. For
+difficult and large mutations this parameter could be used to try to have better bound/unbound work
+convergence</p>
+</li>
+<li><p class="first"><em>Protein Title Name</em> (Default blanc) The protein name used to identify your flask. This name will be used
+for the produced output file names and other info</p>
+</li>
+<li><p class="first"><em>Charge The Ligand</em> (Default True) If <em>True</em> the ligand will be charged by using the ELF10 methods
+otherwise the ligand partial charged will be used (if any)</p>
+</li>
+<li><p class="first"><em>Ligand Force Field</em> (Default OpenFF 1.3) The ligand force field to be used</p>
+</li>
+<li><p class="first"><em>Protein Force Field</em> (Default Amber14SB) The protein force field to be used</p>
+</li>
+<li><p class="first"><em>Hydrogen Mass Repartitioning</em> (Default True) If true the md time step used along the equilibrium
+runs will be set to 4fs otherwise to 2 fs</p>
+</li>
+<li><p class="first"><em>Equilibrium Running Time</em> (Default 6ns) The total equilibrium time for the Bound and Unbound simulations</p>
+</li>
+<li><p class="first"><em>Ligand Affinity Experimental File</em> (Default None) The experimental text file with the binding affinity in <em>kcal/mol</em> or <em>kJ/mol</em>.
+The syntax of this text file is strict. Each line entry must be in the syntax form:</p>
+<div class="system-message">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/gcalabro/Projects/Gaetano/openmm_orion/docs/source/tutorials.rst</tt>, line 720)</p>
+<p>Unexpected indentation.</p>
+</div>
+<blockquote>
+<ul class="simple">
+<li><em>ligA</em> <span class="formula">Δ<i>G</i></span> <span class="formula">Δ<i>G</i><sub><i>error</i></sub></span> <em>units</em></li>
+</ul>
+</blockquote>
+<p>where <em>ligA</em> is the molecule title name, <span class="formula">Δ<i>G</i></span> the binding affinity value, <span class="formula">Δ<i>G</i><sub><i>error</i></sub></span> the
+binding affinity valuer error and <em>units</em> in the syntax form of kcal/mol or kJ/mol. The <span class="formula">Δ<i>G</i><sub><i>error</i></sub></span> is optional
+and if not provided will not be used. An example of this file for the Tyk2 receptor can be download here:</p>
+<div class="system-message">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/gcalabro/Projects/Gaetano/openmm_orion/docs/source/tutorials.rst</tt>, line 724)</p>
+<p>Unexpected indentation.</p>
+</div>
+<blockquote>
+<ul>
+<li><ul class="first">
+<li><p class="first"><a href="#id17"><span class="problematic" id="id18">:download:`Tyk2_exp_affinities.txt &lt;files/Tyk2_exp_affinities.txt&gt;`</span></a></p>
+<div class="system-message" id="id17">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/gcalabro/Projects/Gaetano/openmm_orion/docs/source/tutorials.rst</tt>, line 724); <em><a href="#id18">backlink</a></em></p>
+<p>Unknown interpreted text role &quot;download&quot;.</p>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="id19">
+<h2>Accessing and Understanding the Results</h2>
+<p>The results from the floe are accessed via two main floe reports at the end of the running NES job
+and selectable in the <cite>Jobs</cite> tab in the Orion <cite>Floe</cite> page. For this tutorial we will focus on the
+results produced by running the Tyk2 receptor and three relative binding affinity calculations.</p>
+<div class="figure align-center" id="figure-nes-floe-job">
+<img alt="The NES floe finished Job" src="./images/NES_floe_Job.png" style="width: 700px;" />
+<p class="caption"><strong>The NES floe finished job</strong></p>
+</div>
+<p>From the NES run job page the <strong>NES Report</strong> is accessible by clicking on the tab. Here many info are shown
+but the most relevant are the edges related to the submitted RBFE calculations in form of tiles.
+Each tiles show the edge and the predicted RBFE by using the Bennet Acceptance Ratio method for Non-Equilibrium.
+In addition other relevant information are shown like the total floe running time and its cost. Clicking on each
+tile will show important information related to the RBFE calculation. For example, in the below figure, the detailed calculation
+information are shown for the edge involving the ligand <em>ejm_49</em> to <em>ejm_31</em></p>
+<div class="figure align-center" id="figure-nes-good-edge">
+<img alt="A good RBFE calculation" src="./images/NES_floe_good_edge.png" style="width: 600px;" />
+<p class="caption"><strong>A good RBFE calculation</strong></p>
+</div>
+<p>We have two main plots. The upper and lower plots are respectively related to the Bound and Unbound NES simulations.
+We are going to focus on the Bound NES simulations but the same considerations are true for the Unbound one.
+The blue and red graphs are plotting the calculated Forward and Reverse NES switching work for each selected starting equilibrium frames. The important
+message to take is that if the the graphs overlap well then this is a good indicator that the computed free energy change
+is trustable and accurate. The distribution plots are made by binning the work values for the forward and reverse works and
+again if the two distribution overlaps it is a good sign that the calculation was successfully. As previously sad analog
+consideration are valid for the Unbound graph. By using the work values recorded along the switching it is possible to
+estimate the free energy changes <span class="formula">Δ<i>G</i><sub><i>Bound</i></sub></span> and <span class="formula">Δ<i>G</i><sub><i>Unbound</i></sub></span> shown in <a class="reference internal" href="#figure-rbfe">figure_RBFE</a>
+and indirectly estimates <span class="formula">ΔΔ<i>G</i> = Δ<i>G</i><sub><i>Bound</i></sub> − Δ<i>G</i><sub><i>UnBound</i></sub></span>. These computed values are reported in the shown table.</p>
+<p>The Figure below reports the edge involving the ligand <em>ejm_44</em> to <em>ejm_55</em></p>
+<div class="figure align-center" id="figure-nes-bad-edge">
+<img alt="A bad RBFE calculation" src="./images/NES_floe_bad_edge.png" style="width: 600px;" />
+<p class="caption"><strong>A bad RBFE calculation</strong></p>
+</div>
+<p>In this case both the Bound and Unbound graphs and work distributions do not overlap well and the
+results should not be trustable.</p>
+<p>From the NES job page another report the <strong>Affinity Report</strong> is selectable from the tabs.</p>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id20" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[1]</a></td><td>Jarzynski, C. (1997), &quot;Nonequilibrium equality for free energy differences&quot;, Phys. Rev. Lett., 78 (14): 2690</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id21" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[2]</a></td><td>Jarzynski, C. (1997), &quot;Equilibrium free-energy differences from nonequilibrium measurements: A master-equation approach&quot;, Phys. Rev. E, 56 (5): 5018</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id22" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id9">[3]</a></td><td>Vytautas Gapsys, et al., &quot;Large scale relative protein ligand binding affinities using non-equilibrium alchemy&quot;, Chem. Sci. (2020) 11, 1140-1152</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id23" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id10">[4]</a></td><td>Huafeng Xu &quot;Optimal Measurement Network of Pairwise Differences&quot;, J Chem Inf Model. 2019 Nov 25;59(11):4720-4728</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</body>
+</html>

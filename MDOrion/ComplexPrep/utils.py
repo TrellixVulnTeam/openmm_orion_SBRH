@@ -156,7 +156,8 @@ def order_check(mol, fname):
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO)
 
-    #hv = oechem.OEHierView(mol, oechem.OEAssumption_BondedResidue + oechem.OEAssumption_ResPerceived)
+    # hv = oechem.OEHierView(mol, oechem.OEAssumption_BondedResidue + oechem.OEAssumption_ResPerceived)
+
     hv = oechem.OEHierView(mol)
 
     for chain in hv.GetChains():

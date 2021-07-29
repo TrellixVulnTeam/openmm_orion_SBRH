@@ -28,18 +28,18 @@ from MDOrion.MDEngines.cubes import (ParallelMDMinimizeCube,
 
 from MDOrion.ComplexPrep.cubes import ComplexPrepCube
 
-from MDOrion.System.cubes import ParallelSolvationCube
+from MDOrion.Flask.cubes import ParallelSolvationCube
 
 from MDOrion.ForceField.cubes import ParallelForceFieldCube
 
-from MDOrion.System.cubes import MDComponentCube
+from MDOrion.Flask.cubes import MDComponentCube
 
 from MDOrion.LigPrep.cubes import (ParallelLigandChargeCube,
                                    LigandSetting)
 
-from MDOrion.System.cubes import IDSettingCube
+from MDOrion.Flask.cubes import IDSettingCube
 
-from MDOrion.System.cubes import CollectionSetting
+from MDOrion.Flask.cubes import CollectionSetting
 
 
 job = WorkFloe('Short Trajectory MD',
@@ -113,7 +113,7 @@ mdcomp.promote_parameter("flask_title", promoted_name="flask_title", default="pr
 # Complex cube used to assemble the ligands and the solvated protein
 complx = ComplexPrepCube("Complex", title="Complex Preparation")
 
-solvate = ParallelSolvationCube("Hydration", title="System Hydration")
+solvate = ParallelSolvationCube("Hydration", title="Flask Hydration")
 solvate.promote_parameter('density', promoted_name='density', default=1.03,
                           description="Solution density in g/ml")
 solvate.promote_parameter('salt_concentration', promoted_name='salt_concentration', default=50.0,
@@ -124,9 +124,9 @@ coll_open = CollectionSetting("OpenCollection")
 coll_open.set_parameters(open=True)
 
 # Force Field Application
-ff = ParallelForceFieldCube("ForceField", title="System Parametrization")
+ff = ParallelForceFieldCube("ForceField", title="Flask Parametrization")
 ff.promote_parameter('protein_forcefield', promoted_name='protein_ff', default='Amber99SBildn')
-ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='Gaff2')
+ff.promote_parameter('ligand_forcefield', promoted_name='ligand_ff', default='Gaff_2.11')
 
 prod = ParallelMDNptCube("Production", title="Production")
 prod.promote_parameter('time', promoted_name='prod_ns', default=0.5,
@@ -144,7 +144,7 @@ prod.set_parameters(suffix='prod')
 
 
 # Minimization
-minComplex = ParallelMDMinimizeCube('minComplex', title='System Minimization')
+minComplex = ParallelMDMinimizeCube('minComplex', title='Flask Minimization')
 minComplex.set_parameters(restraints="noh (ligand or protein)")
 minComplex.set_parameters(restraintWt=5.0)
 minComplex.set_parameters(center=True)
@@ -153,7 +153,7 @@ minComplex.promote_parameter("md_engine", promoted_name="md_engine")
 minComplex.set_parameters(hmr=False)
 
 # NVT simulation. Here the assembled system is warmed up to the final selected temperature
-warmup = ParallelMDNvtCube('warmup', title='System Warm Up')
+warmup = ParallelMDNvtCube('warmup', title='Flask Warm Up')
 warmup.set_parameters(time=0.01)
 warmup.promote_parameter("temperature", promoted_name="temperature")
 warmup.set_parameters(restraints="noh (ligand or protein)")
@@ -172,7 +172,7 @@ warmup.set_parameters(hmr=False)
 # is applied in the first stage while a relatively small one is applied in the latter
 
 # NPT Equilibration stage 1
-equil1 = ParallelMDNptCube('equil1', title='System Equilibration I')
+equil1 = ParallelMDNptCube('equil1', title='Flask Equilibration I')
 equil1.set_parameters(time=0.01)
 equil1.promote_parameter("temperature", promoted_name="temperature")
 equil1.promote_parameter("pressure", promoted_name="pressure")
@@ -185,7 +185,7 @@ equil1.promote_parameter("md_engine", promoted_name="md_engine")
 equil1.set_parameters(hmr=False)
 
 # NPT Equilibration stage 2
-equil2 = ParallelMDNptCube('equil2', title='System Equilibration II')
+equil2 = ParallelMDNptCube('equil2', title='Flask Equilibration II')
 equil2.set_parameters(time=0.02)
 equil2.promote_parameter("temperature", promoted_name="temperature")
 equil2.promote_parameter("pressure", promoted_name="pressure")
@@ -198,7 +198,7 @@ equil2.promote_parameter("md_engine", promoted_name="md_engine")
 equil2.set_parameters(hmr=False)
 
 # NPT Equilibration stage 3
-equil3 = ParallelMDNptCube('equil3', title='System Equilibration III')
+equil3 = ParallelMDNptCube('equil3', title='Flask Equilibration III')
 equil3.set_parameters(time=0.03)
 equil3.promote_parameter("temperature", promoted_name="temperature")
 equil3.promote_parameter("pressure", promoted_name="pressure")

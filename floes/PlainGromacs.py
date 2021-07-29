@@ -28,15 +28,20 @@ from MDOrion.MDEngines.Gromacs.cubes import (InputGromacs,
 
 from orionplatform.cubes import DatasetWriterCube
 
-job = WorkFloe('PlainGromacs', title='Plain Gromacs')
+
+floe_title = 'Plain Gromacs'
+tags_for_floe = ['MDRun']
+#
+tag_str = ''.join(' [{}]'.format(tag) for tag in tags_for_floe)
+job = WorkFloe(floe_title, title=floe_title+tag_str)
+job.classification = [tags_for_floe]
+job.tags = tags_for_floe
 
 job.description = open(path.join(path.dirname(__file__), 'PlainGromacs_desc.rst'), 'r').read()
 
-job.classification = [['General MD']]
 job.uuid = "f092b164-7400-403d-8861-b25ff741cab5"
-job.tags = [tag for lists in job.classification for tag in lists]
 
-ifs = InputGromacs("Input File", title="Input file")
+ifs = InputGromacs("Gromacs Input File", title="Gromacs Input file")
 ifs.promote_parameter('tpr', promoted_name='tpr', default=None)
 ifs.promote_parameter("prefix_name", promoted_name="Flask prefix", default="Flask")
 ifs.promote_parameter("data_in", promoted_name='in')

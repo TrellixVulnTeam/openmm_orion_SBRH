@@ -55,6 +55,10 @@ from subprocess import STDOUT, PIPE, Popen, DEVNULL
 
 import math
 
+from parmed.gromacs.gromacstop import _Defaults
+
+import time
+
 
 class GromacsSimulations(MDSimulations):
 
@@ -82,6 +86,9 @@ class GromacsSimulations(MDSimulations):
         # # Copy the topology and positions
         topology = parmed_structure.topology
         positions = parmed_structure.positions
+
+        defaults = _Defaults(fudgeLJ=0.5, fudgeQQ=0.8333, gen_pairs='yes')
+        parmed_structure.defaults = defaults
 
         def check_water(res):
             two_bonds = list(res.bonds())
@@ -146,6 +153,7 @@ class GromacsSimulations(MDSimulations):
         new_system_structure.positions = parmed_structure.positions
         new_system_structure.velocities = parmed_structure.velocities
         new_system_structure.box = parmed_structure.box
+        new_system_structure.defaults = defaults
 
         self.stepLen = 0.002 * unit.picoseconds
 
@@ -175,9 +183,9 @@ class GromacsSimulations(MDSimulations):
             opt['Logger'].info("[{}] Centering is On".format(opt['CubeTitle']))
             # Numpy array in A
             coords = new_system_structure.coordinates
-            # System Center of Geometry
+            # Flask Center of Geometry
             cog = np.mean(coords, axis=0)
-            # System box vectors
+            # Flask box vectors
             box_v = new_system_structure.box_vectors.in_units_of(unit.angstrom) / unit.angstrom
             box_v = np.array([box_v[0][0], box_v[1][1], box_v[2][2]])
             # Translation vector
@@ -343,10 +351,10 @@ class GromacsSimulations(MDSimulations):
                 opt['Logger'].info("[{}] Restraint to the Reference State Enabled".format(opt['CubeTitle']))
                 reference_positions = opt['reference_state'].get_positions()
                 coords = np.array(reference_positions.value_in_unit(unit.angstrom))
-                # System Center of Geometry
+                # Flask Center of Geometry
                 cog = np.mean(coords, axis=0)
 
-                # System box vectors
+                # Flask box vectors
                 box_v = opt['reference_state'].get_box_vectors().value_in_unit(unit.angstrom)
                 box_v = np.array([box_v[0][0], box_v[1][1], box_v[2][2]])
 
@@ -708,13 +716,15 @@ class GromacsSimulations(MDSimulations):
         self.mdstate = mdstate
         self.opt = opt
 
+        self.speed = None
+
         return
 
     def run(self):
 
         # Run Gromacs
         if self.opt['verbose']:
-
+            start_time = time.time()
             subprocess.check_call(['gmx',
                                    'mdrun',
                                    '-v',
@@ -722,7 +732,9 @@ class GromacsSimulations(MDSimulations):
                                    '-deffnm', self.opt['grm_def_fn'],
                                    '-o', self.opt['grm_trj_fn']
                                    ])
+            end_time = time.time()
         else:
+            start_time = time.time()
             p = Popen(['gmx',
                        'mdrun',
                        '-v',
@@ -732,8 +744,19 @@ class GromacsSimulations(MDSimulations):
                        ], stdin=PIPE, stdout=DEVNULL, stderr=STDOUT)
 
             p.communicate()
+            end_time = time.time()
 
         if self.opt['SimType'] in ['nvt', 'npt']:
+
+            # Time in seconds
+            elapsed_time = (end_time - start_time) * unit.seconds
+
+            total_sim_time = self.opt['time'] * unit.nanoseconds
+
+            speed = (total_sim_time / elapsed_time) * 86400 * unit.seconds
+
+            # Value in ns/day
+            self.speed = speed.value_in_unit(unit.nanoseconds)
 
             if self.opt['reporter_interval']:
 
@@ -754,7 +777,7 @@ class GromacsSimulations(MDSimulations):
                 #                       '-pbc', b'whole'],
                 #                      stdin=subprocess.PIPE)
                 #
-                # # Select the entire System
+                # # Select the entire Flask
                 # p.communicate(b'0')
 
                 # Tar the files dir with its content:
@@ -768,6 +791,8 @@ class GromacsSimulations(MDSimulations):
                     archive.add(self.opt['grm_trj_fn'], arcname=os.path.basename(self.opt['grm_trj_fn']))
                     # archive.add(self.opt['grm_trj_comp_fn'], arcname=os.path.basename(self.opt['grm_trj_comp_fn']))
                     archive.add(self.opt['grm_log_fn'], arcname=os.path.basename(self.opt['grm_log_fn']))
+                    archive.add(self.opt['grm_tpr_fn'], arcname=os.path.basename(self.opt['grm_tpr_fn']))
+                    archive.add(self.opt['mdp_fn'], arcname=os.path.basename(self.opt['mdp_fn']))
 
                 # with tarfile.open(tar_fn, mode='w:gz') as archive:
                 #     archive.add(self.opt['out_directory'], arcname=os.path.basename(self.opt['out_directory']))

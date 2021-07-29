@@ -41,7 +41,7 @@ import os
 class MDMinimizeCube(RecordPortsMixin, ComputeCube):
     title = 'Minimization Cube'
 
-    # version = "0.1.4"
+    
     classification = [["MD Simulations"]]
     tags = ['OpenMM', 'Gromacs', 'Minimization']
 
@@ -118,12 +118,12 @@ class MDMinimizeCube(RecordPortsMixin, ComputeCube):
 
     constraints = parameters.StringParameter(
         'constraints',
-        default='H-Bonds',
-        choices=['None', 'H-Bonds', 'H-Angles', 'All-Bonds'],
-        help_text="""None, H-Bonds, H-Angles, or All-Bonds
+        default='Bonds2H',
+        choices=['None', 'Bonds2H', 'Angles2H', 'All-Bonds'],
+        help_text="""None, Bonds2H, Angles2H, or All-Bonds
         Which type of constraints to add to the system.
         None means no bonds are constrained.
-        H-Bonds means bonds with hydrogen are constrained, etc.""")
+        Bonds2H means bonds with hydrogen are constrained, etc.""")
 
     implicit_solvent = parameters.StringParameter(
         'implicit_solvent',
@@ -220,7 +220,7 @@ class MDMinimizeCube(RecordPortsMixin, ComputeCube):
             opt['out_directory'] = mdrecord.cwd
             opt['molecule'] = flask
             opt['str_logger'] = str_logger
-            opt['Logger'].info('[{}] MINIMIZING System: {}'.format(opt['CubeTitle'], system_title))
+            opt['Logger'].info('[{}] MINIMIZING Flask: {}'.format(opt['CubeTitle'], system_title))
 
             # Extract the Parmed structure and synchronize it with the last MD stage state
             parmed_structure = mdrecord.get_parmed(sync_stage_name='last')
@@ -260,7 +260,7 @@ class MDMinimizeCube(RecordPortsMixin, ComputeCube):
 
 class MDNvtCube(RecordPortsMixin, ComputeCube):
     title = 'NVT Cube'
-    # version = "0.1.4"
+    
     classification = [["MD Simulations"]]
     tags = ['Gromacs', 'OpenMM', 'NVT']
 
@@ -336,9 +336,9 @@ class MDNvtCube(RecordPortsMixin, ComputeCube):
 
     constraints = parameters.StringParameter(
         'constraints',
-        default='H-Bonds',
-        choices=['None', 'H-Bonds', 'H-Angles', 'All-Bonds'],
-        help_text="""None, H-Bonds, H-Angles, or All-Bonds
+        default='Bonds2H',
+        choices=['None', 'Bonds2H', 'Angles2H', 'All-Bonds'],
+        help_text="""None, Bonds2H, Angles2H, or All-Bonds
         Which type of constraints to add to the system.
         None means no bonds are constrained.
         HBonds means bonds with hydrogen are constrained, etc.""")
@@ -537,7 +537,7 @@ class MDNvtCube(RecordPortsMixin, ComputeCube):
 
 class MDNptCube(RecordPortsMixin, ComputeCube):
     title = 'NPT Cube'
-    # version = "0.1.4"
+    
     classification = [['MD Simulations']]
     tags = ['Gromacs', 'OpenMM', 'NPT']
 
@@ -617,9 +617,9 @@ class MDNptCube(RecordPortsMixin, ComputeCube):
 
     constraints = parameters.StringParameter(
         'constraints',
-        default='H-Bonds',
-        choices=['None', 'H-Bonds', 'H-Angles', 'All-Bonds'],
-        help_text="""None, H-Bonds, H-Angles, or All-Bonds
+        default='Bonds2H',
+        choices=['None', 'Bonds2H', 'Angles2H', 'All-Bonds'],
+        help_text="""None, Bonds2H, Angles2H, or All-Bonds
         Which type of constraints to add to the system.
         None means no bonds are constrained.
         HBonds means bonds with hydrogen are constrained, etc.""")
