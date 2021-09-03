@@ -7,13 +7,14 @@ MD DataRecord a brief overview
 ==============================
 
 Molecular Dynamics (MD) simulations are notoriously time consuming and
-computational demanding. In terms of data, a lot of information
-need to be stored and retrieved such as atomic coordinates, atomic velocities,
-forces and energies just to cite only few; extracting and managing this data then
-becomes crucial. The MD DataRecord API simplifies the access to the md data in
-the MD floe programming for Orion.
-In the OpenEye Datarecord model, data is exchanged between cubes in format of
-data records where POD data, custom objects, json data etc.  are stored
+computationally demanding. In terms of data, a lot of information
+needs to be stored and retrieved, such as atomic coordinates, atomic velocities,
+forces, and energies, just to cite a few. Extracting and managing these data then
+becomes crucial. The MD DataRecord API simplifies the access to the MD data in
+ MD floe programming for Orion.
+
+In the OpenEye Datarecord model, data are exchanged between cubes in the format of
+data records. POD data, custom objects, json data, and so forth  are stored
 and retrieved by using the associated field names and types. The MD Datarecord API
 is built on the top of the OpenEye Datarecord, standardizing the record content
 data produced during MD runs in a well-structured format and providing
@@ -22,14 +23,14 @@ an API point to its access.
 
 MD DataRecord structure
 -----------------------
-The MD data produced along MD runs is structured in what is named the *md record*:
+The MD data produced along MD runs are structured in what is named the *md record*:
 
-    * the md record contains a sub-record named *md stages* where md information is saved. This sub-record is
+    * the md record contains a subrecord named *md stages* where md information is saved. This subrecord is
       a list of *md stage* records;
 
-    * each *md stage* is a record itself with an associated name, type, log data, topology and MD State info.
-      The latter is a custom object that stores data useful to restart MD runs such as, atomic positions,
-      velocities and box information;
+    * each *md stage* is a record itself with an associated name, type, log data, topology and MD State information.
+      The latter is a custom object that stores data useful to restart MD runs, such as atomic positions,
+      velocities, and box information;
 
     * the md record at the top level contains a Parmed object used to carry the whole system parametrization data
 
@@ -49,23 +50,23 @@ The following picture shows the *md record* structure and its main components
    **Structure of the MD Record**
 
 The *md record* is user accessible by using the *MDDataRecord*  API. In order to use it, the `MDOrion <https://github.com/oess/openmm_orion>`_
-package must be installed. The installation of the package also requires to have access to the OpenEye Magpie repository
+package must be installed. The installation of the package also requires access to the OpenEye Magpie repository
 for some dependencies. The API has been designed to transparently work locally and in Orion.
-To use the API the user needs to create a *MDDatarecord* object starting from an *OERecord* object, after that
-getter and setter functions can be used to access the md data (see full `MDDatatecord API Documentation`_).
+To use the API, the user needs to create a *MDDatarecord* object starting from an *OERecord* object. After that,
+getter and setter functions can be used to access the md data. (See full `MDDatatecord API Documentation`_.)
 
 Code snippets
 -------------------
 
 The following code snippets give an idea on how to use the API.
 
-.. warning::
+.. admonition::
 
     In the following examples **record** is an *OpenEye Datarecord* produced
     running MD floes such as *Solvate and Run MD* or *Solvate and Run Protein-Ligand MD*.
     Starting from the MDOrion pkg v2.0.0, the datasets produced from the *Short Trajectory MD
-    with analysis* floe is "ligand centric" and the MDDatarecord API cannot be directly applied
-    to the produced records. However, the API still works on the conformer (poses) ligand sub-records
+    with analysis* floe are "ligand centric," and the MDDatarecord API cannot be directly applied
+    to the produced records. However, the API still works on the conformer (poses) ligand subrecords
     which are still *md records*
 
 .. code:: python
