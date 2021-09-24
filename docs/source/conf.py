@@ -17,10 +17,10 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
+project = "Orion Programming Guide"
+copyright = "2021, OpenEye Scientific Software Inc"
+author = "OpenEye Scientific Software Inc."
 
-project = 'MDOrion'
-copyright = '2020, OpenEye'
-author = 'OpenEye'
 
 import MDOrion
 # The short X.Y version
