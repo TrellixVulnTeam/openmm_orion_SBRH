@@ -1,5 +1,7 @@
 .. |A|         replace:: Å
 
+.. _molecular-dynamics-tutorials:
+
 #############
 Tutorials
 #############
