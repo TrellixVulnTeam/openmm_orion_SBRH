@@ -800,7 +800,26 @@ class NESGMX(RecordPortsMixin, ComputeCube):
             extra_data_fn = download_gmx_file(mdrecord)
 
             with tarfile.open(extra_data_fn) as tar:
-                tar.extractall(path=mdrecord.cwd)
+                def is_within_directory(directory, target):
+                    
+                    abs_directory = os.path.abspath(directory)
+                    abs_target = os.path.abspath(target)
+                
+                    prefix = os.path.commonprefix([abs_directory, abs_target])
+                    
+                    return prefix == abs_directory
+                
+                def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                
+                    for member in tar.getmembers():
+                        member_path = os.path.join(path, member.name)
+                        if not is_within_directory(path, member_path):
+                            raise Exception("Attempted Path Traversal in Tar File")
+                
+                    tar.extractall(path, members, numeric_owner=numeric_owner) 
+                    
+                
+                safe_extract(tar, path=mdrecord.cwd)
 
             gmx_gro_fn = os.path.join(mdrecord.cwd, "gmx_gro.gro")
             with open(gmx_gro_fn, 'r') as f:
